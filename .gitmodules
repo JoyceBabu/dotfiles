@@ -1,0 +1,3 @@
+[submodule "vim/.config/colors/base16-fzf"]
+	path = vim/.config/colors/base16-fzf
+	url = https://github.com/nicodebo/base16-fzf

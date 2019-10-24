@@ -1,0 +1,49 @@
+# vim: set syntax=sh ft=zsh :
+
+export LC_CTYPE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export OS_NAME=$( uname -s | tr '[:upper:]' '[:lower:]' )
+export EDITOR="vim"
+export GIT_EDITOR='vim'
+
+shell=$(basename $SHELL)
+source ~/.iterm2_shell_integration.$shell
+unset shell
+
+export PATH=$HOME/.local/bin:$PATH
+
+#############################
+# Configure fzf
+#############################
+export FZF_BASE="$HOME/.fzf"
+
+# Use ripgrep for feeding into fzf for searching files.
+export FZF_DEFAULT_COMMAND='rg --files --no-ignore-vcs --hidden'
+
+# OceanNext color scheme for fzf
+fzf_theme_config=~/.config/colors/base16-fzf/bash/base16-oceanicnext.config 
+[ -f $fzf_theme_config ] && . $fzf_theme_config
+unset fzf_theme_config _gen_fzf_default_opts
+
+# Bind F1 key to toggle preview window on/off
+FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS' --bind "F1:toggle-preview" --preview "rougify {} 2> /dev/null || cat {} 2> /dev/null || tree -C {} 2> /dev/null | head -100"'
+
+# Color: https://github.com/junegunn/fzf/wiki/Color-schemes - Solarized Dark
+#FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS'
+#--color fg:#D8DEE9,bg:#2E3440,hl:#A3BE8C,fg+:#D8DEE9,bg+:#434C5E,hl+:#A3BE8C
+#--color pointer:#BF616A,info:#4C566A,spinner:#4C566A,header:#4C566A,prompt:#81A1C1,marker:#EBCB8B
+#'
+
+export FZF_DEFAULT_OPTS
+
+# Show long commands if needed
+# From https://github.com/junegunn/fzf/wiki/Configuring-shell-key-bindings
+# Bind F1 key to toggle preview window on/off
+export FZF_CTRL_R_OPTS='--bind "F1:toggle-preview" --preview "echo {}" --preview-window down:3:hidden:wrap'
+
+[ -f ~/.shell_config_custom ] && . ~/.shell_config_custom
+
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+

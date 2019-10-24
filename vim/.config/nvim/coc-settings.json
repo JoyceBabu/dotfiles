@@ -1,0 +1,14 @@
+{
+  "codeLens.enable": true,
+  "coc.preferences.colorSupport": true,
+  "diagnostic.errorSign": "●",
+  "diagnostic.warningSign": "●",
+  "diagnostic.infoSign": "!",
+  "diagnostic.hintSign": "!",
+  "rust.clippy_preference": "on",
+  "git.realtimeGutters": true,
+  "git.enableGutters": false,
+  "suggest.autoTrigger": "always",
+  "suggest.noselect": true,
+  "suggest.minTriggerInputLength": 2
+}
