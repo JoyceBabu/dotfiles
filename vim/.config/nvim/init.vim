@@ -154,7 +154,10 @@ nnoremap K 20k
 " NERDTree Toggle
 let NERDTreeHijackNetrw = 0
 let g:NERDTreeUpdateOnCursorHold = 0
-let g:NERDTreeUpdateOnWrite      = 0
+let g:NERDTreeUpdateOnWrite  = 0
+let NERDTreeShowHidden = 1
+let NERDTreeIgnore = ['\.DS_Store', '\~$', '\.swp']
+
 noremap <silent> <Leader>n :NERDTreeToggle<CR> <C-w>=
 noremap <silent> <Leader>f :NERDTreeFind<CR> <C-w>=
 
