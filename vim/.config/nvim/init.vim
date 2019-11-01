@@ -6,28 +6,37 @@ endif
 
 call plug#begin('~/.local/share/nvim/plugged')
 
-" Plug 'dracula/vim', { 'as': 'dracula' }
+" Theme
 Plug 'mhartington/oceanic-next'
+" Plug 'dracula/vim', { 'as': 'dracula' }
+
 Plug 'tpope/vim-surround'
-" Plug 'itchyny/lightline.vim'
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all'}
-Plug 'junegunn/fzf.vim'
+Plug 'tpope/vim-repeat'
+Plug 'tpope/vim-commentary' " Comment code
+Plug 'editorconfig/editorconfig-vim'
+" Plug 'terryma/vim-multiple-cursors'
+
 Plug 'haya14busa/incsearch.vim'
 Plug 'machakann/vim-highlightedyank'
-Plug 'tpope/vim-commentary' " Comment code
 Plug 'jeffkreeftmeijer/vim-numbertoggle' "Toggle relative / absolute number based on context
 Plug 'Yggdroot/indentLine'
 Plug 'vim-airline/vim-airline' " Airline status bar
-Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
-Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'roman/golden-ratio', { 'on': 'GoldenRatioResize' }
-Plug 'tpope/vim-fugitive' " Git Integration
+Plug 'thaerkh/vim-workspace'
+
+" Git Integration
+Plug 'tpope/vim-fugitive'
 Plug 'jreybert/vimagit'
 Plug 'shumphrey/fugitive-gitlab.vim' " for :Gbrowse
 Plug 'airblade/vim-gitgutter', { 'on': ['GitGutterEnable', 'GitGutterDisable'] } " Git integration in gutter
-Plug 'tpope/vim-repeat'
-Plug 'thaerkh/vim-workspace'
 
+" File Management
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all'}
+Plug 'junegunn/fzf.vim'
+Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
+Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
+
+" Autocomplete
 if has('nvim')
   Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 else
@@ -129,8 +138,14 @@ colorscheme OceanicNext
 
 autocmd FileType php setlocal commentstring=//\ %s
 
-" Prevent gutter from resizing on lint error
+set nocompatible
+" Always show sign column. Prevent gutter from resizing on lint error
 set signcolumn=yes
+
+set hidden
+set cmdheight=2
+set updatetime=300
+set shortmess+=c
 
 set number
 set relativenumber
@@ -143,11 +158,13 @@ set splitbelow splitright
 set nostartofline " prevent cursor from moving when scrolling
 set encoding=utf-8  " The encoding displayed.
 set fileencoding=utf-8  " The encoding written to file.
+set colorcolumn=81
+set history=100
 
 syntax on
 filetype indent plugin on
 
-imap <S-Tab> <plug>(fzf-complete-line)
+" imap <S-Tab> <plug>(fzf-complete-line)
 nnoremap J 20j
 nnoremap K 20k
 inoremap <expr> <cr> getline(".")[col(".")-2:col(".")-1]=="{}" ? "<cr><esc>O" : "<cr>"
