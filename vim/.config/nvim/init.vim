@@ -150,6 +150,7 @@ filetype indent plugin on
 imap <S-Tab> <plug>(fzf-complete-line)
 nnoremap J 20j
 nnoremap K 20k
+inoremap <expr> <cr> getline(".")[col(".")-2:col(".")-1]=="{}" ? "<cr><esc>O" : "<cr>"
 
 " NERDTree Toggle
 let NERDTreeHijackNetrw = 0
