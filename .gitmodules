@@ -1,3 +1,6 @@
 [submodule "vim/.config/colors/base16-fzf"]
 	path = vim/.config/colors/base16-fzf
 	url = https://github.com/nicodebo/base16-fzf
+[submodule "bash/.local/share/rupa-z"]
+	path = bash/.local/share/rupa-z
+	url = https://github.com/rupa/z

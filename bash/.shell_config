@@ -1,5 +1,11 @@
 # vim: set syntax=sh ft=zsh :
 
+_source_file() {
+	if [ ! -z "$1" ] && [ -f "$1" ]; then
+		source "$1"
+	fi
+}
+
 export LC_CTYPE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export OS_NAME=$( uname -s | tr '[:upper:]' '[:lower:]' )
@@ -21,9 +27,8 @@ export FZF_BASE="$HOME/.fzf"
 export FZF_DEFAULT_COMMAND='rg --files --no-ignore-vcs --hidden'
 
 # OceanNext color scheme for fzf
-fzf_theme_config=~/.config/colors/base16-fzf/bash/base16-oceanicnext.config 
-[ -f $fzf_theme_config ] && . $fzf_theme_config
-unset fzf_theme_config _gen_fzf_default_opts
+_source_file ~/.config/colors/base16-fzf/bash/base16-oceanicnext.config
+unset _gen_fzf_default_opts
 
 # Bind F1 key to toggle preview window on/off
 FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS' --bind "F1:toggle-preview" --preview "rougify {} 2> /dev/null || cat {} 2> /dev/null || tree -C {} 2> /dev/null | head -100"'
@@ -41,9 +46,10 @@ export FZF_DEFAULT_OPTS
 # Bind F1 key to toggle preview window on/off
 export FZF_CTRL_R_OPTS='--bind "F1:toggle-preview" --preview "echo {}" --preview-window down:3:hidden:wrap'
 
-[ -f ~/.shell_config_custom ] && . ~/.shell_config_custom
+_source_file ~/.shell_config_custom
 
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
+_source_file ~/.bash_aliases
 
+_source_file ~/.local/share/rupa-z/z.sh
+
+unset _source_file
