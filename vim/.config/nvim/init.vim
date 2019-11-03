@@ -104,7 +104,6 @@ let g:indentLine_setConceal = 0
 set conceallevel=1
 let g:indentLine_conceallevel=2
 
-let g:indentLine_color_term = 239
 " let g:indentLine_char = 'c'
 
 " IndentLine Settings
@@ -126,14 +125,17 @@ if has('persistent_undo')
   set undofile
 endif
 
-if (has("termguicolors"))
-  set termguicolors
+set termguicolors
+if has('mac') && $COLORTERM == '' && !has('gui_vimr') && !has('gui_running')
+  set t_Co=256
+  set notermguicolors
 endif
 
 " OceanicNext Theme
 let g:airline_theme='oceanicnext'
 let g:oceanic_next_terminal_bold = 1
 let g:oceanic_next_terminal_italic = 1
+
 colorscheme OceanicNext
 
 " color dracula
