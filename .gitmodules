@@ -4,3 +4,6 @@
 [submodule "bash/.local/share/rupa-z"]
 	path = bash/.local/share/rupa-z
 	url = https://github.com/rupa/z
+[submodule "tmux/.tmux/plugins/tpm"]
+	path = tmux/.tmux/plugins/tpm
+	url = https://github.com/tmux-plugins/tpm

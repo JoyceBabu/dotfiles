@@ -38,6 +38,9 @@ Plug 'junegunn/fzf.vim'
 Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 
+" Navigation
+Plug 'christoomey/vim-tmux-navigator'
+
 " Autocomplete
 if has('nvim')
   Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
@@ -91,13 +94,6 @@ call deoplete#custom#option('max_list', 10)
 let g:fugitive_gitlab_domains = ['https://git.ennexa.org']
 let g:golden_ratio_autocommand = 0
 
-"Shortcut window switches, w+h/j/k/l
-" nmap Wk <c-w><up>
-" nmap Wh <c-w><left>
-" nmap Wl <c-w><right>
-" nmap Wj <c-w><down>
-" nmap W} :GoldenRatioResize<CR>
-
 "call <plug>fzf#run({'sink': 'tabedit'})
 let g:indentLine_faster     = 1
 let g:indentLine_setConceal = 0
@@ -145,6 +141,9 @@ autocmd FileType php setlocal commentstring=//\ %s
 set nocompatible
 " Always show sign column. Prevent gutter from resizing on lint error
 set signcolumn=yes
+
+" Enable mouse mode in all modes
+set mouse=a
 
 set hidden
 set cmdheight=2

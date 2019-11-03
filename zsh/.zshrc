@@ -77,6 +77,7 @@ plugins=(
   zsh-completions
   zsh-syntax-highlighting
   fzf
+  tmux
 )
 
 source $ZSH/oh-my-zsh.sh
