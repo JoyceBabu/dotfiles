@@ -12,7 +12,14 @@ export OS_NAME=$( uname -s | tr '[:upper:]' '[:lower:]' )
 export EDITOR="vim"
 export GIT_EDITOR='vim'
 
-shell=$(basename $SHELL)
+if [ -n "$BASH_VERSION" ]; then
+	shell=bash
+elif [ -n "$ZSH_VERSION" ]; then
+	shell=zsh
+else
+	shell=$(basename $SHELL)
+fi
+
 source ~/.iterm2_shell_integration.$shell
 unset shell
 
