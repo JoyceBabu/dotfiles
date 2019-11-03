@@ -42,22 +42,7 @@ Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'christoomey/vim-tmux-navigator'
 
 " Autocomplete
-if has('nvim')
-  Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-else
-  Plug 'Shougo/deoplete.nvim'
-  Plug 'roxma/nvim-yarp'
-  Plug 'roxma/vim-hug-neovim-rpc'
-endif
-Plug 'Shougo/neco-syntax'
-Plug 'thalesmello/webcomplete.vim'
-
 Plug 'neoclide/coc.nvim', { 'branch': 'release','do': ':CocInstall coc-tsserver coc-json coc-java coc-tabnine coc-pairs coc-yaml coc-phpls coc-highlightcoc-git coc-rls' }
-" Plug 'prabirshrestha/vim-lsp'
-" Plug 'prabirshrestha/async.vim'
-" Plug 'lighttiger2505/deoplete-vim-lsp'
-" autocmd InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
-
 
 call plug#end()
 
@@ -75,21 +60,6 @@ autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif
 let g:workspace_session_directory = $HOME . '/.cache/vim/sessions/'
 let g:workspace_undodir='.undodir'
 " CloseHiddenBuffers
-
-" Deoplete
-set completeopt-=preview
-let g:deoplete#enable_at_startup = 0
-if !exists('g:deoplete#omni#input_patterns')
-  let g:deoplete#omni#input_patterns = {}
-endif
-
-let g:deoplete#ignore_sources = get(g:, 'deoplete#ignore_sources', {})
-let g:deoplete#ignore_sources.php = get(g:deoplete#ignore_sources, 'php', ['omni', 'around', 'member'])
-call deoplete#custom#option('max_list', 10)
-
-" inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
-
-" source $HOME/.config/nvim/config/lsp.vimrc
 
 let g:fugitive_gitlab_domains = ['https://git.ennexa.org']
 let g:golden_ratio_autocommand = 0
