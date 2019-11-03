@@ -80,7 +80,7 @@ plugins=(
   tmux
 )
 
-source $ZSH/oh-my-zsh.sh
+[ -f $ZSH/oh-my-zsh.sh ] && source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
@@ -109,5 +109,5 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-[[ ! -f ~/.shell_config ]] || source ~/.shell_config
+[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+[[ -f ~/.shell_config ]] && source ~/.shell_config
