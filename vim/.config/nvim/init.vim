@@ -165,9 +165,15 @@ syntax on
 filetype indent plugin on
 
 " imap <S-Tab> <plug>(fzf-complete-line)
+" Quick navigation
 nnoremap J 20j
 nnoremap K 20k
+" Execute current line in $SHELL and replace it with the output
+noremap Q !!$SHELL<cr>
+" Handle indentation when pressing enter from withing curly braces
 inoremap <expr> <cr> getline(".")[col(".")-2:col(".")-1]=="{}" ? "<cr><esc>O" : "<cr>"
+" Quick edit $MYVIMRC
+nmap <silent> ,ev :e $MYVIMRC<cr>
 
 " NERDTree Toggle
 let NERDTreeHijackNetrw = 0
