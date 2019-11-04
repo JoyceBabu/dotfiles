@@ -160,3 +160,6 @@ noremap <silent> <Leader>f :NERDTreeFind<CR> <C-w>=
 
 nnoremap <c-p> :call fzf#run({'sink': 'tabedit'})<cr>
 
+if filereadable("~/.vimrc.local")
+  source ~/.vimrc.local
+endif
