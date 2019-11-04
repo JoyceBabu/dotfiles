@@ -133,6 +133,7 @@ set encoding=utf-8  " The encoding displayed.
 set fileencoding=utf-8  " The encoding written to file.
 set colorcolumn=81
 set history=100
+set cursorline
 
 syntax on
 filetype indent plugin on
