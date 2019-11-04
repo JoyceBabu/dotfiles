@@ -147,7 +147,7 @@ noremap Q !!$SHELL<cr>
 " Handle indentation when pressing enter from withing curly braces
 inoremap <expr> <cr> getline(".")[col(".")-2:col(".")-1]=="{}" ? "<cr><esc>O" : "<cr>"
 " Quick edit $MYVIMRC
-nmap <silent> ,ev :e $MYVIMRC<cr>
+nmap <silent> ,ev :vsp $MYVIMRC<cr>
 
 " NERDTree Toggle
 let NERDTreeHijackNetrw = 0
