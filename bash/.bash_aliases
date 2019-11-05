@@ -28,7 +28,7 @@ alias rust_init='
 alias python_init="alias venv='python3 -m venv'"
 alias open_ports="sudo lsof -iTCP -sTCP:LISTEN -P -n"
 
-if /usr/bin/which -s nvim; then
+if /usr/bin/which nvim > /dev/null; then
     alias vim=nvim
     alias vi=nvim
 fi
