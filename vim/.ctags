@@ -1,0 +1,41 @@
+--tag-relative=yes
+-R
+
+--regex-PHP=/abstract\s+class\s+([^ ]+)/\1/c/
+--regex-PHP=/interface\s+([^ ]+)/\1/c/
+--regex-PHP=/(public\s+|static\s+|protected\s+|private\s+)\$([^ 	=]+)/\2/p/
+--regex-PHP=/const\s+([^ 	=]+)/\1/d/
+--regex-PHP=/final\s+(public\s+|static\s+|abstract\s+|protected\s+|private\s+)function\s+\&?\s*([^ (]+)/\2/f/
+--regex-PHP=/^[ \t]*trait[ \t]+([a-z0_9_]+)/\1/t,traits/i
+--PHP-kinds=+cfpd
+
+--exclude=.phpmd-rulesets.xml
+--exclude=.phpcs-rulesets.xml
+--exclude=.ignore
+--exclude=.php_cs.cache
+--exclude=.phpcd
+--exclude=composer.json
+--exclude=composer.lock
+--exclude=composer/phpunit/php-code-coverage
+--exclude=composer/bin
+--exclude=composer.phar
+
+--exclude=.neovimsession.vim
+--exclude=webpack.mix.js
+--exclude=node_modules
+--exclude=bower_components
+--exclude=yarn.lock
+--exclude=package-lock.json
+--exclude=*.min.js
+--exclude=*.min.css
+
+--exclude=.git
+
+--exclude=update-db
+--exclude=.data
+--exclude=tmp
+--exclude=log
+--exclude=__dist
+--exclude=db
+--exclude=assets/lib
+

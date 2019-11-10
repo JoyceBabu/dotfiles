@@ -1,0 +1,32 @@
+# Git
+--exclude=.git
+# PHP
+--exclude=.phpmd-rulesets.xml
+--exclude=.phpcs-rulesets.xml
+--exclude=.ignore
+--exclude=.php_cs.cache
+--exclude=.phpcd
+--exclude=composer.json
+--exclude=composer.lock
+--exclude=composer/phpunit/php-code-coverage
+--exclude=composer/bin
+--exclude=composer.phar
+# Vim
+--exclude=.neovimsession.vim
+--exclude=webpack.mix.js
+# Frontend
+--exclude=node_modules
+--exclude=bower_components
+--exclude=yarn.lock
+--exclude=package-lock.json
+--exclude=*.min.js
+--exclude=*.min.css
+# Project Specific
+--exclude=update-db
+--exclude=.data
+--exclude=tmp
+--exclude=log
+--exclude=__dist
+--exclude=db
+--exclude=assets/lib
+
