@@ -1,6 +1,7 @@
 {
   "codeLens.enable": true,
   "coc.preferences.colorSupport": true,
+  "coc.preferences.jumpCommand": "vsp",
   "diagnostic.errorSign": "●",
   "diagnostic.warningSign": "●",
   "diagnostic.infoSign": "!",
