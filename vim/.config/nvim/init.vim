@@ -24,6 +24,7 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-commentary' " Comment code
 Plug 'editorconfig/editorconfig-vim'
 " Plug 'terryma/vim-multiple-cursors'
+Plug 'AndrewRadev/splitjoin.vim' , { 'on': ['SplitjoinSplit', 'SplitjoinJoin']}
 
 Plug 'haya14busa/incsearch.vim'
 Plug 'machakann/vim-highlightedyank'
@@ -190,6 +191,8 @@ set fileencoding=utf-8  " The encoding written to file.
 set updatetime=300
 " Handle indentation when pressing enter from withing curly braces
 inoremap <expr> <cr> getline(".")[col(".")-2:col(".")-1]=="{}" ? "<cr><esc>O" : "<cr>"
+" nnoremap ,J :SplitjoinJoin<CR>
+" nnoremap ,S :SplitjoinSplit<CR>
 
 if has('persistent_undo')
   let target_path = expand('~/.cache/vim/vim-persisted-undo/')
