@@ -255,6 +255,8 @@ nnoremap <c-p> :call fzf#run({'sink': 'tabedit'})<cr>
 " {{{ FileType Overrides
 
 autocmd FileType php setlocal commentstring=//\ %s
+autocmd FileType yaml setlocal shiftwidth=2 softtabstop=2
+
 
 " }}}
 
