@@ -99,13 +99,12 @@ let g:fugitive_gitlab_domains = ['https://git.ennexa.org']
 
 "call <plug>fzf#run({'sink': 'tabedit'})
 
-autocmd FileType php setlocal commentstring=//\ %s
-syntax on
-filetype indent plugin on
 
 " {{{ Basic Settings
 
 set nocompatible
+syntax on
+filetype indent plugin on
 
 " }}}
 
@@ -253,11 +252,21 @@ nnoremap <c-p> :call fzf#run({'sink': 'tabedit'})<cr>
 
 " }}}
 
+" {{{ FileType Overrides
+
+autocmd FileType php setlocal commentstring=//\ %s
+
+" }}}
+
+" {{{ Custom Mappings
+
 " Execute current line in $SHELL and replace it with the output
 noremap Q !!$SHELL<cr>
 " Quick edit $MYVIMRC
 nnoremap ,ve :vsp $MYVIMRC<cr>
 nnoremap ,vr :source $MYVIMRC<cr>
+
+" }}}
 
 if filereadable("~/.vimrc.local")
   source ~/.vimrc.local
