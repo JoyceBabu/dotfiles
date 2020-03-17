@@ -24,6 +24,7 @@ Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-commentary' " Comment code
 Plug 'tpope/vim-sensible'
+Plug 'wincent/terminus'
 Plug 'editorconfig/editorconfig-vim'
 " Plug 'terryma/vim-multiple-cursors'
 Plug 'AndrewRadev/splitjoin.vim' , { 'on': ['SplitjoinSplit', 'SplitjoinJoin']}
