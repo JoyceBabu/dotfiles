@@ -220,6 +220,9 @@ set nostartofline " prevent cursor from moving when scrolling
 nnoremap J 20j
 nnoremap K 20k
 
+" Builtin Pluign. Hit `%` on `if` to jump to `else`.
+runtime macros/matchit.vim
+
 " }}}
 
 " {{{ File Management
