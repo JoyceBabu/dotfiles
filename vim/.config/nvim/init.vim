@@ -41,6 +41,8 @@ Plug 'vim-airline/vim-airline' " Airline status bar
 Plug 'camspiers/lens.vim'
 Plug 'thaerkh/vim-workspace'
 
+" Search & Replace
+Plug 'osyo-manga/vim-over' " Realtime search/replace preview (use command OverCommandLine)
 " Git Integration
 Plug 'tpope/vim-fugitive'
 Plug 'jreybert/vimagit'
