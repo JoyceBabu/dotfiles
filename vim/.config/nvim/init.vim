@@ -26,6 +26,9 @@ Plug 'editorconfig/editorconfig-vim'
 " Plug 'terryma/vim-multiple-cursors'
 Plug 'AndrewRadev/splitjoin.vim' , { 'on': ['SplitjoinSplit', 'SplitjoinJoin']}
 
+" Syntax
+Plug 'StanAngeloff/php.vim'
+
 Plug 'haya14busa/incsearch.vim'
 Plug 'machakann/vim-highlightedyank'
 Plug 'jeffkreeftmeijer/vim-numbertoggle' "Toggle relative / absolute number based on context
