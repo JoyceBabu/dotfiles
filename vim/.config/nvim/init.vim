@@ -25,6 +25,7 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-commentary' " Comment code
 Plug 'tpope/vim-sensible'
 Plug 'wincent/terminus'
+Plug 'suy/vim-context-commentstring' " Context aware commentstring in mixed mode HTML
 Plug 'editorconfig/editorconfig-vim'
 " Plug 'terryma/vim-multiple-cursors'
 Plug 'AndrewRadev/splitjoin.vim' , { 'on': ['SplitjoinSplit', 'SplitjoinJoin']}
