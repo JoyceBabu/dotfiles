@@ -23,6 +23,7 @@ Plug 'TaDaa/vimade'                        "| Fade vim window on focus lose
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-commentary' " Comment code
+Plug 'tpope/vim-sensible'
 Plug 'editorconfig/editorconfig-vim'
 " Plug 'terryma/vim-multiple-cursors'
 Plug 'AndrewRadev/splitjoin.vim' , { 'on': ['SplitjoinSplit', 'SplitjoinJoin']}
