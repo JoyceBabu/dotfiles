@@ -38,7 +38,7 @@ Plug 'machakann/vim-highlightedyank'
 Plug 'jeffkreeftmeijer/vim-numbertoggle' "Toggle relative / absolute number based on context
 Plug 'Yggdroot/indentLine'
 Plug 'vim-airline/vim-airline' " Airline status bar
-Plug 'roman/golden-ratio', { 'on': 'GoldenRatioResize' }
+Plug 'camspiers/lens.vim'
 Plug 'thaerkh/vim-workspace'
 
 " Git Integration
