@@ -16,7 +16,8 @@ endif
 call plug#begin('~/.local/share/nvim/plugged')
 
 " Theme
-Plug 'mhartington/oceanic-next'
+Plug 'mhartington/oceanic-next'            " Dark Theme
+Plug 'TaDaa/vimade'                        "| Fade vim window on focus lose
 " Plug 'dracula/vim', { 'as': 'dracula' }
 
 Plug 'tpope/vim-surround'
@@ -130,6 +131,13 @@ if has('mac') && $COLORTERM == '' && !has('gui_vimr') && !has('gui_running')
   set t_Co=256
   set notermguicolors
 endif
+
+let g:vimade = {}
+let g:vimade.usecursorhold=1
+let g:vimade.fadelevel = 0.8
+let g:lens#width_resize_max = 80
+let g:lens#disabled_filetypes = ['nerdtree', 'fzf']
+" let g:vimade.enablesigns = 1
 
 " {{{ Theme
 
