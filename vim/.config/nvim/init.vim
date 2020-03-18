@@ -66,12 +66,32 @@ call plug#end()
 
 " {{{ Autocompletion powered by coc.vim
 
-" use <c-space>for trigger completion
-inoremap <silent><expr> <c-space> coc#refresh()
-inoremap <expr> <Tab> pumvisible() ? '<C-n>' : '<Tab>'
+" use <tab> for trigger completion and navigate to the next complete item
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~ '\s'
+endfunction
+
+inoremap <silent><expr> <Tab>
+      \ pumvisible() ? "\<C-n>" :
+      \ <SID>check_back_space() ? "\<Tab>" :
+      \ coc#refresh()
+
+function! s:handle_cr()
+    if pumvisible()
+        " if completion window is visible, accept selection
+        return coc#_select_confirm()
+    elseif index(['{}', '[]', '()'], getline(".")[col(".")-2:col(".")-1]) >= 0
+        " if we are inside empty matching brackets, inset newline and indent
+        return "\<cr>\<esc>\O"
+    else
+        " Break undo level and insert <CR>
+        return "\<C-g>\u\<cr>"
+    endif
+endfunction
+
 inoremap <expr> <S-Tab> pumvisible() ? '<C-p>' : '<S-Tab>'
-" inoremap <expr> <cr> pumvisible() ? '\<C-y>' : '\<C-g>u\<CR>'
-inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm() : '<C-g>u<CR>'
+inoremap <silent> <expr> <cr> <SID>handle_cr()
 
 " Remap keys for gotos
 nmap <silent> gd <Plug>(coc-definition)
@@ -211,15 +231,16 @@ set backspace=indent,eol,start
 set shiftwidth=4
 set tabstop=4
 set expandtab autoindent smartindent
-set encoding=utf-8  " The encoding displayed.
-set fileencoding=utf-8  " The encoding written to file.
+set encoding=utf8  " The encoding displayed.
+set fileencoding=utf8  " The encoding written to file.
+
+" Home-row shortcut for escape key
+inoremap kj <esc>
+" nnoremap ,J :SplitjoinJoin<CR>
+" nnoremap ,S :SplitjoinSplit<CR>
 
 " {{{ Undo History
 set updatetime=300
-" Handle indentation when pressing enter from withing curly braces
-inoremap <expr> <cr> getline(".")[col(".")-2:col(".")-1]=="{}" ? "<cr><esc>O" : "<cr>"
-" nnoremap ,J :SplitjoinJoin<CR>
-" nnoremap ,S :SplitjoinSplit<CR>
 
 if has('persistent_undo')
   let target_path = expand('~/.cache/vim/vim-persisted-undo/')
