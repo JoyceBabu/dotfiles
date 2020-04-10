@@ -16,37 +16,36 @@ endif
 call plug#begin('~/.local/share/nvim/plugged')
 
 " Theme
-Plug 'mhartington/oceanic-next'            " Dark Theme
-Plug 'TaDaa/vimade'                        "| Fade vim window on focus lose
-" Plug 'dracula/vim', { 'as': 'dracula' }
+Plug 'mhartington/oceanic-next'        " Dark Theme
+Plug 'TaDaa/vimade'                    " Fade vim window on focus lose
 
-Plug 'tpope/vim-surround'
+Plug 'tpope/vim-surround'              " Surround plugin
 Plug 'tpope/vim-repeat'
-Plug 'tpope/vim-commentary' " Comment code
-Plug 'tpope/vim-sensible'
+Plug 'tpope/vim-commentary'            " Better code commenting
+Plug 'tpope/vim-sensible'              " Sensible defaults for vim
 Plug 'wincent/terminus'
-Plug 'suy/vim-context-commentstring' " Context aware commentstring in mixed mode HTML
-Plug 'editorconfig/editorconfig-vim'
-" Plug 'terryma/vim-multiple-cursors'
+Plug 'suy/vim-context-commentstring'   " Context aware commentstring in mixed code
+Plug 'editorconfig/editorconfig-vim'   " Support for EditorConfig
 Plug 'AndrewRadev/splitjoin.vim' , { 'on': ['SplitjoinSplit', 'SplitjoinJoin']}
 
 " Syntax
-Plug 'StanAngeloff/php.vim'
+Plug 'StanAngeloff/php.vim'            " Better syntax highlighting for PHP
 
 Plug 'haya14busa/incsearch.vim'
 Plug 'machakann/vim-highlightedyank'
-Plug 'jeffkreeftmeijer/vim-numbertoggle' "Toggle relative / absolute number based on context
+Plug 'jeffkreeftmeijer/vim-numbertoggle' " use absolute line no in insert mode
 Plug 'Yggdroot/indentLine'
-Plug 'vim-airline/vim-airline' " Airline status bar
-Plug 'camspiers/lens.vim'
-Plug 'thaerkh/vim-workspace'
+Plug 'vim-airline/vim-airline'         " Airline status bar
+Plug 'camspiers/lens.vim'              " Auto expand active window
+Plug 'thaerkh/vim-workspace'           " Workspace
 
 " Search & Replace
-Plug 'osyo-manga/vim-over' " Realtime search/replace preview (use command OverCommandLine)
+Plug 'osyo-manga/vim-over'             " Realtime replace preview :OverCommandLine
+
 " Git Integration
 Plug 'tpope/vim-fugitive'
 Plug 'jreybert/vimagit'
-Plug 'shumphrey/fugitive-gitlab.vim' " for :Gbrowse
+Plug 'shumphrey/fugitive-gitlab.vim'   " for :Gbrowse
 Plug 'airblade/vim-gitgutter', { 'on': ['GitGutterEnable', 'GitGutterDisable'] } " Git integration in gutter
 
 " File Management
@@ -135,33 +134,32 @@ endfunction
 let g:workspace_session_directory = $HOME . '/.cache/vim/sessions/'
 let g:workspace_persist_undo_history = 1
 let g:workspace_undodir='.undodir'
-
-let g:fugitive_gitlab_domains = ['https://git.ennexa.org']
-
-"call <plug>fzf#run({'sink': 'tabedit'})
+let g:workspace_session_disable_on_args = 1
 
 
 " {{{ Basic Settings
 
 set nocompatible
-syntax on
-filetype indent plugin on
+syntax on                        " Enable colour syntax highlighting
+filetype indent on               " Enable loading of plugin files
+filetype plugin on               " Enable loading of indent files
 
 " }}}
 
 " {{{ User Interface
 
-set number relativenumber " Enable display of relative line number
-set signcolumn=yes " Always show sign colum. This prevents resizing when linting is enabled.
-set colorcolumn=81 " Show a vertical line after 80 chars
-set cursorline " Highlight current line
+set number relativenumber        " Enable display of relative line number
+set signcolumn=yes               " Always show sign colum to prevent resize
+set colorcolumn=81               " Show a vertical line after 80 chars
+set cursorline                   " Highlight current line
 
 set hidden
 set cmdheight=2
 set shortmess+=c
-set history=100
-
-set mouse=a " Enable mouse interaction in all modes
+set history=1000                 " Keep 1000 lines of command line history
+set lazyredraw                   " Avoid unnecessary UI redraw
+set foldenable                   " Enable block folding
+set mouse=a                      " Enable mouse interaction in all modes
 
 set termguicolors
 if has('mac') && $COLORTERM == '' && !has('gui_vimr') && !has('gui_running')
@@ -175,6 +173,14 @@ let g:vimade.fadelevel = 0.8
 let g:lens#width_resize_max = 80
 let g:lens#disabled_filetypes = ['nerdtree', 'fzf']
 " let g:vimade.enablesigns = 1
+
+set conceallevel=1
+
+" {{{ Git Integration
+
+let g:fugitive_gitlab_domains = ['https://git.ennexa.org']
+
+" }}}
 
 " {{{ Theme
 
@@ -199,8 +205,6 @@ set showbreak=↪\ \ \
 
 " }}}
 
-set conceallevel=1
-
 " {{{ IndentLine Settings
 
 let g:indentLine_faster     = 1
@@ -218,8 +222,7 @@ let g:indentLine_leadingSpaceChar = '.'
 
 " {{{ Windows / Tabs
 
-let g:golden_ratio_autocommand = 0
-set splitbelow splitright
+set splitbelow splitright        " Split windows more intuitively.
 
 " }}}
 
@@ -230,9 +233,11 @@ set splitbelow splitright
 set backspace=indent,eol,start
 set shiftwidth=4
 set tabstop=4
-set expandtab autoindent smartindent
-set encoding=utf8  " The encoding displayed.
-set fileencoding=utf8  " The encoding written to file.
+set expandtab                    " Indent with space
+set autoindent                   " Remember indentation from last line
+set smartindent                  " Attempt to detect indentation intelligently
+set encoding=utf8                " The encoding displayed.
+set fileencoding=utf8            " The encoding written to file.
 
 " Home-row shortcut for escape key
 inoremap kj <esc>
@@ -259,8 +264,9 @@ endif
 " {{{ Code Navigation
 
 " imap <S-Tab> <plug>(fzf-complete-line)
-set nohlsearch ignorecase smartcase  " do not highlight searches, incsearch plugin does this
-set nostartofline " prevent cursor from moving when scrolling
+set nohlsearch ignorecase        " disable highlight searches, incsearch plugin does this
+set smartcase                    " Enable case sensitivity if term is mixed case
+set nostartofline                " prevent cursor from moving when scrolling
 
 " Quick navigation
 nnoremap J 20j
@@ -276,8 +282,7 @@ runtime macros/matchit.vim
 " Search down into subfolders. Provide tab-completion for all file related tasks
 set path+=**
 
-" Display all matching files when doing tab-completion.
-set wildmenu
+set wildmenu                     " visual autocomplete for command menu
 
 set wildignore+=**/vendor/**
 set wildignore+=**/composer/**
@@ -308,7 +313,6 @@ nnoremap <c-p> :call fzf#run({'sink': 'tabedit'})<cr>
 
 autocmd FileType php setlocal commentstring=//\ %s
 autocmd FileType yaml setlocal shiftwidth=2 softtabstop=2
-
 
 " }}}
 
