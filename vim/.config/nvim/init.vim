@@ -272,6 +272,7 @@ endif
 set nohlsearch ignorecase        " disable highlight searches, incsearch plugin does this
 set smartcase                    " Enable case sensitivity if term is mixed case
 set nostartofline                " prevent cursor from moving when scrolling
+set switchbuf=useopen,usetab     " better behavior for the quickfix window and :sb
 
 " Quick navigation
 nnoremap J 20j
