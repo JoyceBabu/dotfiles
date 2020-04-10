@@ -61,6 +61,9 @@ Plug 'christoomey/vim-tmux-navigator'
 " Autocomplete
 Plug 'neoclide/coc.nvim', { 'branch': 'release','do': ':CocInstall coc-tsserver coc-json coc-java coc-tabnine coc-pairs coc-yaml coc-phpls coc-highlightcoc-git coc-rls' }
 
+" Debugging
+Plug 'vim-vdebug/vdebug'
+
 call plug#end()
 
 " {{{ Autocompletion powered by coc.vim
@@ -274,6 +277,15 @@ nnoremap K 20k
 
 " Builtin Pluign. Hit `%` on `if` to jump to `else`.
 runtime macros/matchit.vim
+
+" }}}
+
+" {{{ Debugging
+
+let g:vdebug_options = {'ide_key': 'xdebug'}
+let g:vdebug_options = {'break_on_open': 0}
+let g:vdebug_options = {'server': '127.0.0.1'}
+let g:vdebug_options = {'port': '10000'}
 
 " }}}
 
