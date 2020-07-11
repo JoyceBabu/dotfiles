@@ -248,8 +248,6 @@ set fileencoding=utf8            " The encoding written to file.
 
 " Home-row shortcut for escape key
 inoremap kj <esc>
-" nnoremap ,J :SplitjoinJoin<CR>
-" nnoremap ,S :SplitjoinSplit<CR>
 
 " {{{ Undo History
 set updatetime=300
@@ -275,10 +273,6 @@ set nohlsearch ignorecase        " disable highlight searches, incsearch plugin 
 set smartcase                    " Enable case sensitivity if term is mixed case
 set nostartofline                " prevent cursor from moving when scrolling
 set switchbuf=useopen,usetab     " better behavior for the quickfix window and :sb
-
-" Quick navigation
-nnoremap J 20j
-nnoremap K 20k
 
 " Builtin Pluign. Hit `%` on `if` to jump to `else`.
 runtime macros/matchit.vim
