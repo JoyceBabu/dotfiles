@@ -41,6 +41,8 @@ Plug 'thaerkh/vim-workspace'           " Workspace
 
 " Search & Replace
 Plug 'osyo-manga/vim-over'             " Realtime replace preview :OverCommandLine
+Plug 'tpope/vim-abolish'               " Case aware substitution, autocorrection
+                                       " case coercison
 
 " Git Integration
 Plug 'tpope/vim-fugitive'
