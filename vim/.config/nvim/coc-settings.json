@@ -47,7 +47,7 @@
   ],
   "intelephense.completionProvider": false,
   "intelephense.completionProvider.maxItems": 0,
-  "intelephense.environment.phpVersion": "7.3.13",
+  "intelephense.environment.phpVersion": "7.4.8",
   "intelephense.diagnostics.undefinedClassConstants": true,
   "intelephense.completion.insertUseDeclaration": true
 }
