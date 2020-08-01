@@ -98,24 +98,24 @@ inoremap <expr> <S-Tab> pumvisible() ? '<C-p>' : '<S-Tab>'
 inoremap <silent> <expr> <cr> <SID>handle_cr()
 
 " Remap keys for gotos
-nmap <silent> [g <Plug>(coc-diagnostic-prev)
-nmap <silent> ]g <Plug>(coc-diagnostic-next)
-nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gy <Plug>(coc-type-definition)
-nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
+nnoremap <silent> [g <Plug>(coc-diagnostic-prev)
+nnoremap <silent> ]g <Plug>(coc-diagnostic-next)
+nnoremap <silent> gd <Plug>(coc-definition)
+" nnoremap <silent> gy <Plug>(coc-type-definition)
+" nnoremap <silent> gi <Plug>(coc-implementation)
+" nnoremap <silent> gr <Plug>(coc-references)
 " Remap for rename current word
-nmap <leader>rn <Plug>(coc-rename)
+nnoremap <leader>rn <Plug>(coc-rename)
 
 " Create mappings for function text object, requires document symbols feature of languageserver.
-xmap if <Plug>(coc-funcobj-i)
-xmap af <Plug>(coc-funcobj-a)
-omap if <Plug>(coc-funcobj-i)
-omap af <Plug>(coc-funcobj-a)
+xnoremap if <Plug>(coc-funcobj-i)
+xnoremap af <Plug>(coc-funcobj-a)
+onoremap if <Plug>(coc-funcobj-i)
+onoremap af <Plug>(coc-funcobj-a)
 
 " Remap for format selected region
-xmap <leader>F  <Plug>(coc-format-selected)
-nmap <leader>F  <Plug>(coc-format-selected)
+xnoremap <leader>F  <Plug>(coc-format-selected)
+nnoremap <leader>F  <Plug>(coc-format-selected)
 
 command! -nargs=+ -complete=file
       \ SplitIfNotOpen4COC
@@ -146,7 +146,6 @@ let g:workspace_session_disable_on_args = 1
 
 " {{{ Basic Settings
 
-set nocompatible
 syntax on                        " Enable colour syntax highlighting
 filetype indent on               " Enable loading of plugin files
 filetype plugin on               " Enable loading of indent files
@@ -238,11 +237,11 @@ set splitbelow splitright        " Split windows more intuitively.
 " {{{ Editing
 
 set backspace=indent,eol,start
+set tabstop=8
+set softtabstop=4
 set shiftwidth=4
-set tabstop=4
 set expandtab                    " Indent with space
 set autoindent                   " Remember indentation from last line
-set smartindent                  " Attempt to detect indentation intelligently
 set encoding=utf8                " The encoding displayed.
 set fileencoding=utf8            " The encoding written to file.
 
