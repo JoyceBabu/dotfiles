@@ -23,6 +23,7 @@
     "fileinfo",
     "filter",
     "gd",
+    "gmp",
     "hash",
     "iconv",
     "intl",
