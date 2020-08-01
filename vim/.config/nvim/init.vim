@@ -117,6 +117,7 @@ onoremap af <Plug>(coc-funcobj-a)
 " Remap for format selected region
 xnoremap <leader>F  <Plug>(coc-format-selected)
 nnoremap <leader>F  <Plug>(coc-format-selected)
+inoremap <C-;> <esc>
 
 command! -nargs=+ -complete=file
       \ SplitIfNotOpen4COC
@@ -159,7 +160,8 @@ set number relativenumber        " Enable display of relative line number
 set signcolumn=yes               " Always show sign colum to prevent resize
 set colorcolumn=81               " Show a vertical line after 80 chars
 set cursorline                   " Highlight current line
-
+" set showmatch                  " highlight matching [{()}]
+" set matchtime=0
 set hidden
 set cmdheight=2
 set shortmess+=c
@@ -245,6 +247,8 @@ set expandtab                    " Indent with space
 set autoindent                   " Remember indentation from last line
 set encoding=utf8                " The encoding displayed.
 set fileencoding=utf8            " The encoding written to file.
+" set spell
+" set spelllang=en
 
 " Home-row shortcut for escape key
 inoremap kj <esc>
@@ -276,6 +280,23 @@ set switchbuf=useopen,usetab     " better behavior for the quickfix window and :
 
 " Builtin Pluign. Hit `%` on `if` to jump to `else`.
 runtime macros/matchit.vim
+
+" {{{ Code Foldings
+"
+augroup code_folding
+    au!
+    au FileType php setlocal foldmethod=manual
+    au FileType javascript setlocal foldmethod=syntax
+    au FileType javascript.jsx setlocal foldmethod=syntax
+    au FileType typescript setlocal foldmethod=syntax
+    au FileType typescript.tsx setlocal foldmethod=syntax
+    au FileType json setlocal foldmethod=syntax
+    au FileType html setlocal foldmethod=manual
+    au FileType scss setlocal foldmethod=indent
+    au FileType css setlocal foldmethod=indent
+augroup END
+
+" }}}
 
 " }}}
 
@@ -329,6 +350,7 @@ autocmd FileType yaml setlocal shiftwidth=2 softtabstop=2
 
 " {{{ Custom Mappings
 
+let mapleader = ','
 " Execute current line in $SHELL and replace it with the output
 noremap Q !!$SHELL<cr>
 " Quick edit $MYVIMRC
