@@ -56,6 +56,7 @@ Plug 'junegunn/fzf.vim'
 Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'ryanoasis/vim-devicons'
+Plug 'wsdjeg/vim-fetch'                " Handle line & col no in filename
 
 " Navigation
 Plug 'christoomey/vim-tmux-navigator'
