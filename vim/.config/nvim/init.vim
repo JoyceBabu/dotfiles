@@ -1,6 +1,12 @@
 " vim: fdm=marker foldenable sw=4 ts=4 sts=4
 " "zo" to open folds, "zc" to close, "zn" to disable, "zi" to toggle
 
+" Declare group for autocmd for whole init.vim, and clear it
+" Otherwise every autocmd will be added to group each time vimrc sourced!
+augroup vimrc
+  autocmd!
+augroup END
+
 " {{{ Vim Plug Auto Setup
 
 if empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
@@ -285,16 +291,16 @@ runtime macros/matchit.vim
 " {{{ Code Foldings
 "
 augroup code_folding
-    au!
-    au FileType php setlocal foldmethod=manual
-    au FileType javascript setlocal foldmethod=syntax
-    au FileType javascript.jsx setlocal foldmethod=syntax
-    au FileType typescript setlocal foldmethod=syntax
-    au FileType typescript.tsx setlocal foldmethod=syntax
-    au FileType json setlocal foldmethod=syntax
-    au FileType html setlocal foldmethod=manual
-    au FileType scss setlocal foldmethod=indent
-    au FileType css setlocal foldmethod=indent
+    autocmd!
+    autocmd FileType php setlocal foldmethod=manual
+    autocmd FileType javascript setlocal foldmethod=syntax
+    autocmd FileType javascript.jsx setlocal foldmethod=syntax
+    autocmd FileType typescript setlocal foldmethod=syntax
+    autocmd FileType typescript.tsx setlocal foldmethod=syntax
+    autocmd FileType json setlocal foldmethod=syntax
+    autocmd FileType html setlocal foldmethod=manual
+    autocmd FileType scss setlocal foldmethod=indent
+    autocmd FileType css setlocal foldmethod=indent
 augroup END
 
 " }}}
@@ -344,8 +350,8 @@ nnoremap <c-p> :call fzf#run({'sink': 'tabedit'})<cr>
 
 " {{{ FileType Overrides
 
-autocmd FileType php setlocal commentstring=//\ %s
-autocmd FileType yaml setlocal shiftwidth=2 softtabstop=2
+autocmd vimrc FileType php setlocal commentstring=//\ %s
+autocmd vimrc FileType yaml setlocal shiftwidth=2 softtabstop=2
 
 " }}}
 
