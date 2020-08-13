@@ -366,6 +366,9 @@ noremap Q !!$SHELL<cr>
 " Quick edit $MYVIMRC
 nnoremap ,ve :vsp $MYVIMRC<cr>
 nnoremap ,vr :source $MYVIMRC<cr>
+" indent without kill the selection in vmode
+vmap < <gv
+vmap > >gv
 " Save files as root
 cnoremap w!! execute ':w suda://%'
 
