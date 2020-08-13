@@ -268,6 +268,12 @@ let g:indentLine_char_list = ['|', '¦', '┆', '┊']
 
 set splitbelow splitright        " Split windows more intuitively.
 
+" Disable vim->tmux navigation when the Vim pane is zoomed in tmux
+let g:tmux_navigator_disable_when_zoomed = 1
+
+" Rebalance windows on vim resize when tmux panes are created/destroyed/resized
+autocmd vimrc VimResized * :wincmd =
+
 " Zoom / Restore window.
 function! s:ZoomToggle() abort
     if exists('t:zoomed') && t:zoomed
