@@ -1,6 +1,8 @@
 " vim: fdm=marker foldenable sw=4 ts=4 sts=4
 " "zo" to open folds, "zc" to close, "zn" to disable, "zi" to toggle
 
+" {{{ Initialization
+
 " Skip initialization for vim-tiny or vim-small.
 if !1 | finish | endif
 
@@ -9,6 +11,8 @@ if !1 | finish | endif
 augroup vimrc
   autocmd!
 augroup END
+
+let mapleader = ','
 
 " {{{ Vim Plug Auto Setup
 
@@ -21,6 +25,10 @@ if empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
 endif
 
 " }}}
+
+" }}}
+
+" {{{ Load Plugins
 
 call plug#begin('~/.local/share/nvim/plugged')
 
@@ -78,6 +86,8 @@ Plug 'neoclide/coc.nvim', { 'branch': 'release','do': ':CocInstall coc-tsserver 
 Plug 'vim-vdebug/vdebug'
 
 call plug#end()
+
+" }}}
 
 " {{{ Autocompletion powered by coc.vim
 
@@ -144,12 +154,32 @@ function! s:show_documentation()
   endif
 endfunction
 
+" }}}
+
+" {{{ Project / Session
+
 " Workspace
 let g:workspace_session_directory = $HOME . '/.cache/vim/sessions/'
 let g:workspace_persist_undo_history = 1
 let g:workspace_undodir='.undodir'
 let g:workspace_session_disable_on_args = 1
 
+" {{{ Undo History
+set updatetime=300
+
+if has('persistent_undo')
+  let target_path = expand('~/.cache/vim/vim-persisted-undo/')
+
+  if !isdirectory(target_path)
+    call system('mkdir -p ' . target_path)
+  endif
+
+  let &undodir = target_path
+  set undofile
+endif
+" }}}
+
+" }}}
 
 " {{{ Basic Settings
 
@@ -258,21 +288,6 @@ set fileencoding=utf8            " The encoding written to file.
 " Home-row shortcut for escape key
 inoremap kj <esc>
 
-" {{{ Undo History
-set updatetime=300
-
-if has('persistent_undo')
-  let target_path = expand('~/.cache/vim/vim-persisted-undo/')
-
-  if !isdirectory(target_path)
-    call system('mkdir -p ' . target_path)
-  endif
-
-  let &undodir = target_path
-  set undofile
-endif
-" }}}
-
 " }}}
 
 " {{{ Code Navigation
@@ -367,7 +382,6 @@ cnoremap w!! execute ':w suda://%'
 
 " {{{ Custom Mappings
 
-let mapleader = ','
 " Execute current line in $SHELL and replace it with the output
 noremap Q !!$SHELL<cr>
 " Quick edit $MYVIMRC
@@ -379,6 +393,10 @@ vmap > >gv
 
 " }}}
 
+" {{{ Overrides
+
 if filereadable("~/.vimrc.local")
   source ~/.vimrc.local
 endif
+
+" }}}
