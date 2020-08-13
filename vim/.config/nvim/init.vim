@@ -353,6 +353,18 @@ autocmd vimrc FileType yaml setlocal shiftwidth=2 softtabstop=2
 
 " }}}
 
+" {{{ Command Line Modes
+
+" Bash like keys for the command line
+cnoremap <C-A>		<Home>
+cnoremap <C-E>		<End>
+cnoremap <C-K>		<C-U>
+
+" Save files as root
+cnoremap w!! execute ':w suda://%'
+
+" }}}
+
 " {{{ Custom Mappings
 
 let mapleader = ','
@@ -364,8 +376,6 @@ nnoremap ,vr :source $MYVIMRC<cr>
 " indent without kill the selection in vmode
 vmap < <gv
 vmap > >gv
-" Save files as root
-cnoremap w!! execute ':w suda://%'
 
 " }}}
 
