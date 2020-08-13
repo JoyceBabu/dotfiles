@@ -268,6 +268,22 @@ let g:indentLine_char_list = ['|', '¦', '┆', '┊']
 
 set splitbelow splitright        " Split windows more intuitively.
 
+" Zoom / Restore window.
+function! s:ZoomToggle() abort
+    if exists('t:zoomed') && t:zoomed
+        execute t:zoom_winrestcmd
+        let t:zoomed = 0
+    else
+        let t:zoom_winrestcmd = winrestcmd()
+        resize
+        vertical resize
+        let t:zoomed = 1
+    endif
+endfunction
+
+command! ZoomToggle call s:ZoomToggle()
+nnoremap <silent> <C-m> :ZoomToggle<CR>
+
 " }}}
 
 " }}}
