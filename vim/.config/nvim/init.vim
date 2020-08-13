@@ -57,6 +57,7 @@ Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'ryanoasis/vim-devicons'
 Plug 'wsdjeg/vim-fetch'                " Handle line & col no in filename
+Plug 'lambdalisue/suda.vim'            " Write file with sudo
 
 " Navigation
 Plug 'christoomey/vim-tmux-navigator'
@@ -356,6 +357,8 @@ noremap Q !!$SHELL<cr>
 " Quick edit $MYVIMRC
 nnoremap ,ve :vsp $MYVIMRC<cr>
 nnoremap ,vr :source $MYVIMRC<cr>
+" Save files as root
+cnoremap w!! execute ':w suda://%'
 
 " }}}
 
