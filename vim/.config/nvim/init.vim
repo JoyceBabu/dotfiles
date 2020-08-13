@@ -1,6 +1,9 @@
 " vim: fdm=marker foldenable sw=4 ts=4 sts=4
 " "zo" to open folds, "zc" to close, "zn" to disable, "zi" to toggle
 
+" Skip initialization for vim-tiny or vim-small.
+if !1 | finish | endif
+
 " Declare group for autocmd for whole init.vim, and clear it
 " Otherwise every autocmd will be added to group each time vimrc sourced!
 augroup vimrc
