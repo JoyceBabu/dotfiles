@@ -34,11 +34,10 @@ Plug 'tpope/vim-commentary'            " Better code commenting
 Plug 'tpope/vim-sensible'              " Sensible defaults for vim
 Plug 'wincent/terminus'
 Plug 'suy/vim-context-commentstring'   " Context aware commentstring in mixed code
-Plug 'editorconfig/editorconfig-vim'   " Support for EditorConfig
-Plug 'AndrewRadev/splitjoin.vim' , { 'on': ['SplitjoinSplit', 'SplitjoinJoin']}
 
 " Syntax
 Plug 'StanAngeloff/php.vim'            " Better syntax highlighting for PHP
+Plug 'AndrewRadev/splitjoin.vim' , { 'on': ['SplitjoinSplit', 'SplitjoinJoin']}
 
 Plug 'haya14busa/incsearch.vim'
 Plug 'machakann/vim-highlightedyank'
@@ -67,6 +66,7 @@ Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'ryanoasis/vim-devicons'
 Plug 'wsdjeg/vim-fetch'                " Handle line & col no in filename
 Plug 'lambdalisue/suda.vim'            " Write file with sudo
+Plug 'editorconfig/editorconfig-vim'   " Support for EditorConfig
 
 " Navigation
 Plug 'christoomey/vim-tmux-navigator'
@@ -143,11 +143,6 @@ function! s:show_documentation()
     call CocAction('doHover')
   endif
 endfunction
-
-" Close preview when completion is done
-" autocmd! CompleteDone * if pumvisible() == 0 | pclose | endif
-
-" }}}
 
 " Workspace
 let g:workspace_session_directory = $HOME . '/.cache/vim/sessions/'
