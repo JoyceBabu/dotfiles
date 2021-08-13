@@ -80,7 +80,7 @@ Plug 'editorconfig/editorconfig-vim'   " Support for EditorConfig
 Plug 'christoomey/vim-tmux-navigator'
 
 " Autocomplete
-Plug 'neoclide/coc.nvim', { 'branch': 'release','do': ':CocInstall coc-tsserver coc-json coc-java coc-tabnine coc-pairs coc-yaml coc-phpls coc-highlightcoc-git coc-rls' }
+Plug 'neoclide/coc.nvim', { 'branch': 'release','do': ':CocInstall coc-diagnostic coc-tsserver coc-json coc-java coc-tabnine coc-pairs coc-yaml coc-phpls coc-highlightcoc-git coc-snippets' }
 
 " Debugging
 Plug 'vim-vdebug/vdebug'
@@ -89,7 +89,13 @@ call plug#end()
 
 " }}}
 
-" {{{ Autocompletion powered by coc.vim
+" {{{ Language Support
+
+" {{{ PHP
+
+" {{{ Coc / Intelephense
+
+highlight! CocCodeLens guifg=#606060 ctermfg=60
 
 " use <tab> for trigger completion and navigate to the next complete item
 function! s:check_back_space() abort
@@ -118,33 +124,8 @@ endfunction
 inoremap <expr> <S-Tab> pumvisible() ? '<C-p>' : '<S-Tab>'
 inoremap <silent> <expr> <cr> <SID>handle_cr()
 
-" Remap keys for gotos
-nnoremap <silent> [g <Plug>(coc-diagnostic-prev)
-nnoremap <silent> ]g <Plug>(coc-diagnostic-next)
-nnoremap <silent> gd <Plug>(coc-definition)
-" nnoremap <silent> gy <Plug>(coc-type-definition)
-" nnoremap <silent> gi <Plug>(coc-implementation)
-" nnoremap <silent> gr <Plug>(coc-references)
-" Remap for rename current word
-nnoremap <leader>rn <Plug>(coc-rename)
-
-" Create mappings for function text object, requires document symbols feature of languageserver.
-xnoremap if <Plug>(coc-funcobj-i)
-xnoremap af <Plug>(coc-funcobj-a)
-onoremap if <Plug>(coc-funcobj-i)
-onoremap af <Plug>(coc-funcobj-a)
-
-" Remap for format selected region
-xnoremap <leader>F  <Plug>(coc-format-selected)
-nnoremap <leader>F  <Plug>(coc-format-selected)
-inoremap <C-;> <esc>
-
-command! -nargs=+ -complete=file
-      \ SplitIfNotOpen4COC
-      \ call lh#coc#_split_open(<f-args>)
-
-" Use K to show documentation in preview window
-nnoremap <silent> gk :call <SID>show_documentation()<CR>
+imap <silent> <c-u>      <plug>(coc-snippets-expand)
+inoremap <m-p> call CocActionAsync('showSignatureHelp')<cr>
 
 function! s:show_documentation()
   if (index(['vim','help'], &filetype) >= 0)
@@ -153,6 +134,83 @@ function! s:show_documentation()
     call CocAction('doHover')
   endif
 endfunction
+
+" Show quick documentation
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+" Remap keys for gotos
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
+
+" GoTo code navigation.
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gI <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+" Remap for rename current symbol
+nmap <leader>rn <Plug>(coc-rename)
+nmap <leader>qf  <Plug>(coc-fix-current)
+
+" Remap for format selected region
+xmap <leader>F  <Plug>(coc-format-selected)
+
+
+" Create mappings for function text object, requires document symbols feature of languageserver.
+xmap if <Plug>(coc-funcobj-i)
+omap if <Plug>(coc-funcobj-i)
+xmap af <Plug>(coc-funcobj-a)
+omap af <Plug>(coc-funcobj-a)
+xmap ic <Plug>(coc-classobj-i)
+omap ic <Plug>(coc-classobj-i)
+xmap ac <Plug>(coc-classobj-a)
+omap ac <Plug>(coc-classobj-a)
+
+" Apply codeAction to the selected region
+xmap <leader>a  <Plug>(coc-codeaction-selected)
+" Apply codeAction to the current buffer
+nmap <leader>ac  <Plug>(coc-codeaction)
+" Apply AutoFix to problem on the current line.
+nnoremap <leader>prw :CocSearch <C-R>=expand("<cword>")<CR><CR>
+
+" " Use CTRL-S for selections ranges.
+" nmap <silent> <C-s> <Plug>(coc-range-select)
+" xmap <silent> <C-s> <Plug>(coc-range-select)
+
+" command! -nargs=+ -complete=file
+"       \ SplitIfNotOpen4COC
+"       \ call lh#coc#_split_open(<f-args>)
+
+" Add `:OR` command for organize imports of the current buffer.
+command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')
+
+command! -nargs=0 IntelephenseReindex   :call     CocAction('runCommand', 'intelephense.index.workspace')
+
+" Add (Neo)Vim's native statusline support.
+set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
+
+augroup vimrc
+  " Setup formatexpr specified filetype(s).
+  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
+  " Update signature help on jump placeholder.
+  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
+  " Highlight the symbol and its references when holding the cursor.
+  autocmd CursorHold * silent call CocActionAsync('highlight')
+augroup end
+
+" }}}
+
+" {{{ phpactor
+
+au FileType php nmap ,gd :call phpactor#GotoDefinition()<CR>
+au FileType php nmap ,c :call phpactor#ContextMenu()<CR>
+au FileType php nmap ,i :call phpactor#OffsetTypeInfo()<CR>
+
+" }}}
+
+" autocmd vimrc BufWritePost *.php silent! call PhpCsFixerFixFile()
+
+" }}}
 
 " }}}
 
