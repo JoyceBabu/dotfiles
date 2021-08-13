@@ -365,9 +365,6 @@ set fileencoding=utf8            " The encoding written to file.
 " set spell
 " set spelllang=en
 
-" Home-row shortcut for escape key
-inoremap kj <esc>
-
 " }}}
 
 " {{{ Code Navigation
@@ -470,6 +467,22 @@ nnoremap ,vr :source $MYVIMRC<cr>
 " indent without kill the selection in vmode
 vmap < <gv
 vmap > >gv
+
+" Home-row shortcut for escape key
+inoremap kj <esc>
+inoremap jk <esc>
+
+" Replace selection with last yanked text without modifying unnamed registers
+vnoremap <leader>p "_dP
+" Delete without modifying unnamed registers
+nnoremap <leader>d "_d
+vnoremap <leader>d "_d
+" Yank to system clipboard
+nnoremap <leader>y "+y
+vnoremap <leader>y "+y
+
+nnoremap <leader>bs /<C-R>=escape(expand("<cWORD>"), "/")<CR><CR>
+nnoremap <leader>pv :Vex<CR>
 
 " }}}
 
