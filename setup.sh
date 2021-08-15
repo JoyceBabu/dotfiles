@@ -13,9 +13,11 @@ base=(
 
 # folders that should, or only need to be installed for a local user
 useronly=(
+    editorconfig
     git
-    vim
     ripgrep
+    tmux
+    vim
     zsh
     editorconfig
     tmux
