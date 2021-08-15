@@ -1,0 +1,23 @@
+# Auto-detect text files, ensure they use LF.
+* text=auto eol=lf
+
+# Shell scripts, autoconf, etc. must have LF endings, even on Windows
+*.sh text eol=lf
+*.zsh text eol=lf
+configure text eol=lf
+configure.ac text eol=lf
+*.m4 text eol=lf
+
+*.html diff=html
+*.java diff=java
+*.md diff=markdown
+*.php diff=php
+*.py diff=python
+*.rb diff=ruby
+
+# Binary Files
+*.pdf binary
+*.gif binary
+*.ico binary
+*.jpg binary
+*.png binary
