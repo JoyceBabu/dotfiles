@@ -1,7 +1,7 @@
 {
   "codeLens.enable": true,
   "coc.preferences.colorSupport": true,
-  "coc.preferences.jumpCommand": "vsp",
+  "coc.preferences.jumpCommand": "vsplit",
   "diagnostic.errorSign": "●",
   "diagnostic.warningSign": "●",
   "diagnostic.infoSign": "!",
@@ -37,7 +37,7 @@
     "regex",
     "SimpleXML",
     "SPL",
-    "Redis",
+    "redis",
     "standard",
     "superglobals",
     "session",
@@ -48,7 +48,7 @@
   ],
   "intelephense.completionProvider": false,
   "intelephense.completionProvider.maxItems": 0,
-  "intelephense.environment.phpVersion": "7.4.8",
+  "intelephense.environment.phpVersion": "8.0.3",
   "intelephense.diagnostics.undefinedClassConstants": true,
   "intelephense.completion.insertUseDeclaration": true
 }
