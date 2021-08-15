@@ -113,6 +113,8 @@ plugins=(
 [[ -f ~/.shell_config ]] && source ~/.shell_config
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
+setopt HIST_IGNORE_SPACE
+
 # This speeds up pasting w/ autosuggest
 # https://github.com/zsh-users/zsh-autosuggestions/issues/238
 pasteinit() {
