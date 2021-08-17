@@ -84,6 +84,12 @@ Plug 'christoomey/vim-tmux-navigator'
 
 " Autocomplete
 Plug 'neoclide/coc.nvim', { 'branch': 'release','do': ':CocInstall coc-diagnostic coc-tsserver coc-json coc-java coc-tabnine coc-pairs coc-yaml coc-phpls coc-highlightcoc-git coc-snippets' }
+" Plug 'SirVer/ultisnips'
+
+" Editing
+Plug 'mbbill/undotree'                 " Visualize undo tree
+Plug 'michaeljsmith/vim-indent-object' " Text objects for indentation level
+Plug 'vim-scripts/argtextobj.vim'
 
 " Debugging
 Plug 'vim-vdebug/vdebug'
