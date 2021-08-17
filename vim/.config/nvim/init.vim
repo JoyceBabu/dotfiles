@@ -523,7 +523,7 @@ nnoremap <leader>pv :Vex<CR>
 
 " {{{ Overrides
 
-if filereadable("~/.vimrc.local")
+if filereadable(expand("~/.vimrc.local"))
   source ~/.vimrc.local
 endif
 
