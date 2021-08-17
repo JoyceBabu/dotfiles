@@ -77,6 +77,7 @@ plugins=(
   zsh-completions
   zsh-syntax-highlighting
   fzf
+  zsh-vi-mode
   tmux
 )
 
