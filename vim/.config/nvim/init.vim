@@ -34,6 +34,8 @@ call plug#begin('~/.local/share/nvim/plugged')
 
 " Theme
 Plug 'mhartington/oceanic-next'        " Dark Theme
+Plug 'gruvbox-community/gruvbox'       " Gruvbox Theme
+Plug 'dracula/vim'                     " Dracula Theme
 Plug 'TaDaa/vimade'                    " Fade vim window on focus lose
 
 Plug 'tpope/vim-surround'              " Surround plugin
