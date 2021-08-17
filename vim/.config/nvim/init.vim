@@ -67,7 +67,10 @@ Plug 'shumphrey/fugitive-gitlab.vim'   " for :Gbrowse
 Plug 'airblade/vim-gitgutter', { 'on': ['GitGutterEnable', 'GitGutterDisable'] } " Git integration in gutter
 
 " File Management
-Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all'}
+Plug 'junegunn/fzf', {
+      \ 'dir': '~/.fzf',
+      \ 'do': './install --all --no-update-rc'
+      \}
 Plug 'junegunn/fzf.vim'
 Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
@@ -222,6 +225,14 @@ let g:workspace_persist_undo_history = 1
 let g:workspace_undodir='.undodir'
 let g:workspace_session_disable_on_args = 1
 
+let g:netrw_liststyle = 3    " Show tree style directory list
+" let g:netrw_banner = 0       " Hide directory banner
+let g:netrw_winsize = 25     " Width of the netrw split
+let g:netrw_preview   = 1
+let g:netrw_browse_split = 4 " Open file in previous window
+let g:netrw_altv = 1         " Open file in left right split when pressing v
+let g:netrw_list_hide = '\.sw[op]$'
+
 " {{{ Undo History
 set updatetime=300
 
@@ -273,7 +284,7 @@ let g:vimade = {}
 let g:vimade.usecursorhold=1
 let g:vimade.fadelevel = 0.8
 let g:lens#width_resize_max = 80
-let g:lens#disabled_filetypes = ['nerdtree', 'fzf']
+let g:lens#disabled_filetypes = ['nerdtree', 'fzf', 'netrw']
 " let g:vimade.enablesigns = 1
 
 set conceallevel=1
