@@ -115,6 +115,14 @@ plugins=(
 
 setopt HIST_IGNORE_SPACE
 
+# https://superuser.com/a/1669733/51472
+tmux-go-left() {
+  tmux select-pane -L;
+}
+
+zle -N tmux-go-left
+bindkey -M vicmd '^h' tmux-go-left
+
 # This speeds up pasting w/ autosuggest
 # https://github.com/zsh-users/zsh-autosuggestions/issues/238
 pasteinit() {
