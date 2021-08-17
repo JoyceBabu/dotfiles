@@ -63,7 +63,7 @@ Plug 'tpope/vim-abolish'               " Case aware substitution, autocorrection
 
 " Git Integration
 Plug 'tpope/vim-fugitive'
-Plug 'jreybert/vimagit'
+" Plug 'jreybert/vimagit'
 Plug 'shumphrey/fugitive-gitlab.vim'   " for :Gbrowse
 Plug 'airblade/vim-gitgutter', { 'on': ['GitGutterEnable', 'GitGutterDisable'] } " Git integration in gutter
 
@@ -84,7 +84,7 @@ Plug 'editorconfig/editorconfig-vim'   " Support for EditorConfig
 Plug 'christoomey/vim-tmux-navigator'
 
 " Autocomplete
-Plug 'neoclide/coc.nvim', { 'branch': 'release','do': ':CocInstall coc-diagnostic coc-tsserver coc-json coc-java coc-tabnine coc-pairs coc-yaml coc-phpls coc-highlightcoc-git coc-snippets' }
+Plug 'neoclide/coc.nvim', { 'branch': 'release','do': ':CocInstall coc-diagnostic coc-tsserver coc-json coc-tabnine coc-pairs coc-yaml coc-phpls coc-highlight coc-git coc-snippets' }
 " Plug 'SirVer/ultisnips'
 
 " Editing
@@ -349,6 +349,10 @@ let g:tmux_navigator_disable_when_zoomed = 1
 " Rebalance windows on vim resize when tmux panes are created/destroyed/resized
 autocmd vimrc VimResized * :wincmd =
 
+" zoom a vim pane, <C-w>= to re-balance
+nnoremap <leader>- :wincmd _<cr>:wincmd \|<cr>
+nnoremap <leader>= :wincmd =<cr>
+
 " Zoom / Restore window.
 function! s:ZoomToggle() abort
     if exists('t:zoomed') && t:zoomed
@@ -391,6 +395,7 @@ set nohlsearch ignorecase        " disable highlight searches, incsearch plugin 
 set smartcase                    " Enable case sensitivity if term is mixed case
 set nostartofline                " prevent cursor from moving when scrolling
 set switchbuf=useopen,usetab     " better behavior for the quickfix window and :sb
+set scrolloff=8
 
 " Builtin Pluign. Hit `%` on `if` to jump to `else`.
 runtime macros/matchit.vim
@@ -454,7 +459,7 @@ let NERDTreeIgnore = ['\.DS_Store', '\~$', '\.swp']
 noremap <silent> <Leader>n :NERDTreeToggle<CR> <C-w>=
 noremap <silent> <Leader>f :NERDTreeFind<CR> <C-w>=
 
-nnoremap <c-p> :call fzf#run({'sink': 'tabedit'})<cr>
+" nnoremap <C-p> :GFiles<CR>
 
 " }}}
 
