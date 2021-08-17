@@ -46,6 +46,7 @@ Plug 'suy/vim-context-commentstring'   " Context aware commentstring in mixed co
 " Syntax
 Plug 'StanAngeloff/php.vim'            " Better syntax highlighting for PHP
 Plug 'AndrewRadev/splitjoin.vim' , { 'on': ['SplitjoinSplit', 'SplitjoinJoin']}
+Plug 'swekaj/php-foldexpr.vim', { 'for' :'php' } " Enable code folding for PHP
 
 Plug 'haya14busa/incsearch.vim'
 Plug 'machakann/vim-highlightedyank'
@@ -277,7 +278,6 @@ set cmdheight=2
 set shortmess+=c
 set history=1000                 " Keep 1000 lines of command line history
 set lazyredraw                   " Avoid unnecessary UI redraw
-set foldenable                   " Enable block folding
 set mouse=a                      " Enable mouse interaction in all modes
 
 set termguicolors
@@ -396,10 +396,13 @@ set switchbuf=useopen,usetab     " better behavior for the quickfix window and :
 runtime macros/matchit.vim
 
 " {{{ Code Foldings
-"
+
+set nofoldenable                   " Enable block folding
+
 augroup code_folding
     autocmd!
-    autocmd FileType php setlocal foldmethod=manual
+    " autocmd FileType php setlocal foldmethod=manual
+    autocmd FileType php setlocal foldlevel=1
     autocmd FileType javascript setlocal foldmethod=syntax
     autocmd FileType javascript.jsx setlocal foldmethod=syntax
     autocmd FileType typescript setlocal foldmethod=syntax
@@ -464,11 +467,6 @@ autocmd vimrc FileType yaml setlocal shiftwidth=2 softtabstop=2
 
 " {{{ Command Line Modes
 
-" Bash like keys for the command line
-cnoremap <C-A>		<Home>
-cnoremap <C-E>		<End>
-cnoremap <C-K>		<C-U>
-
 " Save files as root
 cnoremap w!! execute ':w suda://%'
 
@@ -478,10 +476,25 @@ cnoremap w!! execute ':w suda://%'
 
 " Execute current line in $SHELL and replace it with the output
 noremap Q !!$SHELL<cr>
+
 " Quick edit $MYVIMRC
 nnoremap ,ve :vsp $MYVIMRC<cr>
 nnoremap ,vr :source $MYVIMRC<cr>
-" indent without kill the selection in vmode
+
+" Bash like keys for the insert/command line mode
+inoremap <C-a> <Home>
+inoremap <C-b> <Left>
+inoremap <C-d> <Delete>
+inoremap <C-e> <End>
+inoremap <C-f> <Right> asdf
+" inoremap <C-h> <Backspace>
+" inoremap <C-k> <C-U>
+inoremap <C-y> <C-r>+
+cnoremap <C-a> <Home>
+cnoremap <C-e> <End>
+" cnoremap <C-k> <C-o>D
+
+" Indent without killing the selection in vmode
 vmap < <gv
 vmap > >gv
 
