@@ -386,6 +386,18 @@ endfunction
 command! ZoomToggle call s:ZoomToggle()
 nnoremap <silent> <C-m> :ZoomToggle<CR>
 
+command! -range -nargs=+ Pipe call Pipe(<q-args>, <line1>, <line2>)
+function! Pipe(cmd, line1, line2) abort
+  let lines = getline(a:line1, a:line2)
+  let res = systemlist(a:cmd, lines)
+  if empty(res)
+    echomsg 'Empty output'
+    return
+  endif
+  new
+  call setline(1, res)
+endfunction
+
 " }}}
 
 " }}}
