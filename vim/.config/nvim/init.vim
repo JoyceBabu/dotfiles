@@ -280,7 +280,6 @@ filetype plugin on               " Enable loading of indent files
 " {{{ User Interface
 
 set number relativenumber        " Enable display of relative line number
-set signcolumn=yes               " Always show sign colum to prevent resize
 set colorcolumn=81               " Show a vertical line after 80 chars
 set cursorline                   " Highlight current line
 " set showmatch                  " highlight matching [{()}]
@@ -296,6 +295,12 @@ set termguicolors
 if has('mac') && $COLORTERM == '' && !has('gui_vimr') && !has('gui_running')
   set t_Co=256
   set notermguicolors
+endif
+
+if has("nvim-0.5.0") || has("patch-8.1.1564")
+  set signcolumn=number          " Merge signcolumn and number column into one
+else
+  set signcolumn=yes             " Always show sign colum to prevent resize
 endif
 
 let g:vimade = {}
