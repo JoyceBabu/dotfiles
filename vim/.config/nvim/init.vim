@@ -119,11 +119,6 @@ function! s:check_back_space() abort
   return !col || getline('.')[col - 1]  =~ '\s'
 endfunction
 
-inoremap <silent><expr> <Tab>
-      \ pumvisible() ? "\<C-n>" :
-      \ <SID>check_back_space() ? "\<Tab>" :
-      \ coc#refresh()
-
 function! s:handle_cr()
     if pumvisible()
         " if completion window is visible, accept selection
@@ -133,12 +128,23 @@ function! s:handle_cr()
         return "\<cr>\<esc>\O"
     else
         " Break undo level and insert <CR>
-        return "\<C-g>\u\<cr>"
+        return "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
     endif
 endfunction
 
+inoremap <silent><expr> <Tab>
+      \ pumvisible() ? "\<C-n>" :
+      \ <SID>check_back_space() ? "\<Tab>" :
+      \ coc#refresh()
 inoremap <expr> <S-Tab> pumvisible() ? '<C-p>' : '<S-Tab>'
-inoremap <silent> <expr> <cr> <SID>handle_cr()
+inoremap <silent><expr> <cr> <SID>handle_cr()
+
+" Use <c-space> to trigger completion.
+if has('nvim')
+  inoremap <silent><expr> <c-space> coc#refresh()
+else
+  inoremap <silent><expr> <c-@> coc#refresh()
+endif
 
 imap <silent> <c-u>      <plug>(coc-snippets-expand)
 inoremap <m-p> call CocActionAsync('showSignatureHelp')<cr>
