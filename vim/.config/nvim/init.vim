@@ -321,12 +321,12 @@ let g:fugitive_gitlab_domains = ['https://git.ennexa.org']
 " {{{ Theme
 
 " OceanicNext Theme
-let g:airline_theme='oceanicnext'
+let g:airline_theme='gruvbox'
 let g:oceanic_next_terminal_bold = 1
 let g:oceanic_next_terminal_italic = 1
 
-" color dracula
-colorscheme OceanicNext
+set background=dark
+colorscheme gruvbox
 
 " }}}
 
