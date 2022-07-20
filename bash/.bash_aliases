@@ -27,11 +27,17 @@ alias rust_init='
 '
 alias python_init="alias venv='python3 -m venv'"
 alias open_ports="sudo lsof -iTCP -sTCP:LISTEN -P -n"
+alias ..='cd ..'
+alias ssh=tssh
 
 if /usr/bin/which nvim > /dev/null; then
     alias vim=nvim
     alias vi=nvim
 fi
+
+function tssh () {
+	/usr/bin/ssh -t $1 "tmux new -As${2:-0}"
+}
 
 proxy-start () {
     if [ $# -eq 0 ]; then
