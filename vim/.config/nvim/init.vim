@@ -547,6 +547,7 @@ vnoremap <leader>y "+y
 
 nnoremap <leader>bs /<C-R>=escape(expand("<cWORD>"), "/")<CR><CR>
 nnoremap <leader>pv :Vex<CR>
+nnoremap <leader>ps :GFiles<CR>
 
 " }}}
 
