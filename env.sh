@@ -14,7 +14,7 @@ mkdir -p "$ENV_DIR"
 chmod 0700 "$ENV_DIR"
 
 curl -s https://raw.githubusercontent.com/JoyceBabu/dotfiles/master/tmux/.tmux.conf > "$ENV_DIR/.tmux.conf"
-curl -s https://raw.githubusercontent.com/JoyceBabu/dotfiles/master/vim/.config/nvim/init.vim > "$ENV_DIR/.vimrc"
+curl -s https://raw.githubusercontent.com/JoyceBabu/dotfiles/master/vim/.config/nvim/basic.vim > "$ENV_DIR/.vimrc"
 
 find "$ENV_DIR" -type f -exec chmod 0600 {} +
 
