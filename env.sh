@@ -18,32 +18,64 @@ dl_config_file() {
 }
 
 check_for_executable() {
-  echo "checking for $1"
   type $1 >/dev/null 2>/dev/null
 }
 
 export MYVIMRC=$ENV_DIR/.vimrc
 export VIMINIT=":set runtimepath^=/tmp/jb-vim/.vim|:source $MYVIMRC"
 
+cat <<EOF > $ENV_DIR/.shrc
+check_for_executable() {
+  type \$1 >/dev/null 2>/dev/null
+}
+
 if check_for_executable nvim; then
-  alias vim='abc'
+  alias vim='nvim'
 elif ! check_for_executable vim; then
   alias vim='vi'
+fi
+
+export ENV_DIR="$ENV_DIR"
+
+unset check_for_executable
+
+[ -f "\$HOME/.\${SHELL}rc" ] && . "\$HOME/.\${SHELL}rc"
+
+alias tmux='\tmux -f"$ENV_DIR/.tmux.conf"'
+alias envtest='ls -lah'
+
+EOF
+
+for ENV_SHELL in zsh bash `echo $SHELL|rev|cut -d/ -f1|rev`; do
+  if check_for_executable $ENV_SHELL; then
+    ENV_TMUX_DEF_CMD=`which $ENV_SHELL`
+    break
+  fi
+done
+
+if [ "zsh" = "$ENV_SHELL" ]; then
+  export ZDOTDIR=$ENV_DIR
+  ln -s $ENV_DIR/.shrc $ENV_DIR/.zshrc
+elif [ "bash" = "$ENV_SHELL" ]; then
+  ENV_TMUX_DEF_CMD="$ENV_TMUX_DEF_CMD --rcfile $ENV_DIR/.shrc"
+else
+  export ENV="$ENV_DIR/.shrc"
 fi
 
 dl_config_file vim/.config/nvim/basic.vim .vimrc
 
 if check_for_executable tmux; then
-  echo "tmux found"
   # tmux installation detected
+  echo "tmux found"
+  dl_config_file tmux/.tmux.conf .tmux.conf
+  echo "set-option -g default-command '$ENV_TMUX_DEF_CMD -i'" >> $ENV_DIR/.tmux.conf
+
   if [ -n "$TMUX" ]; then
     # Reload configuration if we are under a tmux session
-    dl_config_file tmux/.tmux.conf .tmux.conf
     tmux source "$ENV_DIR/.tmux.conf"
   elif [ "`echo $TERM | cut -d- -f1`" != "screen" ]; then
     # Create a new tmux session, unless we are in a tmux session owned by
     # another user (after sudo su - user)
-    dl_config_file tmux/.tmux.conf .tmux.conf
     tmux -f"$ENV_DIR/.tmux.conf" new
   fi
 fi
