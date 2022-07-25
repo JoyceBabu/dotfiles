@@ -1,82 +1,101 @@
 #!/bin/sh
 
-TMP_DIR=`mktemp -u 2>/dev/null || echo "/tmp/tmp"`
-ENV_DIR="`dirname $TMP_DIR`/jb-$USER-tmux"
+JB_TMP_DIR=`mktemp -u 2>/dev/null || echo "/tmp/tmp"`
+JB_ENV_DIR="`dirname $JB_TMP_DIR`/jb-$USER-tmux"
 ENV_UID=`id -u`
 
-if [ -e "$ENV_DIR" ] && [ -z "`find "$ENV_DIR" -user "$ENV_UID" -print -prune -o -prune`" ]; then
-  echo "The config directory '$ENV_DIR' is not owned by $USER."
+if [ -e "$JB_ENV_DIR" ] && [ -z "`find "$JB_ENV_DIR" -user "$ENV_UID" -print -prune -o -prune`" ]; then
+  echo "The config directory '$JB_ENV_DIR' is not owned by $USER."
   exit 1
 fi
 
-mkdir -p "$ENV_DIR"
-chmod 0700 "$ENV_DIR"
+mkdir -p "$JB_ENV_DIR"
+chmod 0700 "$JB_ENV_DIR"
 
-dl_config_file() {
-  curl -s https://raw.githubusercontent.com/JoyceBabu/dotfiles/master/$1 > "$ENV_DIR/$2"
-  chmod 0600 "$ENV_DIR/$2"
+jb_dl_config_file() {
+  curl -s https://raw.githubusercontent.com/JoyceBabu/dotfiles/master/$1 > "$JB_ENV_DIR/$2"
+  chmod 0600 "$JB_ENV_DIR/$2"
 }
 
-check_for_executable() {
+jb_check_for_executable() {
   type $1 >/dev/null 2>/dev/null
 }
 
-export MYVIMRC=$ENV_DIR/.vimrc
+export MYVIMRC=$JB_ENV_DIR/.vimrc
 export VIMINIT=":set runtimepath^=/tmp/jb-vim/.vim|:source $MYVIMRC"
 
-cat <<EOF > $ENV_DIR/.shrc
-check_for_executable() {
+cat <<EOF > $JB_ENV_DIR/.shrc
+jb_check_for_executable() {
   type \$1 >/dev/null 2>/dev/null
 }
 
-if check_for_executable nvim; then
+if jb_check_for_executable nvim; then
   alias vim='nvim'
-elif ! check_for_executable vim; then
+elif ! jb_check_for_executable vim; then
   alias vim='vi'
 fi
 
-export ENV_DIR="$ENV_DIR"
+export JB_ENV_DIR="$JB_ENV_DIR"
 
-unset check_for_executable
+unset jb_check_for_executable
 
 [ -f "\$HOME/.\${SHELL}rc" ] && . "\$HOME/.\${SHELL}rc"
 
-alias tmux='\tmux -f"$ENV_DIR/.tmux.conf"'
-alias envtest='ls -lah'
+alias tmux='\tmux -f"$JB_ENV_DIR/.tmux.conf"'
+alias jbenvtest='ls -lah'
 
 EOF
 
+jb_dl_config_file vim/.config/nvim/basic.vim .vimrc
+
+# Setup shell
 for ENV_SHELL in zsh bash `echo $SHELL|rev|cut -d/ -f1|rev`; do
-  if check_for_executable $ENV_SHELL; then
+  if jb_check_for_executable $ENV_SHELL; then
     ENV_TMUX_DEF_CMD=`which $ENV_SHELL`
     break
   fi
 done
 
 if [ "zsh" = "$ENV_SHELL" ]; then
-  export ZDOTDIR=$ENV_DIR
-  ln -s $ENV_DIR/.shrc $ENV_DIR/.zshrc
+  export JB_ZDOTDIR=$JB_ENV_DIR
+  ln -sf $JB_ENV_DIR/.shrc $JB_ENV_DIR/.zshrc
 elif [ "bash" = "$ENV_SHELL" ]; then
-  ENV_TMUX_DEF_CMD="$ENV_TMUX_DEF_CMD --rcfile $ENV_DIR/.shrc"
+  ENV_TMUX_DEF_CMD="$ENV_TMUX_DEF_CMD --rcfile $JB_ENV_DIR/.shrc"
 else
-  export ENV="$ENV_DIR/.shrc"
+  JB_ENV="$JB_ENV_DIR/.shrc"
 fi
 
-dl_config_file vim/.config/nvim/basic.vim .vimrc
-
-if check_for_executable tmux; then
+if jb_check_for_executable tmux; then
   # tmux installation detected
   echo "tmux found"
-  dl_config_file tmux/.tmux.conf .tmux.conf
-  echo "set-option -g default-command '$ENV_TMUX_DEF_CMD -i'" >> $ENV_DIR/.tmux.conf
+  jb_dl_config_file tmux/.tmux.conf .tmux.conf
+
+  echo "set-option -g default-command '$ENV_TMUX_DEF_CMD -i'" >> $JB_ENV_DIR/.tmux.conf
+  if [ -n "$JB_ENV" ]; then
+    echo "set-environment -g ENV '$JB_ENV'" >> $JB_ENV_DIR/.tmux.conf
+  fi
+  if [ -n "$JB_ZDOTDIR" ]; then
+    echo "set-environment -g ZDOTDIR '$JB_ZDOTDIR'" >> $JB_ENV_DIR/.tmux.conf
+  fi
 
   if [ -n "$TMUX" ]; then
     # Reload configuration if we are under a tmux session
-    tmux source "$ENV_DIR/.tmux.conf"
+    tmux source "$JB_ENV_DIR/.tmux.conf"
   elif [ "`echo $TERM | cut -d- -f1`" != "screen" ]; then
     # Create a new tmux session, unless we are in a tmux session owned by
     # another user (after sudo su - user)
-    tmux -f"$ENV_DIR/.tmux.conf" new
+    tmux -f"$JB_ENV_DIR/.tmux.conf" new
   fi
+else
+  ENV="$JB_ENV" ZDOTDIR="$JB_ZDOTDIR" $ENV_TMUX_DEF_CMD -i
 fi
+
+# Cleanup
+unset jb_dl_config_file
+unset jb_check_for_executable
+unset ENV_TMUX_DEF_CMD
+unset JB_TMP_DIR
+unset JB_ENV_UID
+unset JB_ZDOTDIR
+unset JB_ENV
 
