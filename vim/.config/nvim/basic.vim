@@ -63,7 +63,12 @@ set breakindent
 " Ensures word-wrap does not split words
 set formatoptions=l
 set lbr
-set showbreak=↪\ \ \
+if has('multi_byte') && &encoding ==# 'utf-8'
+  set showbreak=↪\ \ \
+else
+  " Some vim versions does not support multi-byte
+  set showbreak=...\ \ \
+endif
 
 " }}}
 
