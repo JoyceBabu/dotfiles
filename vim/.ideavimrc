@@ -1,0 +1,293 @@
+" vim: fdm=marker foldenable sw=4 ts=4 sts=4
+" "zo" to open folds, "zc" to close, "zn" to disable, "zi" to toggle
+
+source ~/.dotfiles/vim/.config/nvim/basic.vim
+
+" Declare group for autocmd for whole init.vim, and clear it
+" Otherwise every autocmd will be added to group each time vimrc sourced!
+augroup vimrc
+  autocmd!
+augroup END
+
+" {{{ Emulated plugins
+
+Plug 'tpope/vim-surround'
+" Plug 'tpope/vim-commentary'
+Plug 'terryma/vim-multiple-cursors'
+Plug 'vim-scripts/argtextobj.vim'
+Plug 'machakann/vim-highlightedyank'
+Plug 'michaeljsmith/vim-indent-object'
+Plug 'tommcdo/vim-exchange'
+Plug 'preservim/nerdtree'
+" Plug 'easymotion/vim-easymotion'
+
+" {{{ Multiple Cursors
+
+" Set multiple cursor bindings
+nmap <C-n> <Plug>NextWholeOccurrence
+xmap <C-n> <Plug>NextWholeOccurrence
+nmap g<C-n> <Plug>NextOccurrence
+xmap g<C-n> <Plug>NextOccurrence
+nmap <C-x> <Plug>SkipOccurrence
+xmap <C-x> <Plug>SkipOccurrence
+nmap <C-p> <Plug>RemoveOccurrence
+xmap <C-p> <Plug>RemoveOccurrence
+nmap <A-n> <Plug>AllWholeOccurrences
+xmap <A-n> <Plug>AllWholeOccurrences
+nmap g<A-p> <Plug>AllOccurrences
+xmap g<A-p> <Plug>AllOccurrences
+
+" }}}
+
+" }}}
+
+" {{{ Set commands
+" https://github.com/JetBrains/ideavim/blob/master/doc/set-commands.md
+
+" If set, creation of global mark will trigger creation of IDE's bookmark and vice versa.
+set ideamarks
+
+" Use Idea to join lines smartly
+set ideajoin
+
+" Highlight matches with the current search pattern
+set hlsearch
+
+" Ignore case when searching
+set ignorecase
+
+" Makes search act like search in modern browsers
+" Show where search pattern typed so far matches
+set incsearch
+
+" Pairs of characters that "%" can match
+set matchpairs=(:),[:],{:},<:>
+
+" number formats recognized for CTRL-A command
+set nrformats+=alpha
+set nrformats-=octal
+
+" Use hybrid (absolute and relative) numbers
+set number relativenumber
+
+" message on status line to show current mode
+set showmode
+
+" When searching try to be smart about cases
+set smartcase
+
+" time that is waited for a mapped key sequence
+" set timeoutlen=500
+
+" use visual bell instead of beeping
+set visualbell
+
+" searches wrap around the end of the file
+set wrapscan
+
+" }}}
+
+" {{{ IDE actions
+" ============================================================================
+
+" Show quick documentation (works for all languages, not just java)
+nmap K :action QuickJavaDoc<Cr>
+
+" Remap keys for gotos
+nmap <silent> [g :action GotoPreviousError<Cr>
+nmap <silent> ]g :action GotoNextError<Cr>
+
+" GoTo code navigation.
+nnoremap gd :action GotoDeclaration<Cr>
+nnoremap gf :action GotoFile<Cr>
+nnoremap gI :action GotoImplementation<Cr>
+nnoremap gr :action GotoReference<Cr>
+nnoremap gy :action GotoTypeDeclaration<Cr>
+
+nnoremap g; :action JumpToLastChange<Cr>
+nnoremap g, :action JumpToNextChange<Cr>
+
+" Remap for rename current symbol
+nnoremap <leader>rn :action RenameElement<Cr>
+nnoremap <leader>qf :action ShowIntentionActions<Cr>
+
+" Remap for format selected region
+vnoremap <leader>F :action ReformatCode<Cr>
+
+nmap gcc :action CommentByLineComment<Cr>
+
+nnoremap <C-o> :action Back<Cr>
+nnoremap <C-i> :action Forward<Cr>
+
+"  unimpaired-style mappings
+" noremap [<Space> O<Esc>j
+" noremap ]<Space> o<Esc>k
+" noremap ]b :action GotoNextBookmark<Cr>
+" noremap [b :action GotoPreviousBookmark<Cr>
+" noremap [c :action VcsShowPrevChangeMarker<Cr>
+" noremap ]c :action VcsShowNextChangeMarker<Cr>
+" noremap ]e :action GotoNextError<Cr>
+" noremap [e :action GotoPreviousError<Cr>
+" noremap ]m :action MethodDown<Cr>
+" noremap [m :action MethodUp<Cr>
+" noremap ]o :action SelectNextOccurrence<Cr>
+" noremap [o :action SelectPreviousOccurrence<Cr>
+" noremap ]u :action GotoNextElementUnderCaretUsage<Cr>
+" noremap [u :action GotoPrevElementUnderCaretUsage<Cr>
+" noremap ]p :action org.intellij.plugins.markdown.ui.actions.editorLayout.EditorOnlyLayoutChangeAction<Cr>
+" noremap [p :action org.intellij.plugins.markdown.ui.actions.editorLayout.EditorAndPreviewLayoutChangeAction<Cr>
+" noremap ]P :action org.intellij.plugins.markdown.ui.actions.editorLayout.EditorOnlyLayoutChangeAction<Cr>
+" noremap [P :action org.intellij.plugins.markdown.ui.actions.editorLayout.PreviewOnlyLayoutChangeAction<Cr>
+"  Listed by Active Editor (EditorToggleActions)
+" noremap yob :action EditorToggleShowBreadcrumbs<Cr>
+" noremap yod :action ToggleDistractionFreeMode<Cr>
+" noremap yog :action EditorToggleShowGutterIcons<Cr>
+" noremap yoi :action EditorToggleShowIndentLines<Cr>
+" noremap yon :action EditorToggleShowLineNumbers<Cr>
+" noremap yop :action TogglePresentationMode<Cr>
+" noremap yos :action ViewStatusBar<Cr>
+" noremap yot :action ViewToolBar<Cr>
+" noremap yow :action EditorToggleUseSoftWraps<Cr>
+" noremap yoz :action ToggleZenMode<Cr>
+
+" Backslash as leader key mappings
+" Instead of ActivateCommitToolWindow, use Cmd+k and Cmd+w
+" Set up external tool "black":
+" https://black.readthedocs.io/en/stable/editor_integration.html
+" Arguments: "$FilePath$" -l 79
+" nmap <space> <leader>
+" nnoremap <leader>a :action EditorActions<Cr>
+" nnoremap <leader>b :action Tool_External Tools_Black<Cr>
+" nnoremap <leader>c :action SilentCodeCleanup<Cr>
+" nnoremap <leader>d :action ActivateDatabaseToolWindow<Cr>
+" nnoremap <leader>e :action ActivateEventLogToolWindow<Cr>
+" nnoremap <leader>f :action RenameFile<Cr>
+" nnoremap <leader>g :action EditorPopupMenu.GoTo<Cr>
+" nnoremap <leader>h :action LocalHistory.ShowHistory<Cr>
+" nnoremap <leader>i :action GotoImplementation<Cr>
+" nnoremap <leader>j :action JumpToLastWindow<Cr>
+" nnoremap <leader>k :action Help.KeymapReference<Cr>
+" " Reformat Code is M-A-L
+" nnoremap <leader>l :action ReformatCode<Cr>
+" nnoremap <leader>m :action Move<Cr>
+" nnoremap <leader>n :action ShowNavBar<Cr>
+" nnoremap <leader>o :action OptimizeImports<Cr>
+" nnoremap <leader>p :action ActivatePythonConsoleToolWindow<Cr>
+" nnoremap <leader>q :action CloseProject<Cr>
+" nnoremap <leader>r :action ActivateRConsoleToolWindow<Cr>
+" nnoremap <leader>s :action ActivateSciViewToolWindow<Cr>
+" nnoremap <leader>t :action ActivateTerminalToolWindow<Cr>
+" nnoremap <leader>u :action FindUsagesInFile<Cr>
+" " Introduce Variable is M-A-V
+" nnoremap <leader>v :action IntroduceVariable<Cr>
+" nnoremap <leader>w :action HideAllWindows<Cr>
+" nnoremap <leader>x :action ChangeSplitOrientation<Cr>
+" " Reload All from Disk is M-A-Y
+" nnoremap <leader>y :action Synchronize<Cr>
+" " Rollback is M-A-Z
+" nnoremap <leader>z :action Vcs.RollbackChangedLines<Cr>
+" Clear search highlighting when hitting backslash twice
+" nnoremap <leader><leader> :nohlsearch<Cr>
+
+" These work, you just have to do the combo very fast
+" nnoremap <c-w>+ :action StretchSplitToBottom<Cr>
+" nnoremap <c-w>- :action StretchSplitToTop<Cr>
+" nnoremap <c-w>> :action StretchSplitToRight<Cr>
+" nnoremap <c-w>< :action StretchSplitToLeft<Cr>
+" <C-t> = Refactor this... now only works in normal mode
+" so <C-t> can indent line in insert mode
+" nnoremap <C-t> :action Refactorings.QuickListPopupAction<Cr>
+
+" }}}
+
+" {{{ Mappings
+
+" {{{ Emacs and bash style insert mode CTRL shortcuts
+" <C-a> = Move to start of the line; like in vim command mode: c_ctrl-b; To insert previously inserted text, use <C-r>. or <Alt-.> (below)
+" inoremap <C-a> <Home>
+" <C-b> = Move one character backward
+" inoremap <C-b> <Left>
+" <C-d> = Delete one character forward; the opposite of <C-h>
+" inoremap <C-d> <Delete>
+" <C-e> = Move to end of the line; the opposite of <C-a>; already exists in command mode: c_ctrl-e
+" inoremap <C-e> <End>
+" <C-f> = Move one character forward; the opposite of <C-b>
+" inoremap <C-f> <Right>
+" <C-g> = Cancel completion
+inoremap <silent><expr> <C-g> pumvisible() ? "\<C-e>" :  "<C-g>"
+" <C-h> = Delete one character backward; the opposite of <C-d>; already exists in command mode: c_ctrl-h
+" <C-k> = Delete to end of line; the opposite of <C-u>
+" inoremap <C-k> <C-o>:action EditorDeleteToLineEnd<Cr>
+" <C-n> = Complete word using matches that come next; the opposite of <C-p>
+" inoremap <C-n> <C-o>:action HippieCompletion<Cr>
+" <C-p> = Complete word using previous matches; the opposite of <C-n>
+" inoremap <C-p> <C-o>:action HippieBackwardCompletion<Cr>
+" <C-u> = Delete to start of line; the opposite of <C-k>; already exists in command mode: c_ctrl-u
+" <C-w> = Delete word backward; opposite of <A-d>; same as <A-h>; already exists in command mode: c_ctrl-w
+" <C-y> = Paste from system clipboard (not from killring like in bash/emacs)
+" inoremap <C-y> <C-r>+
+" <C-_> = Undo like in bash/emacs (this works really well)
+inoremap <C--> <C-o>u
+
+" Emacs and bash style insert mode ALT shortcuts
+" <A-b> = Move one word backward; opposite of <A-f>
+inoremap <A-b> <S-Left>
+" <A-c> = Capitalize letter and move forward
+inoremap <A-c> <Esc>l~ea
+" <A-d> = Delete word forward; opposite of <A-h> and <C-w>
+inoremap <A-d> <C-o>:action EditorKillToWordEnd<Cr>
+" <A-f> = Move one word forward; opposite of <A-b>
+inoremap <A-f> <S-Right>
+" <A-h> = Delete word backward; opposite of <A-d>, same as <C-w>
+" inoremap <A-h> <C-w>
+" " <A-j> = Move down; opposite of <A-k>
+" inoremap <A-j> <Down>
+" " <A-k> = Move up; opposite of <A-j>
+" inoremap <A-k> <Up>
+" <A-t> = Swap current word with previous word (works)
+inoremap <A-t> <Esc>diwbPldepa
+" " <A-.> = Insert previously inserted text (if any)
+inoremap <A-.> <Esc>a<C-r>.
+cnoremap <A-.> <C-r>.
+" " <A--> = Undo
+inoremap <A--> <Esc>ugi
+" inoremap <A--> <C-o>u
+
+" }}}
+
+" Multiple cursors mappings
+" inoremap <A-j> <C-o>:action EditorCloneCaretBelow<Cr>
+" inoremap <A-k> <C-o>:action EditorCloneCaretAbove<Cr>
+
+"" Indent without killing the selection in vmode
+"vmap < <gv
+"vmap > >gv
+"
+"" remap Y to y$ to make it easier to yank to the end of the line
+"nnoremap Y y$
+"
+"" Home-row shortcut for escape key
+"" cnoremap kj <esc>
+"" inoremap kj <esc>
+"" vnoremap kj <esc>
+"
+"noremap H ^
+"noremap L $
+"
+"" Replace selection with last yanked text without modifying unnamed registers
+"vnoremap <leader>p "_dP
+"" Delete without modifying unnamed registers
+"nnoremap <leader>d "_d
+"vnoremap <leader>d "_d
+"" Yank to system clipboard
+"nnoremap <leader>y "+y
+"vnoremap <leader>y "+y
+"
+"nnoremap <leader>bs /<C-R>=escape(expand("<cWORD>"), "/")<Cr><Cr>
+"nnoremap <leader>pv :Sex!<Cr>
+
+" Experimental Mappings
+nnoremap ,/ :nohlsearch<CR>
+
+" }}}
+

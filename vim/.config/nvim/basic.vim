@@ -240,7 +240,14 @@ nnoremap <leader>pv :Vex<CR>
 
 " {{{ Custom Commands
 
-command! -range -nargs=+ Pipe call Pipe(<q-args>, <line1>, <line2>)
+" {{{ Pipe - Pipe the selected range to an extenal command and
+" display the output in a new buffer
+
+if !has('ide')
+  " eg `:Pipe sort | uniq -c`
+  command! -range -nargs=+ Pipe call Pipe(<q-args>, <line1>, <line2>)
+endif
+
 function! Pipe(cmd, line1, line2) abort
   let lines = getline(a:line1, a:line2)
   let res = systemlist(a:cmd, lines)
@@ -252,8 +259,12 @@ function! Pipe(cmd, line1, line2) abort
   call setline(1, res)
 endfunction
 
-" Zoom / Restore window.
+" }}}
+
+" {{{ ZoomToggle - Zoom / Restore window.
+
 command! ZoomToggle call s:ZoomToggle()
+
 function! s:ZoomToggle() abort
     if exists('t:zoomed') && t:zoomed
         execute t:zoom_winrestcmd
@@ -265,5 +276,7 @@ function! s:ZoomToggle() abort
         let t:zoomed = 1
     endif
 endfunction
+
+" }}}
 
 " }}}

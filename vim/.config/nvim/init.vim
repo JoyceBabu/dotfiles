@@ -1,10 +1,12 @@
-" vim: fdm=marker foldenable sw=4 ts=4 sts=4
+" vim: filetype=vim fdm=marker foldenable sw=4 ts=4 sts=4
 " "zo" to open folds, "zc" to close, "zn" to disable, "zi" to toggle
 
 " {{{ Initialization
 
 " Skip initialization for vim-tiny or vim-small.
 if !1 | finish | endif
+
+source ~/.config/nvim/basic.vim
 
 " Declare group for autocmd for whole init.vim, and clear it
 " Otherwise every autocmd will be added to group each time vimrc sourced!
@@ -108,7 +110,7 @@ Plug 'editorconfig/editorconfig-vim'   " Support for EditorConfig
 
 " Navigation
 Plug 'christoomey/vim-tmux-navigator'
-" Plug 'mg979/vim-visual-multi', {'branch': 'master'} " Multi cursor support
+Plug 'mg979/vim-visual-multi', {'branch': 'master'} " Multi cursor support
 
 " Autocomplete
 Plug 'neoclide/coc.nvim', { 'branch': 'release','do': ':CocInstall coc-diagnostic coc-tsserver coc-json coc-tabnine coc-pairs coc-yaml coc-phpactor coc-highlight coc-git coc-snippets' }
@@ -399,6 +401,30 @@ cnoremap w!! execute ':w suda://%'
 " Execute current line in $SHELL and replace it with the output
 noremap Q !!$SHELL<cr>
 
+" {{{ Vim Visual Multi
+
+let g:VM_theme = 'iceblue'
+let g:VM_highlight_matches = 'underline'
+
+let g:VM_maps = {}
+let g:VM_maps["Undo"]            = 'u'
+let g:VM_maps["Redo"]            = '<C-r>'
+let g:VM_maps["Add Cursor Down"] = '<M-j>'   " new cursor down
+let g:VM_maps["Add Cursor Up"]   = '<M-k>'   " new cursor up
+let g:VM_maps["Toggle Mappings"] = '<CR>'    " toggle VM buffer mappings
+let g:VM_maps["Exit"]            = '<C-c>'   " quit VM
+let g:VM_maps['Select All']      = '<M-n>'
+let g:VM_maps['Visual All']      = '<M-n>'
+" let g:VM_maps["Select l"] = '<S-Right>'
+" let g:VM_maps["Select h"] = '<S-Left>'
+
+let g:VM_mouse_mappings = 1    " Equivalent to following mappings
+" nmap   <C-LeftMouse>       <Plug>(VM-Mouse-Cursor)
+" nmap   <C-RightMouse>      <Plug>(VM-Mouse-Word)
+" nmap   <M-C-RightMouse>    <Plug>(VM-Mouse-Column)
+
+" }}}
+
 " Home-row shortcut for escape key
 " cnoremap kj <esc>
 " inoremap kj <esc>
@@ -415,3 +441,4 @@ if filereadable(expand("~/.vimrc.local"))
 endif
 
 " }}}
+
