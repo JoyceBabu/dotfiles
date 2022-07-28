@@ -236,6 +236,21 @@ vnoremap <leader>y "+y
 nnoremap <leader>bs /<C-R>=escape(expand("<cWORD>"), "/")<CR><CR>
 nnoremap <leader>pv :Vex<CR>
 
+cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
+" cnoremap $$ <C-R>=fnameescape(expand('%'))<cr>
+map <leader>E :e %%
+map <leader>es :sp %%
+map <leader>ev :vsp %%
+map <leader>et :tabe %%
+
+" Apply a macro line by line on the selected range in visual block mode
+xnoremap @ :<C-u>call ExecuteMacroOverVisualRange()<CR>
+
+function! ExecuteMacroOverVisualRange()
+  echo "@".getcmdline()
+  execute ":'<,'>normal @".nr2char(getchar())
+endfunction
+
 " }}}
 
 " {{{ Custom Commands
