@@ -30,7 +30,7 @@ jb_check_for_executable() {
 }
 
 if jb_check_for_executable nvim; then
-  alias vim='nvim'
+  alias vim='nvim -c "let g:tty='\''$(tty)'\''"'
 elif ! jb_check_for_executable vim; then
   alias vim='vi'
 fi
