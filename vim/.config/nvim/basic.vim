@@ -297,71 +297,83 @@ endfunction
 " {{{ Copy to Local Clipboard Using OSC52
 " https://github.com/greymd/oscyank.vim
 
-let s:save_cpo = &cpo
-set cpo&vim
+if !has('ide')
+  " If not IdeaVim
 
-function! s:OscyankPut(text)
-  let encodedText=""
-  " `tty` works in vim, `tty < /proc/$$PID/fd/0` is required for neovim per
-  " https://github.com/neovim/neovim/issues/8450#issuecomment-407063983)
-  let tty = exists('g:tty') ? shellescape(g:tty) : system('(tty || tty </proc/$PPID/fd/0 || echo /dev/tty) 2>/dev/null | grep /dev/')
-  if $TMUX != ""
-    let encodedText=substitute(a:text, '\', '\\', "g")
-  else
-    let encodedText=substitute(a:text, '\', '\\\\', "g")
-  endif
-  let encodedText=substitute(encodedText, "\'", "'\\\\''", "g")
-  let executeCmd="echo -n '".encodedText."' | base64 | tr -d '\\n'"
-  let encodedText=system(executeCmd)
-  if $TMUX != ""
-    " tmux
-    let executeCmd='echo -en "\033Ptmux;\033\033]52;;'.encodedText.'\033\033\\\\\033\\"'
-  elseif $TERM == "screen"
-    " screen
-    let executeCmd='echo -en "\033P\033]52;;'.encodedText.'\007\033\\"'
-  else
-    let executeCmd='echo -en "\033]52;;'.encodedText.'\033\\"'
-  endif
-  call system(executeCmd . ' > ' . tty)
-  redraw!
-endfunction
+  let s:save_cpo = &cpo
+  set cpo&vim
 
-" Yank register's content with OSC.
-function! s:OscyankRegister()
-  let text = @"           " Put current register's content to 'text'
-  call s:OscyankPut(text) " Put text with OSC52
-endfunction
+  function! s:OscYankPut(text)
+    let length = strlen(a:text)
+	let limit = 10000
+    if length > limit
+      echohl WarningMsg
+      echo '[OscYank] Selection has length ' . length . ', limit is ' . limit
+      echohl None
+      return
+    endif
 
-" Yank selected content with OSC.
-function! s:Oscyank() range
-  let tmp = @@            " Backup register.
-  silent normal gvy       " Yank current selected line.
-  let text = @@           " Put current register's content to 'text'
-  let @@ = tmp            " Restore original register.
-  call s:OscyankPut(text) " Put text with OSC52
-endfunction
+    let encodedText=""
+    " `tty` works in vim, `tty < /proc/$$PID/fd/0` is required for neovim per
+    " https://github.com/neovim/neovim/issues/8450#issuecomment-407063983)
+    let tty = exists('g:tty') ? shellescape(g:tty) : system('(tty || tty </proc/$PPID/fd/0 || echo /dev/tty) 2>/dev/null | grep /dev/')
+    if $TMUX != ""
+      let encodedText=substitute(a:text, '\', '\\', "g")
+    else
+      let encodedText=substitute(a:text, '\', '\\\\', "g")
+    endif
 
-function s:ToggleClipboard() abort
-  if execute('autocmd TextYankPost') =~# 's:OscyankRegister'
+    let encodedText=substitute(encodedText, "\'", "'\\\\''", "g")
+    let executeCmd="echo -n '".encodedText."' | base64 | tr -d '\\n'"
+    let encodedText=system(executeCmd)
+
+    if $TMUX != ""
+      " tmux
+      let executeCmd='echo -en "\033Ptmux;\033\033]52;;'.encodedText.'\033\033\\\\\033\\"'
+    elseif $TERM == "screen"
+      " screen
+      let executeCmd='echo -en "\033P\033]52;;'.encodedText.'\007\033\\"'
+    else
+      let executeCmd='echo -en "\033]52;;'.encodedText.'\033\\"'
+    endif
+
+    call system(executeCmd . ' > ' . tty)
+    redraw!
+  endfunction
+
+  " Yank selected content with OSC.
+  function! s:OscYank() range
+    let tmp = @@            " Backup register.
+    silent normal gvy       " Yank current selected line.
+    let text = @@           " Put current register's content to 'text'
+    let @@ = tmp            " Restore original register.
+    call s:OscYankPut(text) " Put text with OSC52
+  endfunction
+
+  function s:ToggleClipboard() abort
     augroup Yank
       autocmd!
+
+      if execute('autocmd TextYankPost') !~# 's:OscYankPut'
+        autocmd TextYankPost * if v:event.operator ==# 'y' && v:event.regname ==# '+' | call s:OscYankPut(getreg(v:register)) | endif
+        echo '[OscYank] clipboardy copy enabled'
+      else
+        echo '[OscYank] clipboardy copy disabled'
+      endif
     augroup END
-    echo 'OSC52 clipboardy copy disabled'
-  else
-    augroup Yank
-      autocmd!
-      autocmd TextYankPost * if v:event.operator ==# 'y' | call s:OscyankRegister() | endif
-    augroup END
-    echo 'OSC52 clipboardy copy enabled'
+  endfunction
+
+  command! -range OscYank call s:OscYank()
+  command ToggleClipboard call s:ToggleClipboard()
+
+  if $JB_ENV_DIR != ""
+    call s:ToggleClipboard()
   endif
-endfunction
 
-command! -range Oscyank call s:Oscyank()
-command! OscyankRegister call s:OscyankRegister()
-command ToggleClipboard call s:ToggleClipboard()
+  let &cpo = s:save_cpo
+  unlet s:save_cpo
 
-let &cpo = s:save_cpo
-unlet s:save_cpo
+endif
 
 " }}}
 
