@@ -44,7 +44,7 @@ unset jb_check_for_executable
 alias tmux='\tmux -f"$JB_ENV_DIR/.tmux.conf"'
 alias jbenvtest='ls -lah'
 alias sd='sudo '
-alias sudo='\sudo --preserve-env=VIMINIT'
+alias sudo='\sudo --preserve-env=VIMINIT,TMUX,JB_ENV_DIR'
 
 EOF
 
