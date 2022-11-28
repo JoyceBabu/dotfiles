@@ -145,6 +145,9 @@ endif
 
 " {{{ Coc / Intelephense
 
+
+let g:airline#extensions#coc#show_coc_status = 1
+
 highlight! CocCodeLens guifg=#606060 ctermfg=60
 
 " use <tab> for trigger completion and navigate to the next complete item
@@ -154,16 +157,16 @@ function! s:check_back_space() abort
 endfunction
 
 function! s:handle_cr()
-    if pumvisible()
-        " if completion window is visible, accept selection
-        return coc#_select_confirm()
-    elseif index(['{}', '[]', '()'], getline(".")[col(".")-2:col(".")-1]) >= 0
-        " if we are inside empty matching brackets, inset newline and indent
-        return "\<cr>\<esc>\O"
-    else
-        " Break undo level and insert <CR>
-        return "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
-    endif
+  if pumvisible()
+    " if completion window is visible, accept selection
+    return coc#_select_confirm()
+  elseif index(['{}', '[]', '()'], getline(".")[col(".")-2:col(".")-1]) >= 0
+    " if we are inside empty matching brackets, inset newline and indent
+    return "\<cr>\<esc>\O"
+  else
+    " Break undo level and insert <CR>
+    return "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+  endif
 endfunction
 
 inoremap <silent><expr> <Tab>
@@ -184,10 +187,10 @@ imap <silent> <c-u>      <plug>(coc-snippets-expand)
 inoremap <m-p> call CocActionAsync('showSignatureHelp')<cr>
 
 function! s:show_documentation()
-  if (index(['vim','help'], &filetype) >= 0)
-    execute 'h '.expand('<cword>')
-  else
+  if CocAction('hasProvider', 'hover')
     call CocAction('doHover')
+  else
+    call feedkeys('K', 'in')
   endif
 endfunction
 
@@ -237,13 +240,10 @@ nnoremap <leader>prw :CocSearch <C-R>=expand("<cword>")<CR><CR>
 "       \ SplitIfNotOpen4COC
 "       \ call lh#coc#_split_open(<f-args>)
 
-" Add `:OR` command for organize imports of the current buffer.
+" Add `:OR` command to organize imports in the current buffer.
 command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')
 
 command! -nargs=0 IntelephenseReindex   :call     CocAction('runCommand', 'intelephense.index.workspace')
-
-" Add (Neo)Vim's native statusline support.
-set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
 
 augroup vimrc
   " Setup formatexpr specified filetype(s).
@@ -252,6 +252,9 @@ augroup vimrc
   autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
   " Highlight the symbol and its references when holding the cursor.
   autocmd CursorHold * silent call CocActionAsync('highlight')
+
+  " Redraw status line
+  " autocmd User CocStatusChange redrawstatus
 
   if has("nvim")
     autocmd FileType fzf tunmap <buffer> <Esc>
