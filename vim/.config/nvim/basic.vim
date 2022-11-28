@@ -70,6 +70,11 @@ else
   set showbreak=...\ \ \
 endif
 
+augroup vimrc_basic
+  autocmd BufEnter,FocusGained,InsertLeave,WinEnter * if &nu && mode() != "i" | set rnu   | endif
+  autocmd BufLeave,FocusLost,InsertEnter,WinLeave   * if &nu                  | set nornu | endif
+augroup end
+
 " }}}
 
 " {{{ Windows / Tabs

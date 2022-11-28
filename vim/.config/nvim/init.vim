@@ -18,16 +18,11 @@ augroup END
 
 " {{{ Vim Plug Auto Setup
 
-" if empty(glob('~/.local/share/nvim/site/autoload/plug.vim'))
-"   silent !curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs
-"     \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-"   silent !mkdir -p ~/.vim/autoload
-"   silent !ln -fs ~/.local/share/nvim/site/autoload/plug.vim ~/.vim/autoload/plug.vim
-"   autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
-" endif
 let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
 if empty(glob(data_dir . '/autoload/plug.vim'))
   silent execute '!curl -fLo '.data_dir.'/autoload/plug.vim --create-dirs  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  silent !mkdir -p ~/.vim/autoload
+  silent !ln -fs ~/.local/share/nvim/site/autoload/plug.vim ~/.vim/autoload/plug.vim
   autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
 
@@ -47,42 +42,35 @@ if has('nvim')
   Plug 'nvim-lua/plenary.nvim'
   Plug 'nvim-neorg/neorg'
   Plug 'nvim-telescope/telescope.nvim'
-  Plug 'nvim-telescope/telescope-ui-select.nvim'endif
+  Plug 'nvim-telescope/telescope-ui-select.nvim'
+  Plug 'olimorris/onedarkpro.nvim'
+else
+  Plug 'joshdick/onedark.vim'
+endif
 
 " Theme
-Plug 'mhartington/oceanic-next'        " Dark Theme
-Plug 'gruvbox-community/gruvbox', {'as': 'grubox'} " Gruvbox Theme
-Plug 'dracula/vim', {'as': 'dracula'}  " Dracula Theme
+" Plug 'gruvbox-community/gruvbox', {'as': 'gruvbox'} " Gruvbox Theme
 Plug 'jeffkreeftmeijer/vim-dim', { 'branch': '1.x' }
-Plug 'doums/darcula'
 " Plug 'TaDaa/vimade'                    " Fade vim window on focus lose
 
 Plug 'tpope/vim-surround'              " Surround plugin
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-commentary'            " Better code commenting
 Plug 'tpope/vim-sensible'              " Sensible defaults for vim
-Plug 'wincent/terminus'
-Plug 'suy/vim-context-commentstring'   " Context aware commentstring in mixed code
 
 " Syntax
 Plug 'StanAngeloff/php.vim'            " Better syntax highlighting for PHP
 Plug 'ollykel/v-vim'				   " Syntax support for vlang
-" Plug 'stephpy/vim-php-cs-fixer'        " PHP CS Fixer
 Plug 'AndrewRadev/splitjoin.vim' , { 'on': ['SplitjoinSplit', 'SplitjoinJoin']}
-" Plug 'rayburgemeestre/phpfolding.vim'
-Plug 'swekaj/php-foldexpr.vim', { 'for' :'php' } " Enable code folding for PHP
-Plug 'phpactor/phpactor', {'for': 'php', 'tag': '*', 'do': 'composer install --no-dev -o'}
 
 Plug 'haya14busa/incsearch.vim'
 Plug 'machakann/vim-highlightedyank'
-Plug 'jeffkreeftmeijer/vim-numbertoggle' " use absolute line no in insert mode
 Plug 'Yggdroot/indentLine'
 Plug 'vim-airline/vim-airline'         " Airline status bar
 Plug 'camspiers/lens.vim'              " Auto expand active window
 Plug 'thaerkh/vim-workspace'           " Workspace
 
 " Search & Replace
-Plug 'osyo-manga/vim-over'             " Realtime replace preview :OverCommandLine
 Plug 'tpope/vim-abolish'               " Case aware substitution, autocorrection
                                        " case coercison
 
@@ -105,7 +93,6 @@ Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'ryanoasis/vim-devicons'
 Plug 'wsdjeg/vim-fetch'                " Handle line & col no in filename
-Plug 'lambdalisue/suda.vim'            " Write file with sudo
 Plug 'editorconfig/editorconfig-vim'   " Support for EditorConfig
 
 " Navigation
@@ -115,7 +102,6 @@ Plug 'mg979/vim-visual-multi', {'branch': 'master'} " Multi cursor support
 " Autocomplete
 Plug 'neoclide/coc.nvim', { 'branch': 'release','do': ':CocInstall coc-diagnostic coc-tsserver coc-json coc-tabnine coc-pairs coc-yaml coc-phpactor coc-highlight coc-git coc-snippets' }
 " Plug 'SirVer/ultisnips'
-Plug 'github/copilot.vim'
 
 " Editing
 Plug 'mbbill/undotree'                 " Visualize undo tree
@@ -169,11 +155,6 @@ function! s:handle_cr()
   endif
 endfunction
 
-inoremap <silent><expr> <Tab>
-      \ pumvisible() ? "\<C-n>" :
-      \ <SID>check_back_space() ? "\<Tab>" :
-      \ coc#refresh()
-inoremap <expr> <S-Tab> pumvisible() ? '<C-p>' : '<S-Tab>'
 inoremap <silent><expr> <cr> <SID>handle_cr()
 
 " Use <c-space> to trigger completion.
@@ -263,18 +244,6 @@ augroup end
 
 " }}}
 
-" {{{ phpactor
-
-augroup vimrc
-  au FileType php nmap ,gd :call phpactor#GotoDefinition()<CR>
-  au FileType php nmap ,c :call phpactor#ContextMenu()<CR>
-  au FileType php nmap ,i :call phpactor#OffsetTypeInfo()<CR>
-augroup end
-
-" }}}
-
-" autocmd vimrc BufWritePost *.php silent! call PhpCsFixerFixFile()
-
 " }}}
 
 " {{{ vlang
@@ -330,15 +299,10 @@ let g:fugitive_gitlab_domains = ['https://git.ennexa.org']
 
 " {{{ Theme
 
-" OceanicNext Theme
-let g:airline_theme='gruvbox'
-let g:oceanic_next_terminal_bold = 1
-let g:oceanic_next_terminal_italic = 1
+" let g:airline_theme='gruvbox'
 
 set background=dark
-colorscheme gruvbox
-" colorscheme darcula
-" colorscheme dim
+colorscheme onedark
 
 " }}}
 
@@ -394,9 +358,6 @@ noremap <silent> <Leader>f :NERDTreeFind<CR> <C-w>=
 " }}}
 
 " {{{ Command Line Modes
-
-" Save files as root
-cnoremap w!! execute ':w suda://%'
 
 " }}}
 
