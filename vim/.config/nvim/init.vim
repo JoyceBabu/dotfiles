@@ -1,5 +1,5 @@
 " vim: filetype=vim fdm=marker foldenable sw=4 ts=4 sts=4
-" "zo" to open folds, "zc" to close, "zn" to disable, "zi" to toggle
+" "zo" to open fold, "zc" to close, "za" to toggle, "zi" to toggle folding
 
 " {{{ Initialization
 
@@ -47,7 +47,7 @@ if has('nvim')
   Plug 'nvim-lua/plenary.nvim'
   Plug 'nvim-neorg/neorg'
   Plug 'nvim-telescope/telescope.nvim'
-endif
+  Plug 'nvim-telescope/telescope-ui-select.nvim'endif
 
 " Theme
 Plug 'mhartington/oceanic-next'        " Dark Theme
@@ -134,6 +134,7 @@ call plug#end()
 if has('nvim')
   lua require('neorg-cfg')
   lua require('treesitter-cfg')
+  lua require('telescope-cfg')
 endif
 
 " }}}
