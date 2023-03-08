@@ -44,6 +44,33 @@ if has('nvim')
   Plug 'nvim-telescope/telescope.nvim'
   Plug 'nvim-telescope/telescope-ui-select.nvim'
   Plug 'olimorris/onedarkpro.nvim'
+  " Plug 'ldelossa/nvim-ide'
+  " LSP Support
+  Plug 'neovim/nvim-lspconfig'
+  Plug 'williamboman/mason.nvim'
+  Plug 'williamboman/mason-lspconfig.nvim'
+  Plug 'jose-elias-alvarez/null-ls.nvim'
+  Plug 'jay-babu/mason-null-ls.nvim'
+
+  " Autocompletion
+  Plug 'hrsh7th/nvim-cmp'
+  Plug 'hrsh7th/cmp-buffer'
+  Plug 'hrsh7th/cmp-path'
+  Plug 'saadparwaiz1/cmp_luasnip'
+  Plug 'hrsh7th/cmp-nvim-lsp'
+  Plug 'hrsh7th/cmp-nvim-lua'
+
+  " Useful status updates for LSP
+  Plug 'j-hui/fidget.nvim'
+
+  " Additional lua configuration, makes nvim stuff amazing
+  Plug 'folke/neodev.nvim'
+
+  " Snippets
+  Plug 'L3MON4D3/LuaSnip'
+  Plug 'rafamadriz/friendly-snippets'
+
+  Plug 'VonHeikemen/lsp-zero.nvim'
 else
   Plug 'joshdick/onedark.vim'
 endif
@@ -99,10 +126,6 @@ Plug 'editorconfig/editorconfig-vim'   " Support for EditorConfig
 Plug 'christoomey/vim-tmux-navigator'
 Plug 'mg979/vim-visual-multi', {'branch': 'master'} " Multi cursor support
 
-" Autocomplete
-Plug 'neoclide/coc.nvim', { 'branch': 'release','do': ':CocInstall coc-diagnostic coc-tsserver coc-json coc-tabnine coc-pairs coc-yaml coc-phpactor coc-highlight coc-git coc-snippets' }
-" Plug 'SirVer/ultisnips'
-
 " Editing
 Plug 'mbbill/undotree'                 " Visualize undo tree
 Plug 'michaeljsmith/vim-indent-object' " Text objects for indentation level
@@ -118,133 +141,12 @@ call plug#end()
 " {{{ Configure Plugins
 
 if has('nvim')
-  lua require('neorg-cfg')
   lua require('treesitter-cfg')
-  lua require('telescope-cfg')
 endif
 
 " }}}
 
 " {{{ Language Support
-
-" {{{ PHP
-
-" {{{ Coc / Intelephense
-
-
-let g:airline#extensions#coc#show_coc_status = 1
-
-highlight! CocCodeLens guifg=#606060 ctermfg=60
-
-" use <tab> for trigger completion and navigate to the next complete item
-function! s:check_back_space() abort
-  let col = col('.') - 1
-  return !col || getline('.')[col - 1]  =~ '\s'
-endfunction
-
-function! s:handle_cr()
-  if pumvisible()
-    " if completion window is visible, accept selection
-    return coc#_select_confirm()
-  elseif index(['{}', '[]', '()'], getline(".")[col(".")-2:col(".")-1]) >= 0
-    " if we are inside empty matching brackets, inset newline and indent
-    return "\<cr>\<esc>\O"
-  else
-    " Break undo level and insert <CR>
-    return "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
-  endif
-endfunction
-
-inoremap <silent><expr> <cr> <SID>handle_cr()
-
-" Use <c-space> to trigger completion.
-if has('nvim')
-  inoremap <silent><expr> <c-space> coc#refresh()
-else
-  inoremap <silent><expr> <c-@> coc#refresh()
-endif
-
-imap <silent> <c-u>      <plug>(coc-snippets-expand)
-inoremap <m-p> call CocActionAsync('showSignatureHelp')<cr>
-
-function! s:show_documentation()
-  if CocAction('hasProvider', 'hover')
-    call CocAction('doHover')
-  else
-    call feedkeys('K', 'in')
-  endif
-endfunction
-
-" Show quick documentation
-nnoremap <silent> K :call <SID>show_documentation()<CR>
-
-" Remap keys for gotos
-nmap <silent> [g <Plug>(coc-diagnostic-prev)
-nmap <silent> ]g <Plug>(coc-diagnostic-next)
-
-" GoTo code navigation.
-nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gy <Plug>(coc-type-definition)
-nmap <silent> gI <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
-
-" Remap for rename current symbol
-nmap <leader>rn <Plug>(coc-rename)
-nmap <leader>qf  <Plug>(coc-fix-current)
-
-" Remap for format selected region
-xmap <leader>F  <Plug>(coc-format-selected)
-
-
-" Create mappings for function text object, requires document symbols feature of languageserver.
-xmap if <Plug>(coc-funcobj-i)
-omap if <Plug>(coc-funcobj-i)
-xmap af <Plug>(coc-funcobj-a)
-omap af <Plug>(coc-funcobj-a)
-xmap ic <Plug>(coc-classobj-i)
-omap ic <Plug>(coc-classobj-i)
-xmap ac <Plug>(coc-classobj-a)
-omap ac <Plug>(coc-classobj-a)
-
-" Apply codeAction to the selected region
-xmap <leader>a  <Plug>(coc-codeaction-selected)
-" Apply codeAction to the current buffer
-nmap <leader>ac  <Plug>(coc-codeaction)
-" Apply AutoFix to problem on the current line.
-nnoremap <leader>prw :CocSearch <C-R>=expand("<cword>")<CR><CR>
-
-" " Use CTRL-S for selections ranges.
-" nmap <silent> <C-s> <Plug>(coc-range-select)
-" xmap <silent> <C-s> <Plug>(coc-range-select)
-
-" command! -nargs=+ -complete=file
-"       \ SplitIfNotOpen4COC
-"       \ call lh#coc#_split_open(<f-args>)
-
-" Add `:OR` command to organize imports in the current buffer.
-command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')
-
-command! -nargs=0 IntelephenseReindex   :call     CocAction('runCommand', 'intelephense.index.workspace')
-
-augroup vimrc
-  " Setup formatexpr specified filetype(s).
-  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
-  " Update signature help on jump placeholder.
-  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-  " Highlight the symbol and its references when holding the cursor.
-  autocmd CursorHold * silent call CocActionAsync('highlight')
-
-  " Redraw status line
-  " autocmd User CocStatusChange redrawstatus
-
-  if has("nvim")
-    autocmd FileType fzf tunmap <buffer> <Esc>
-  endif
-augroup end
-
-" }}}
-
-" }}}
 
 " {{{ vlang
 
@@ -356,6 +258,13 @@ noremap <silent> <Leader>n :NERDTreeToggle<CR> <C-w>=
 noremap <silent> <Leader>f :NERDTreeFind<CR> <C-w>=
 
 " nnoremap <C-p> :GFiles<CR>
+
+" Find files using Telescope command-line sugar.
+nnoremap <leader>fa <cmd>Telescope find_files<cr>
+nnoremap <leader>ff <cmd>Telescope git_files<cr>
+nnoremap <leader>fg <cmd>Telescope live_grep<cr>
+nnoremap <leader>fb <cmd>Telescope buffers<cr>
+nnoremap <leader>fh <cmd>Telescope help_tags<cr>
 
 " }}}
 
