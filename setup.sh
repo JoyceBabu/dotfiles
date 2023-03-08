@@ -15,9 +15,11 @@ base=(
 useronly=(
     editorconfig
     git
+    kitty
     ripgrep
     tmux
     vim
+    wezterm
     zsh
 )
 

@@ -26,9 +26,11 @@ alias rust_init='
     export PATH=$CARGO_HOME/bin:$PATH
 '
 alias python_init="alias venv='python3 -m venv'"
+alias composer_init='PATH=$PATH:~/.composer/vendor/bin'
 alias open_ports="sudo lsof -iTCP -sTCP:LISTEN -P -n"
 alias ..='cd ..'
 alias ssh=tssh
+alias pstorm=phpstorm
 
 if /usr/bin/which nvim > /dev/null; then
     alias vim=nvim
@@ -36,6 +38,7 @@ if /usr/bin/which nvim > /dev/null; then
 fi
 
 function tssh () {
+    #/usr/bin/ssh -t $@ "tmux -2 attach || tmux -2 new";
 	/usr/bin/ssh -t $1 "tmux new -As${2:-0}"
 }
 
@@ -44,7 +47,7 @@ proxy-start () {
         echo "Usage: proxy-start <remote_host> [<local_port=8123>]"
         return 1
     fi
-    ssh -D ${2:-8123} -q -C -N ${1}
+    \ssh -D ${2:-8123} -q -C -N ${1}
 }
 
 docker-ip() {

@@ -16,10 +16,10 @@ augroup END
 
 " {{{ Basic Settings
 
-let mapleader = ','
-" let maplocallseader = ','
+let mapleader = ' '
+let maplocallseader = ' '
 
-set updatetime=300
+set updatetime=250
 
 syntax on                        " Enable colour syntax highlighting
 filetype indent on               " Enable loading of plugin files
@@ -79,7 +79,7 @@ augroup end
 
 " {{{ Windows / Tabs
 
-set splitbelow splitright        " Split windows more intuitively.
+"set splitbelow splitright        " Split windows more intuitively.
 
 " Rebalance windows on vim resize when tmux panes are created/destroyed/resized
 autocmd vimrc_basic VimResized * :wincmd =
@@ -188,11 +188,14 @@ set wildignore+=**/db/**
 
 let g:netrw_liststyle = 3    " Show tree style directory list
 " let g:netrw_banner = 0       " Hide directory banner
-let g:netrw_winsize = 25     " Width of the netrw split
+let g:netrw_winsize = 20     " Width of the netrw split
 let g:netrw_preview   = 1
 let g:netrw_browse_split = 4 " Open file in previous window
 let g:netrw_altv = 1         " Open file in left right split when pressing v
 let g:netrw_list_hide = '\.sw[op]$'
+
+"  Press ? for quick help in netrw window
+autocmd vimrc_basic FileType netrw nnoremap ? :help netrw-quickmap<CR>
 
 " }}}
 
@@ -213,24 +216,39 @@ nnoremap ,ve :vsp $MYVIMRC<cr>
 nnoremap ,vr :source $MYVIMRC<cr>
 
 " Bash like keys for the insert/command line mode
+" https://github.com/tpope/vim-rsi/blob/master/plugin/rsi.vim
 inoremap <C-a> <Home>
+inoremap <C-x><C-a> <C-a>
 inoremap <C-b> <Left>
 inoremap <C-d> <Delete>
-inoremap <C-e> <End>
+" inoremap <C-e> <End>
+inoremap <expr> <C-E> col('.')>strlen(getline('.'))<bar><bar>pumvisible()?"\<Lt>C-E>":"\<Lt>End>"
 inoremap <C-f> <Right>
 " inoremap <C-h> <Backspace>
 " inoremap <C-k> <C-U>
 inoremap <C-y> <C-r>+
 cnoremap <C-a> <Home>
+cnoremap   <C-x><C-a> <C-a>
 cnoremap <C-e> <End>
 " cnoremap <C-k> <C-o>D
 
 " Indent without killing the selection in vmode
 vmap < <gv
 vmap > >gv
+" Select last pasted text
+nnoremap <expr> gvp '`[' . strpart(getregtype(), 0, 1) . '`]'
 
 noremap H ^
 noremap L $
+
+" Retain cursor position when joining lines
+noremap J mzJ`z
+" Center cursor
+noremap <C-d> <C-d>zz
+noremap <C-u> <C-u>zz
+" Center cursor and open folds
+noremap n nzzzv
+noremap N Nzzzv
 
 " Replace selection with last yanked text without modifying unnamed registers
 vnoremap <leader>p "_dP
@@ -242,7 +260,7 @@ nnoremap <leader>y "+y
 vnoremap <leader>y "+y
 
 nnoremap <leader>bs /<C-R>=escape(expand("<cWORD>"), "/")<CR><CR>
-nnoremap <leader>pv :Vex<CR>
+nnoremap <leader>pv :Lex<CR>
 
 cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
 " cnoremap $$ <C-R>=fnameescape(expand('%'))<cr>

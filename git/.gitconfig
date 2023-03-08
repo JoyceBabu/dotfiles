@@ -49,3 +49,6 @@
     cmd = nvim -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
     prompt = false
     keepBackup = true
+[fetch]
+	prune = true[init]
+	defaultBranch = master
