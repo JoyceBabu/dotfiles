@@ -59,8 +59,8 @@ Plug 'tpope/vim-commentary'            " Better code commenting
 Plug 'tpope/vim-sensible'              " Sensible defaults for vim
 
 " Syntax
-Plug 'StanAngeloff/php.vim'            " Better syntax highlighting for PHP
-Plug 'ollykel/v-vim'				   " Syntax support for vlang
+Plug 'StanAngeloff/php.vim', {'for': 'php'} " Better syntax highlighting for PHP
+Plug 'ollykel/v-vim', { 'for': 'vlang' } " Syntax support for vlang
 Plug 'AndrewRadev/splitjoin.vim' , { 'on': ['SplitjoinSplit', 'SplitjoinJoin']}
 
 Plug 'haya14busa/incsearch.vim'
