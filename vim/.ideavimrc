@@ -21,6 +21,16 @@ Plug 'tommcdo/vim-exchange'
 Plug 'preservim/nerdtree'
 " Plug 'easymotion/vim-easymotion'
 
+" {{{ Abolish.vim
+" Requires plugin String Manipulation
+map crm <Action>(StringManipulation.ToPascalCaseOrCamelCase)
+map crc <Action>(StringManipulation.ToCamelCase)
+map crs <Action>(StringManipulation.ToSnakeCase)
+map cru <Action>(StringManipulation.ToScreamingSnakeCase)
+StringManipulation.
+
+" }}}
+
 " {{{ Multiple Cursors
 
 " Set multiple cursor bindings
@@ -119,6 +129,9 @@ nmap gcc :action CommentByLineComment<Cr>
 nnoremap <C-o> :action Back<Cr>
 nnoremap <C-i> :action Forward<Cr>
 
+" Remap search/replace word under cursor
+nnoremap <leader>h viwy:%s/\<<c-r>"\>/<c-r>"/gI<Left><Left><Left>
+
 "  unimpaired-style mappings
 " noremap [<Space> O<Esc>j
 " noremap ]<Space> o<Esc>k
@@ -210,7 +223,7 @@ nnoremap <C-i> :action Forward<Cr>
 " <C-d> = Delete one character forward; the opposite of <C-h>
 " inoremap <C-d> <Delete>
 " <C-e> = Move to end of the line; the opposite of <C-a>; already exists in command mode: c_ctrl-e
-" inoremap <C-e> <End>
+inoremap <C-e> <End>
 " <C-f> = Move one character forward; the opposite of <C-b>
 " inoremap <C-f> <Right>
 " <C-g> = Cancel completion
@@ -285,9 +298,6 @@ inoremap <A--> <Esc>ugi
 "
 "nnoremap <leader>bs /<C-R>=escape(expand("<cWORD>"), "/")<Cr><Cr>
 "nnoremap <leader>pv :Sex!<Cr>
-
-" Experimental Mappings
-nnoremap ,/ :nohlsearch<CR>
 
 " }}}
 

@@ -205,6 +205,9 @@ autocmd vimrc_basic FileType yaml setlocal shiftwidth=2 softtabstop=2
 
 " {{{ Custom Mappings
 
+" Experimental Mappings
+nnoremap <leader>/ :nohlsearch<CR>
+
 " Quick edit $MYVIMRC
 nnoremap ,ve :vsp $MYVIMRC<cr>
 nnoremap ,vr :source $MYVIMRC<cr>
@@ -247,6 +250,9 @@ map <leader>E :e %%
 map <leader>es :sp %%
 map <leader>ev :vsp %%
 map <leader>et :tabe %%
+
+" Search/Replace word under cursor
+nnoremap <leader>h :%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>
 
 " Apply a macro line by line on the selected range in visual block mode
 xnoremap @ :<C-u>call ExecuteMacroOverVisualRange()<CR>
