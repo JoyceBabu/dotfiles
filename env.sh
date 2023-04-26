@@ -24,6 +24,27 @@ jb_check_for_executable() {
 export MYVIMRC=$JB_ENV_DIR/.vimrc
 export VIMINIT=":set runtimepath^=/tmp/jb-vim/.vim|:source $MYVIMRC"
 
+cat <<EOF > $JB_ENV_DIR/.gitconfig
+[user]
+  name = Joyce Babu
+  email = joyce@ennexa.com
+[pull]
+  rebase = true
+[rebase]
+  autoStash = true
+[merge]
+  tool = vimdiff
+  conflictstyle = diff3
+[mergetool "vimdiff"]
+  keepBackup = true
+  prompt = false
+  cmd = nvim -d \$BASE \$LOCAL \$REMOTE \$MERGED -c '\$wincmd w' -c 'wincmd J'
+[mergetool "nvim"]
+  keepBackup = true
+  prompt = false
+  cmd = nvim -f -c \"Gdiffsplit!\" \"\$MERGED\"
+EOF
+
 cat <<EOF > $JB_ENV_DIR/.shrc
 jb_check_for_executable() {
   type \$1 >/dev/null 2>/dev/null
@@ -36,6 +57,7 @@ elif ! jb_check_for_executable vim; then
 fi
 
 export JB_ENV_DIR="$JB_ENV_DIR"
+export GIT_CONFIG_GLOBAL="\$JB_ENV_DIR/.gitconfig"
 
 unset jb_check_for_executable
 
