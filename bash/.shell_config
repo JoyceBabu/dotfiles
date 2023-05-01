@@ -18,12 +18,13 @@ if [ -n "$BASH_VERSION" ]; then
 	shell=bash
 elif [ -n "$ZSH_VERSION" ]; then
 	shell=zsh
-else
+elif [ ! -z $SHELL ]; then
 	shell=$(basename $SHELL)
+else
+	shell=$(which zsh)
 fi
 
 source ~/.iterm2_shell_integration.$shell
-unset shell
 
 export PATH=$HOME/.local/bin:$PATH
 
@@ -59,9 +60,8 @@ _source_file ~/.shell_config_custom
 
 _source_file ~/.bash_aliases
 
-_SHELL=$(basename $SHELL)
-eval "$(zoxide init $_SHELL)"
+eval "$(zoxide init $shell)"
 
 unset _source_file
-unset _SHELL
+unset shell
 
