@@ -49,6 +49,14 @@ xmap g<A-p> <Plug>AllOccurrences
 
 " }}}
 
+" {{{ Fugitive
+
+map <leader>dg :diffget<CR>
+map <leader>dp :diffput<CR>
+nmap <Leader>ga :action Git.Add<CR>
+
+" }}}
+
 " }}}
 
 " {{{ Set commands
@@ -131,6 +139,8 @@ nnoremap <C-i> :action Forward<Cr>
 
 " Remap search/replace word under cursor
 nnoremap <leader>h viwy:%s/\<<c-r>"\>/<c-r>"/gI<Left><Left><Left>
+nnoremap <leader>9 :action ActivateProjectToolWindow<cr>
+nnoremap <leader>8 :action JumpToLastWindow
 
 "  unimpaired-style mappings
 " noremap [<Space> O<Esc>j

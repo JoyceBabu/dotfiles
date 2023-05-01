@@ -22,8 +22,9 @@ let maplocallseader = ' '
 set updatetime=250
 
 syntax on                        " Enable colour syntax highlighting
-filetype indent on               " Enable loading of plugin files
-filetype plugin on               " Enable loading of indent files
+filetype on                      " Enable filetype detection
+filetype plugin on               " Enable loading of filetype plugins
+filetype indent on               " Enable loading of indent files
 
 " }}}
 
@@ -54,7 +55,14 @@ else
   set signcolumn=yes             " Always show sign colum to prevent resize
 endif
 
+" Disable a legacy behavior that can break plugin maps.
+if has('langmap') && exists('+langremap') && &langremap && s:MaySet('langremap')
+  set nolangremap
+endif
+
 set background=dark
+set laststatus=2
+set ruler
 
 " {{{ Word Wrap
 
@@ -129,22 +137,48 @@ set expandtab                    " Indent with space
 set autoindent                   " Remember indentation from last line
 set encoding=utf8                " The encoding displayed.
 set fileencoding=utf8            " The encoding written to file.
+set smarttab
+set nrformats-=octal             " Increment 007 to 008, not 010
 " set spell
 " set spelllang=en
+" set complete-=i                " Scan current & included files for completion
+
+if !has('nvim') && &ttimeoutlen == -1
+  set ttimeout
+  set ttimeoutlen=100
+endif
+
+
+" Correctly highlight $() and other modern affordances in filetype=sh.
+if !exists('g:is_posix') && !exists('g:is_bash') && !exists('g:is_kornshell') && !exists('g:is_dash')
+  let g:is_posix = 1
+endif
 
 " }}}
 
 " {{{ Code Navigation
 
 " imap <S-Tab> <plug>(fzf-complete-line)
+set incsearch
 set nohlsearch ignorecase        " disable highlight searches, incsearch plugin does this
 set smartcase                    " Enable case sensitivity if term is mixed case
 set nostartofline                " prevent cursor from moving when scrolling
 set switchbuf=useopen,usetab     " better behavior for the quickfix window and :sb
 set scrolloff=8
+set sidescroll=1                 " Scroll horizontally when wordwrap is disabled
+set sidescrolloff=5              " and cursor is 5 chars away from the edge
+set display+=lastline
+set autoread                     " Auto reload file on external change
+set tabpagemax=50
+set viminfo^=!
+
+if v:version > 703
+  set formatoptions+=j " Delete comment character when joining commented lines
+endif
 
 " Builtin Pluign. Hit `%` on `if` to jump to `else`.
 runtime macros/matchit.vim
+runtime ftplugin/man.vim         " Enable the :Man command
 
 " {{{ Code Foldings
 
@@ -186,15 +220,39 @@ set wildignore+=**/update-db/**
 set wildignore+=**/__dist/**
 set wildignore+=**/db/**
 
-let g:netrw_liststyle = 3    " Show tree style directory list
-" let g:netrw_banner = 0       " Hide directory banner
-let g:netrw_winsize = 20     " Width of the netrw split
-let g:netrw_preview   = 1
-let g:netrw_browse_split = 4 " Open file in previous window
-let g:netrw_altv = 1         " Open file in left right split when pressing v
-let g:netrw_list_hide = '\.sw[op]$'
+" Saving options in session and view files causes more problems than it
+" solves, so disable it.
+set sessionoptions-=options
+set viewoptions-=options
 
-"  Press ? for quick help in netrw window
+function! NetrwMapping()
+    " noremap <buffer> <C-l> <C-W>l
+    " noremap <buffer> <C-h> <C-W>h
+
+    let g:netrw_liststyle = 3    " Directory tree view. Cycle with i
+    " let g:netrw_banner = 0     " Hide directory banner
+    " let g:netrw_winsize = 50     " Width of the netrw split
+    let g:netrw_preview   = 1
+    " let g:netrw_browse_split = 4 " Open file in previous window
+    let g:netrw_sort_sequence = '[\/]$,*'
+    let g:netrw_altv = 1         " Open file in left right split when pressing v
+
+    let g:netrw_list_hide= '.*.swp$,
+            \ *.pyc$,
+            \ *.log$,
+            \ *.o$,
+            \ *.xmi$,
+            \ *.sw[op]$,
+            \ *.bak$,
+            \ *.pyc$,
+            \ *.class$,
+            \ *.jar$,
+            \ *.war$,
+            \ *__pycache__*'
+endfunction
+
+autocmd vimrc_basic FileType netrw call NetrwMapping()
+" Press ? for quick help in netrw window
 autocmd vimrc_basic FileType netrw nnoremap ? :help netrw-quickmap<CR>
 
 " }}}
@@ -207,6 +265,11 @@ autocmd vimrc_basic FileType yaml setlocal shiftwidth=2 softtabstop=2
 " }}}
 
 " {{{ Custom Mappings
+
+" Browse in separate window. Requires g:netrw_browse_split = 4
+" Also need to experiment with g:netrw_chgwin to use both :Exp and :Lex
+" nnoremap <leader>9 :Lex \| vertical resize 35<cr>
+nnoremap <leader>9 :execute exists("w:netrw_rexlocal")?":Rexplore":":Explore"<cr>
 
 " Experimental Mappings
 nnoremap <leader>/ :nohlsearch<CR>
@@ -230,6 +293,10 @@ inoremap <C-y> <C-r>+
 cnoremap <C-a> <Home>
 cnoremap   <C-x><C-a> <C-a>
 cnoremap <C-e> <End>
+" Add an undo point before deleting, to prevent accidental data loss
+inoremap <C-U> <C-G>u<C-U>
+inoremap <C-W> <C-G>u<C-W>
+
 " cnoremap <C-k> <C-o>D
 
 " Indent without killing the selection in vmode
