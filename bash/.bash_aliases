@@ -31,6 +31,7 @@ alias open_ports="sudo lsof -iTCP -sTCP:LISTEN -P -n"
 alias ..='cd ..'
 alias ssh=tssh
 alias pstorm=phpstorm
+alias gg=lazygit
 
 if /usr/bin/which nvim > /dev/null; then
     alias vim=nvim
