@@ -2,30 +2,40 @@ local lsp = require('lsp-zero')
 local fidget = require("fidget")
 
 lsp.preset("recommended")
+-- lsp.preset({
+--   name = 'minimal',
+--   set_lsp_keymaps = true,
+--   manage_nvim_cmp = true,
+--   suggest_lsp_servers = false,
+-- })
+
+lsp.nvim_workspace()
+
+lsp.setup()
 
 lsp.ensure_installed({
-  'bashls',
-  'cssls',
-  'eslint',
-  'html',
-  'jsonls',
-  'sumneko_lua',
-  'tsserver',
-  'yamlls',
-  'phpactor',
-  -- 'rust_analyzer',
+-- 'bashls',
+-- 'cssls',
+-- 'eslint',
+-- 'html',
+-- 'jsonls',
+-- 'sumneko_lua',
+-- 'tsserver',
+-- 'yamlls',
+-- 'phpactor',
+-- 'rust_analyzer',
 })
 
--- Fix Undefined global 'vim'
-lsp.configure('sumneko_lua', {
-    settings = {
-        Lua = {
-            diagnostics = {
-                globals = { 'vim' }
-            }
-        }
-    }
-})
+-- -- Fix Undefined global 'vim'
+-- lsp.configure('sumneko_lua', {
+--     settings = {
+--         Lua = {
+--             diagnostics = {
+--                 globals = { 'vim' }
+--             }
+--         }
+--     }
+-- })
 
 fidget.setup()
 
@@ -120,9 +130,8 @@ null_ls.setup({
 mason_null_ls.setup({
   ensure_installed = nil,
   automatic_installation = true,
-  automatic_setup = true,
+  handlers = {},
 })
-mason_null_ls.setup_handlers({})
 
 vim.diagnostic.config({
     virtual_text = true, -- Set this to false to disable inline diagnostic message
@@ -132,3 +141,5 @@ vim.diagnostic.config({
     -- severity_sort = true,
     -- float = true,
 })
+
+require('mason').setup()
