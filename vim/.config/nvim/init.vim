@@ -204,6 +204,7 @@ let g:fugitive_gitlab_domains = ['https://git.ennexa.org']
 
 set background=dark
 colorscheme onedark
+highlight Comment cterm=italic gui=italic
 
 "
 
