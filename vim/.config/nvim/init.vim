@@ -1,7 +1,7 @@
 " vim: filetype=vim fdm=marker foldenable sw=4 ts=4 sts=4
 " "zo" to open fold, "zc" to close, "za" to toggle, "zi" to toggle folding
 
-" {{{ Initialization
+"  Initialization
 
 " Skip initialization for vim-tiny or vim-small.
 if !1 | finish | endif
@@ -14,9 +14,7 @@ augroup vimrc
   autocmd!
 augroup END
 
-" }}}
-
-" {{{ Vim Plug Auto Setup
+"  Vim Plug Auto Setup
 
 let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
 if empty(glob(data_dir . '/autoload/plug.vim'))
@@ -31,9 +29,9 @@ autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
   \| PlugInstall --sync | source $MYVIMRC
 \| endif
 
-" }}}
+"
 
-" {{{ Load Plugins
+"  Load Plugins
 
 call plug#begin('~/.local/share/nvim/plugged')
 
@@ -77,7 +75,7 @@ endif
 
 " Theme
 " Plug 'gruvbox-community/gruvbox', {'as': 'gruvbox'} " Gruvbox Theme
-Plug 'jeffkreeftmeijer/vim-dim', { 'branch': '1.x' }
+" Plug 'jeffkreeftmeijer/vim-dim', { 'branch': '1.x' }
 " Plug 'TaDaa/vimade'                    " Fade vim window on focus lose
 
 Plug 'tpope/vim-surround'              " Surround plugin
@@ -90,11 +88,10 @@ Plug 'StanAngeloff/php.vim', {'for': 'php'} " Better syntax highlighting for PHP
 Plug 'ollykel/v-vim', { 'for': 'vlang' } " Syntax support for vlang
 Plug 'AndrewRadev/splitjoin.vim' , { 'on': ['SplitjoinSplit', 'SplitjoinJoin']}
 
-Plug 'haya14busa/incsearch.vim'
 Plug 'machakann/vim-highlightedyank'
 Plug 'Yggdroot/indentLine'
 Plug 'vim-airline/vim-airline'         " Airline status bar
-Plug 'camspiers/lens.vim'              " Auto expand active window
+" Plug 'camspiers/lens.vim'              " Auto expand active window
 Plug 'thaerkh/vim-workspace'           " Workspace
 
 " Search & Replace
@@ -116,10 +113,10 @@ Plug 'junegunn/fzf', {
 Plug 'junegunn/fzf.vim'
 Plug 'jesseleite/vim-agriculture'      " Allow passing flags in :Ag
 Plug 'justinmk/vim-dirvish'
-Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
+" Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'ryanoasis/vim-devicons'
-Plug 'wsdjeg/vim-fetch'                " Handle line & col no in filename
+" Plug 'wsdjeg/vim-fetch'                " Handle line & col no in filename
 Plug 'editorconfig/editorconfig-vim'   " Support for EditorConfig
 
 " Navigation
@@ -132,42 +129,42 @@ Plug 'michaeljsmith/vim-indent-object' " Text objects for indentation level
 Plug 'vim-scripts/argtextobj.vim'
 
 " Debugging
-Plug 'vim-vdebug/vdebug'
+" Plug 'vim-vdebug/vdebug'
 
 call plug#end()
 
-" }}}
+"
 
-" {{{ Configure Plugins
+"  Configure Plugins
 
 if has('nvim')
   lua require('treesitter-cfg')
 endif
 
-" }}}
+"
 
-" {{{ Language Support
+"  Language Support
 
-" {{{ vlang
+"  vlang
 
 let g:v_autofmt_bufwritepre = 1        " Auto format on save
 
-" }}}
+"
 
-" }}}
+"
 
-" {{{ Project / Session
+"  Project / Session
 
-" {{{ Workspace
+"  Workspace
 
 let g:workspace_session_directory = $HOME . '/.cache/vim/sessions/'
 let g:workspace_persist_undo_history = 1
 let g:workspace_undodir='.undodir'
 let g:workspace_session_disable_on_args = 1
 
-" }}}
+"
 
-" {{{ Undo History
+"  Undo History
 
 if has('persistent_undo')
   let target_path = expand('~/.cache/vim/vim-persisted-undo/')
@@ -182,11 +179,11 @@ if has('persistent_undo')
   set nobackup
 endif
 
-" }}}
+"
 
-" }}}
+"
 
-" {{{ User Interface
+"  User Interface
 
 let g:vimade = {}
 let g:vimade.usecursorhold=1
@@ -195,22 +192,22 @@ let g:lens#width_resize_max = 80
 let g:lens#disabled_filetypes = ['nerdtree', 'fzf', 'netrw']
 " let g:vimade.enablesigns = 1
 
-" {{{ Git Integration
+"  Git Integration
 
 let g:fugitive_gitlab_domains = ['https://git.ennexa.org']
 
-" }}}
+"
 
-" {{{ Theme
+"  Theme
 
 " let g:airline_theme='gruvbox'
 
 set background=dark
 colorscheme onedark
 
-" }}}
+"
 
-" {{{ IndentLine Settings
+"  IndentLine Settings
 
 let g:indentLine_faster     = 1
 let g:indentLine_setConceal = 0
@@ -223,29 +220,29 @@ let g:indentLine_leadingSpaceChar = '.'
 let g:indentLine_char_list = ['|', '¦', '┆', '┊']
 " autocmd! User indentLine doautocmd indentLine Syntax
 
-" }}}
+"
 
-" {{{ Windows / Tabs
+"  Windows / Tabs
 
 " Disable vim->tmux navigation when the Vim pane is zoomed in tmux
 let g:tmux_navigator_disable_when_zoomed = 1
 
 nnoremap <silent> gz :ZoomToggle<CR>
 
-" }}}
+"
 
-" }}}
+"
 
-" {{{ Debugging
+"  Debugging
 
-let g:vdebug_options = {'ide_key': 'xdebug'}
-let g:vdebug_options = {'break_on_open': 0}
-let g:vdebug_options = {'server': '127.0.0.1'}
-let g:vdebug_options = {'port': '10000'}
+" let g:vdebug_options = {'ide_key': 'xdebug'}
+" let g:vdebug_options = {'break_on_open': 0}
+" let g:vdebug_options = {'server': '127.0.0.1'}
+" let g:vdebug_options = {'port': '10000'}
 
-" }}}
+"
 
-" {{{ File Management
+"  File Management
 
 " NERDTree Toggle
 let NERDTreeHijackNetrw = 0
@@ -266,18 +263,19 @@ nnoremap <leader>fg <cmd>Telescope live_grep<cr>
 nnoremap <leader>fb <cmd>Telescope buffers<cr>
 nnoremap <leader>fh <cmd>Telescope help_tags<cr>
 
-" }}}
+"
 
-" {{{ Command Line Modes
+"  Command Line Modes
 
-" }}}
+"
 
-" {{{ Custom Mappings
+"  Custom Mappings
+
 
 " Execute current line in $SHELL and replace it with the output
 noremap Q !!$SHELL<cr>
 
-" {{{ Vim Visual Multi
+"  Vim Visual Multi
 
 let g:VM_theme = 'iceblue'
 let g:VM_highlight_matches = 'underline'
@@ -299,7 +297,7 @@ let g:VM_mouse_mappings = 1    " Equivalent to following mappings
 " nmap   <C-RightMouse>      <Plug>(VM-Mouse-Word)
 " nmap   <M-C-RightMouse>    <Plug>(VM-Mouse-Column)
 
-" }}}
+"
 
 " Home-row shortcut for escape key
 " cnoremap kj <esc>
@@ -308,13 +306,13 @@ let g:VM_mouse_mappings = 1    " Equivalent to following mappings
 
 nnoremap <leader>ps :GFiles<CR>
 
-" }}}
+"
 
-" {{{ Overrides
+"  Overrides
 
 if filereadable(expand("~/.vimrc.local"))
   source ~/.vimrc.local
 endif
 
-" }}}
+"
 
