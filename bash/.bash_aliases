@@ -40,7 +40,11 @@ fi
 
 function tssh () {
     #/usr/bin/ssh -t $@ "tmux -2 attach || tmux -2 new";
-	/usr/bin/ssh -t $1 "tmux new -As${2:-0}"
+	if [ $# -eq 1 ]; then
+		/usr/bin/ssh -t $1 "tmux new -As${2:-0}"
+	else
+		/usr/bin/ssh $@
+	fi
 }
 
 proxy-start () {
