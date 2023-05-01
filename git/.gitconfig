@@ -43,12 +43,16 @@
 [gc]
     autoDetach = false
 [merge]
-    tool = vimdiff
+    tool = nvim
     conflictstyle = diff3
 [mergetool "vimdiff"]
     cmd = nvim -d $BASE $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
     prompt = false
     keepBackup = true
+[mergetool "nvim"]
+  cmd = nvim -f -c \"Gdiffsplit!\" \"$MERGED\"
+  keepBackup = true
 [fetch]
-	prune = true[init]
+	prune = true
+[init]
 	defaultBranch = master
