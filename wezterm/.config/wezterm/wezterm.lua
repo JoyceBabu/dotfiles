@@ -33,8 +33,7 @@ wezterm.on("gui-startup", function()
 end)
 
 return {
-    color_scheme = "JetBrains Darcula",
-    -- color_scheme = "Adventure",
+    color_scheme = 'OneDark (Gogh)',
     -- default_prog = {"/usr/bin/zsh", "-l"},
     font = font_with_sym_fallback("JetBrains Mono",{foreground="#b0b0b0"}),
     font_size = 16.0,
