@@ -39,12 +39,17 @@ if /usr/bin/which nvim > /dev/null; then
 fi
 
 function tssh () {
-    #/usr/bin/ssh -t $@ "tmux -2 attach || tmux -2 new";
-	if [ $# -eq 1 ]; then
-		/usr/bin/ssh -t $1 "tmux new -As${2:-0}"
-	else
-		/usr/bin/ssh $@
-	fi
+    if [ "$#" -ne 1 ]; then
+        # More than one argument. Just pass all to ssh.
+        \ssh "$@"
+    else
+        # Only the server name is given. Try to attach to tmux session.
+        \ssh "$1" -t "
+            tmux attach -t tssh 2>/dev/null || {
+				source <(curl --max-time 3 -fsSL 'https://env.joycebabu.com') 2>/dev/null
+			}
+        "
+    fi
 }
 
 proxy-start () {
