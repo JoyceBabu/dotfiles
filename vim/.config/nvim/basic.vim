@@ -156,8 +156,10 @@ set nrformats-=octal             " Increment 007 to 008, not 010
 set complete=.,w,b,u,t
 set diffopt=internal,filler
 
+if exists(":DiffOrig") != 2
+  command DiffOrig vert new | set bt=nofile | r ++edit # | 0d_
+        \ | diffthis | wincmd p | diffthis
 endif
-
 
 " Correctly highlight $() and other modern affordances in filetype=sh.
 if !exists('g:is_posix') && !exists('g:is_bash') && !exists('g:is_kornshell') && !exists('g:is_dash')
@@ -281,8 +283,8 @@ nnoremap <leader>9 :execute exists("w:netrw_rexlocal")?":Rexplore":":Explore"<cr
 nnoremap <leader>/ :nohlsearch<CR>
 
 " Quick edit $MYVIMRC
-nnoremap ,ve :vsp $MYVIMRC<cr>
-nnoremap ,vr :source $MYVIMRC<cr>
+nnoremap <leader>ve :vsp $MYVIMRC<cr>
+nnoremap <leader>vr :source $MYVIMRC<cr>
 
 " Bash like keys for the insert/command line mode
 " https://github.com/tpope/vim-rsi/blob/master/plugin/rsi.vim
@@ -310,6 +312,8 @@ vmap < <gv
 vmap > >gv
 " Select last pasted text
 nnoremap <expr> gvp '`[' . strpart(getregtype(), 0, 1) . '`]'
+" Reselect last pasted text
+nnoremap gp `[v`]
 
 noremap H ^
 noremap L $
@@ -480,10 +484,165 @@ endif
 " }}}
 
 " }}}
+
+" {{ Neovim Compatibility
+" https://github.com/mikeslattery/nvim-defaults.vim/blob/main/plugin/.vimrc
+
+if exists('g:loaded_nvim_defaults')
+  finish
+endif
+
+let g:loaded_nvim_defaults = 1
+
+if has('nvim')
+  function! Stdpath(id)
+    return stdpath(a:id)
+  endfunction
+
+  command! MapQ :
+  finish
+endif
+
+if &ttimeoutlen == -1
+  set ttimeout
+  set ttimeoutlen=50
+endif
+
+let &keywordprg=":Man"
+set guicursor=n-v-c-sm:block,i-ci-ve:ver25,r-cr-o:hor20
+set listchars=tab:>\ ,trail:-,nbsp:+
+set maxcombine=6
+set scroll=13
+set tags=./tags;,tags
+set notitle
+set titleold=
+
+set ttyfast
+
+let &viminfo='!,'.&viminfo
+let &wildoptions="pum,tagfile"
+let g:vimsyn_embed='l'
+
+" These don't always necessarily exist in Neovim,
+" but are convenient to have for Stdpath()
+
+if ! exists('$NVIM_APPNAME')
+    let $NVIM_APPNAME = 'nvim'
+endif
+
+if ! exists('$XDG_CACHE_HOME')
+  if has('win32')
+    let $XDG_CACHE_HOME=$TEMP
+  else
+    let $XDG_CACHE_HOME=$HOME . '/.cache'
+  endif
+endif
+
+if ! exists('$XDG_CONFIG_HOME')
+  if has('win32')
+    let $XDG_CONFIG_HOME=$LOCALAPPDATA
+  else
+    let $XDG_CONFIG_HOME=$HOME . '/.config'
+  endif
+endif
+
+if ! exists('$XDG_DATA_HOME')
+  if has('win32')
+    let $XDG_DATA_HOME=$LOCALAPPDATA
+  else
+    let $XDG_DATA_HOME=$HOME . '/.local/share'
+  endif
+endif
+
+" Similar to nvim's stdpath(id)
+" Unfortunately, user functions can't use lowercase
+function! Stdpath(id)
+  if a:id == 'data'
+    if has('win32')
+      return $XDG_DATA_HOME . '/' . $NVIM_APPNAME . '-data'
+    else
+      return $XDG_DATA_HOME . '/' . $NVIM_APPNAME
+    endif
+  elseif a:id == 'data_dirs'
+    return []
+  elseif a:id == 'config'
+    return $XDG_CONFIG_HOME . '/' . $NVIM_APPNAME
+  elseif a:id == 'config_dirs'
+    return []
+  elseif a:id == 'cache'
+    return $XDG_CACHE_HOME . '/' . $NVIM_APPNAME
+  else
+    throw '"' . a:id . '" is not a valid stdpath'
+  endif
+endfunction
+
+let s:datadir   = Stdpath('data')
+let s:configdir = Stdpath('config')
+
+" backupdir isn't set exactly like Neovim, because it's odd.
+let &backupdir = s:datadir . '/backup//'
+let &viewdir   = s:datadir . '/view//'
+if ! executable('nvim')
+  let &directory = s:datadir . '/swap//'
+  let &undodir   = s:datadir . '/undo//'
+else
+  " Vim/Neovim have different file formats
+  let &directory = s:datadir . '/vimswap//'
+  let &undodir   = s:datadir . '/vimundo//'
+endif
+
+let s:shadadir   = s:datadir  . '/shada'
+let &viminfofile.= s:shadadir . '/viminfo'
+
+" Neovim creates directories if they don't exist
+function! s:MakeDirs()
+  for dir in [&backupdir, &directory, &undodir, &viewdir, s:shadadir]
+    call mkdir(dir, "p")
+  endfor
+endfunction
+autocmd VimEnter * call s:MakeDirs()
+
+" Add user config dirs to search paths
+function! s:fixpath(path)
+  let l:pathprefix  = s:configdir . ',' . s:datadir . '/site,'
+  let l:pathpostfix = ',' . s:datadir . '/site/after,' . s:configdir . '/after'
+  let l:fullpath = l:pathprefix . a:path . l:pathpostfix
+  " Remove .vim
+  return substitute(l:fullpath, ','.$HOME.'\/\.vim\(/after\)\?', '', 'g')
+endfunction
+
+let &packpath     = s:fixpath(&packpath)
+let &runtimepath  = s:fixpath(&runtimepath)
+
+" Implement Q
+let g:qreg='@'
+function! RecordOrStop()
+  if reg_recording() == ''
+    echo 'Enter register to record to: '
+    let g:qreg=getcharstr()
+    if g:qreg != "\e"
+      execute 'normal! q'.g:qreg
+    endif
+  else
+    normal! q
+    call setreg(g:qreg, substitute(getreg(g:qreg), "q$", "", ""))
+  endif
+endfunction
+
+" :MapQ will activate the Q mapping
+command! MapQ noremap q <cmd>call RecordOrStop()<cr>
+noremap Q <cmd>execute 'normal! @'.g:qreg<cr>
+
 " Builtin Pluign. Hit `%` on `if` to jump to `else`.
 if !exists('g:loaded_matchit') && findfile('plugin/matchit.vim', &rtp) ==# ''
   runtime macros/matchit.vim
 endif
 if exists(":Man") != 2
   runtime! ftplugin/man.vim      " Enable the :Man command
+endif
+
+" If this is the .vimrc, not a plugin, then load init.vim
+if $MYVIMRC == expand('<sfile>:p')
+  let $MYVIMRC = s:configdir . '/init.vim'
+  source $MYVIMRC
 endif
