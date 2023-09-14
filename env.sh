@@ -10,11 +10,11 @@ if [ -e "$JB_ENV_DIR" ] && [ -z "`find "$JB_ENV_DIR" -user "$ENV_UID" -print -pr
 fi
 
 mkdir -p "$JB_ENV_DIR"
-chmod 0700 "$JB_ENV_DIR"
+chmod 0744 "$JB_ENV_DIR"
 
 jb_dl_config_file() {
   curl -s https://raw.githubusercontent.com/JoyceBabu/dotfiles/master/$1 > "$JB_ENV_DIR/$2"
-  chmod 0600 "$JB_ENV_DIR/$2"
+  chmod 0644 "$JB_ENV_DIR/$2"
 }
 
 jb_check_for_executable() {
@@ -44,6 +44,7 @@ cat <<EOF > $JB_ENV_DIR/.gitconfig
   prompt = false
   cmd = nvim -f -c \"Gdiffsplit!\" \"\$MERGED\"
 EOF
+chmod 0644 "$JB_ENV_DIR/.gitconfig"
 
 cat <<EOF > $JB_ENV_DIR/.shrc
 jb_check_for_executable() {
@@ -69,6 +70,7 @@ alias sd='sudo '
 alias sudo='\sudo --preserve-env=VIMINIT,TMUX,JB_ENV_DIR'
 
 EOF
+chmod 0644 "$JB_ENV_DIR/.gitconfig"
 
 jb_dl_config_file vim/.config/nvim/basic.vim .vimrc
 
@@ -88,6 +90,9 @@ elif [ "bash" = "$ENV_SHELL" ]; then
 else
   JB_ENV="$JB_ENV_DIR/.shrc"
 fi
+
+chmod 0755 "$JB_ENV_DIR"
+chmod 0644 "$JB_ENV_DIR"/*
 
 if jb_check_for_executable tmux; then
   # tmux installation detected
@@ -113,6 +118,7 @@ if jb_check_for_executable tmux; then
 else
   ENV="$JB_ENV" ZDOTDIR="$JB_ZDOTDIR" $ENV_TMUX_DEF_CMD -i
 fi
+
 
 # Cleanup
 unset jb_dl_config_file
