@@ -123,5 +123,3 @@ unset JB_ENV_UID
 unset JB_ZDOTDIR
 unset JB_ENV
 
-source $JB_ENV_DIR/.shrc
-
