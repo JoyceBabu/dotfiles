@@ -21,10 +21,15 @@ let maplocallseader = ' '
 
 set updatetime=250
 
-syntax on                        " Enable colour syntax highlighting
-filetype on                      " Enable filetype detection
-filetype plugin on               " Enable loading of filetype plugins
-filetype indent on               " Enable loading of indent files
+if has('syntax') && !exists('g:syntax_on')
+  syntax enable
+endif
+
+if has('autocmd')
+  filetype on                    " Enable filetype detection
+  filetype plugin on             " Enable loading of filetype plugins
+  filetype indent on             " Enable loading of indent files
+endif
 
 " }}}
 
@@ -33,15 +38,18 @@ filetype indent on               " Enable loading of indent files
 set number relativenumber        " Enable display of relative line number
 set colorcolumn=81               " Show a vertical line after 80 chars
 set cursorline                   " Highlight current line
+set showcmd
 " set showmatch                  " highlight matching [{()}]
 " set matchtime=0
 set hidden
 set cmdheight=2
-set shortmess+=c
-set history=1000                 " Keep 1000 lines of command line history
+set shortmess=filnxtToOF
+set history=10000                " Keep 10000 lines of command line history
 set lazyredraw                   " Avoid unnecessary UI redraw
 set mouse=a                      " Enable mouse interaction in all modes
+set belloff=all
 set conceallevel=1
+set cdpath=,.,~/src,~/
 
 set termguicolors
 if has('mac') && $COLORTERM == '' && !has('gui_vimr') && !has('gui_running')
@@ -56,10 +64,11 @@ else
 endif
 
 " Disable a legacy behavior that can break plugin maps.
-if has('langmap') && exists('+langremap') && &langremap && s:MaySet('langremap')
+if has('langmap') && exists('+langremap') && &langremap
   set nolangremap
 endif
 
+set nojoinspaces
 set background=dark
 set laststatus=2
 set ruler
@@ -142,10 +151,11 @@ set nrformats-=octal             " Increment 007 to 008, not 010
 " set spell
 " set spelllang=en
 " set complete-=i                " Scan current & included files for completion
+"set clipboard=unnamed,unnamedplus
+"set clipboard=unnamed
+set complete=.,w,b,u,t
+set diffopt=internal,filler
 
-if !has('nvim') && &ttimeoutlen == -1
-  set ttimeout
-  set ttimeoutlen=100
 endif
 
 
@@ -175,10 +185,6 @@ set viminfo^=!
 if v:version > 703
   set formatoptions+=j " Delete comment character when joining commented lines
 endif
-
-" Builtin Pluign. Hit `%` on `if` to jump to `else`.
-runtime macros/matchit.vim
-runtime ftplugin/man.vim         " Enable the :Man command
 
 " {{{ Code Foldings
 
@@ -474,3 +480,10 @@ endif
 " }}}
 
 " }}}
+" Builtin Pluign. Hit `%` on `if` to jump to `else`.
+if !exists('g:loaded_matchit') && findfile('plugin/matchit.vim', &rtp) ==# ''
+  runtime macros/matchit.vim
+endif
+if exists(":Man") != 2
+  runtime! ftplugin/man.vim      " Enable the :Man command
+endif
