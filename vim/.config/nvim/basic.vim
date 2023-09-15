@@ -486,6 +486,56 @@ endif
 
 " }}}
 
+" {{{ Auto open omnicomplete
+" From https://stackoverflow.com/a/70816950/465590
+
+set completeopt+=menuone,noselect,noinsert " don't insert text automatically
+" set pumheight=5 " keep the autocomplete suggestion menu small
+" set shortmess+=c " don't give ins-completion-menu messages
+
+" if completion menu closed, and two non-spaces typed, call autocomplete
+let s:insert_count = 0
+function! OpenCompletion()
+    if string(v:char) =~ ' '
+        let s:insert_count = 0
+    else
+        let s:insert_count += 1
+    endif
+    if !pumvisible() && s:insert_count >= 2
+        silent! call feedkeys("\<C-n>", "n")
+    endif
+endfunction
+
+function! TurnOnAutoComplete()
+    augroup autocomplete
+        autocmd!
+        autocmd InsertLeave let s:insert_count = 0
+        autocmd InsertCharPre * silent! call OpenCompletion()
+    augroup END
+endfunction
+
+function! TurnOffAutoComplete()
+    augroup autocomplete
+        autocmd!
+    augroup END
+endfunction
+
+function! ReplayMacroWithoutAutoComplete()
+    call TurnOffAutoComplete()
+    let reg = getcharstr()
+    execute "normal! @".reg
+    call TurnOnAutoComplete()
+endfunction
+
+" don't let the above mess with replaying macros
+nnoremap <silent> @ :call ReplayMacroWithoutAutoComplete()<CR>
+
+" use tab for navigating the autocomplete menu
+inoremap <expr> <TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
+inoremap <expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<TAB>"
+
+" }}}
+
 
 " }}}
 
