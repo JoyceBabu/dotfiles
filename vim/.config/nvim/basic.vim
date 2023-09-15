@@ -51,12 +51,6 @@ set belloff=all
 set conceallevel=1
 set cdpath=,.,~/src,~/
 
-set termguicolors
-if has('mac') && $COLORTERM == '' && !has('gui_vimr') && !has('gui_running')
-  set t_Co=256
-  set notermguicolors
-endif
-
 if has("nvim-0.5.0") || has("patch-8.1.1564")
   set signcolumn=number          " Merge signcolumn and number column into one
 else

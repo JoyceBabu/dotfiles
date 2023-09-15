@@ -8,6 +8,12 @@ if !1 | finish | endif
 
 source ~/.config/nvim/basic.vim
 
+set termguicolors
+if has('mac') && $COLORTERM == '' && !has('gui_vimr') && !has('gui_running')
+  set t_Co=256
+  set notermguicolors
+endif
+
 " Declare group for autocmd for whole init.vim, and clear it
 " Otherwise every autocmd will be added to group each time vimrc sourced!
 augroup vimrc
