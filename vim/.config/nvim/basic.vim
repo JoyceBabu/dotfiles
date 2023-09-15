@@ -486,6 +486,19 @@ endif
 
 " }}}
 
+
+" }}}
+
+" {{{ Builtin plugins
+
+if !exists('g:loaded_matchit') && findfile('plugin/matchit.vim', &rtp) ==# ''
+  runtime macros/matchit.vim     " Hit `%` on `if` to jump to `else`.
+endif
+
+if exists(":Man") != 2
+  runtime! ftplugin/man.vim      " Enable the :Man command
+endif
+
 " }}}
 
 " {{ Neovim Compatibility
@@ -635,14 +648,6 @@ endfunction
 " :MapQ will activate the Q mapping
 command! MapQ noremap q <cmd>call RecordOrStop()<cr>
 noremap Q <cmd>execute 'normal! @'.g:qreg<cr>
-
-" Builtin Pluign. Hit `%` on `if` to jump to `else`.
-if !exists('g:loaded_matchit') && findfile('plugin/matchit.vim', &rtp) ==# ''
-  runtime macros/matchit.vim
-endif
-if exists(":Man") != 2
-  runtime! ftplugin/man.vim      " Enable the :Man command
-endif
 
 " If this is the .vimrc, not a plugin, then load init.vim
 if $MYVIMRC == expand('<sfile>:p')
