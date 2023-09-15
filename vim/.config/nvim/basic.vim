@@ -305,6 +305,9 @@ cnoremap <C-e> <End>
 inoremap <C-U> <C-G>u<C-U>
 inoremap <C-W> <C-G>u<C-W>
 
+" Use * to search the current selection
+vnoremap <silent> * "zy/<C-R>=@z<CR><CR>
+
 " cnoremap <C-k> <C-o>D
 
 " Indent without killing the selection in vmode
