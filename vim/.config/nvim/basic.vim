@@ -57,6 +57,12 @@ else
   set signcolumn=yes             " Always show sign colum to prevent resize
 endif
 
+if &background == "dark"
+    highlight ColorColumn guibg=darkgrey ctermbg=235
+else
+    highlight ColorColumn guibg=lightgrey ctermbg=252
+endif
+
 " Disable a legacy behavior that can break plugin maps.
 if has('langmap') && exists('+langremap') && &langremap
   set nolangremap
