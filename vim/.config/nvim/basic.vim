@@ -150,6 +150,7 @@ set encoding=utf8                " The encoding displayed.
 set fileencoding=utf8            " The encoding written to file.
 set smarttab
 set nrformats-=octal             " Increment 007 to 008, not 010
+set timeoutlen=500
 " set spell
 " set spelllang=en
 " set complete-=i                " Scan current & included files for completion
@@ -712,5 +713,52 @@ if !exists('g:loaded_nvim_defaults')
   endif
 endif
 
+
+" }}}
+
+" {{{ Toggle Term
+
+function! TabTogTerm()
+  let l:OpenTerm = {x -> x
+        \  ? { -> execute('botright 15 split +term') }
+        \  : { -> execute('botright term ++rows=15') }
+        \ }(has('nvim'))
+  let term = gettabvar(tabpagenr(), 'term',
+        \ {'main': -1, 'winnr': -1, 'bufnr': -1})
+  if ! bufexists(term.bufnr)
+    call l:OpenTerm()
+    call settabvar(tabpagenr(), 'term',
+          \ {'main': winnr('#'), 'winnr': winnr(), 'bufnr': bufnr()})
+    exe 'tnoremap <buffer> <leader>t <cmd>' . t:term.main . ' wincmd w<cr>'
+    exe 'tnoremap <buffer> <c-t>j     <cmd>wincmd c<cr>'
+    exe 'tnoremap <buffer> <c-t>k     <cmd>:resize 90<cr>'
+    setlocal winheight=15
+   	setlocal bufhidden=hide
+    setlocal nospell nobuflisted nonumber
+    setlocal winfixheight winfixwidth
+    setlocal timeoutlen=250
+
+	if has('nvim')
+        setlocal nocursorcolumn
+        startinsert
+    endif
+  else
+    if ! len(filter(tabpagebuflist(), {_,x -> x == term.bufnr}))
+      exe 'botright 15 split +b\ ' . term.bufnr
+    else
+	  exe term.winnr . 'close'
+    endif
+  endif
+endfunction
+
+augroup term_au
+    au!
+    au BufEnter * if &buftype == 'terminal' | startinsert | endif
+augroup END
+
+command! ToggleTerminal call TabTogTerm()
+nnoremap <c-t>   :ToggleTerminal<CR>
+tnoremap <c-t> <C-\><C-N>:ToggleTerminal<CR>
+inoremap <c-t>   <C-O>:ToggleTerminal<CR>
 
 " }}}
