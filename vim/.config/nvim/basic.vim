@@ -355,6 +355,12 @@ map <leader>et :tabe %%
 " Search/Replace word under cursor
 nnoremap <leader>h :%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>
 
+" Vim surround emulation
+nnoremap ds( di(va(p`[
+nnoremap dsb di(va(p`[
+nnoremap ds" di"va"p`[
+nnoremap ds' di'va'p`[
+
 " Apply a macro line by line on the selected range in visual block mode
 xnoremap @ :<C-u>call ExecuteMacroOverVisualRange()<CR>
 
