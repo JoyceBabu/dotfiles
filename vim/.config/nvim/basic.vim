@@ -96,7 +96,7 @@ augroup end
 
 " }}}
 
-" {{{ Windows / Tabs
+" {{{ Buffers / Windows / Tabs
 
 "set splitbelow splitright        " Split windows more intuitively.
 
@@ -114,6 +114,10 @@ augroup vimrc_basic
     " Escape from terminal
     autocmd TermOpen * tnoremap <buffer> <Esc> <c-\><c-n>
   endif
+  autocmd FileType qf nnoremap <buffer> q :ccl<CR>
+  autocmd FileType qf nnoremap <buffer> p <CR>zz<C-w>p
+  autocmd FileType qf nmap <buffer> J jp
+  autocmd FileType qf nmap <buffer> K kp
 augroup end
 
 " {{{ Tmux/Vim seamless window navigation
@@ -186,6 +190,14 @@ set display+=lastline
 set autoread                     " Auto reload file on external change
 set tabpagemax=50
 set viminfo^=!
+
+" Use :grep search_term to search recursively. Use :copen to view results.
+" Search project files only when using :grep within a git repo
+if trim(system('git rev-parse --is-inside-work-tree')) =~? '^true$'
+    set grepprg=git\ --no-pager\ grep\ -n\ --column\ $*
+else
+    set grepprg=grep\ -nRI\ $*\ /dev/null
+endif
 
 if v:version > 703
   set formatoptions+=j " Delete comment character when joining commented lines
