@@ -387,6 +387,13 @@ endfunction
 
 " {{{ Custom Commands
 
+" {{{ MakeTags - Build ctags database
+
+set tags+=.tags
+command! MakeTags !ctags --recurse=yes --verbose -f .tags --exclude=.git --exclude=BUILD --exclude=.svn --exclude=vendor/* --exclude=node_modules/* --exclude=db/* --exclude=log/*
+
+" }}}
+
 " {{{ Pipe - Pipe the selected range to an extenal command and
 " display the output in a new buffer
 
