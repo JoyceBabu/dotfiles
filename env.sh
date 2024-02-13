@@ -68,6 +68,7 @@ alias tmux='\tmux -f"$JB_ENV_DIR/.tmux.conf"'
 alias jbenvtest='ls -lah'
 alias sd='sudo '
 alias sudo='\sudo --preserve-env=VIMINIT,TMUX,JB_ENV_DIR'
+alias ssu='\sudo --preserve-env=VIMINIT,TMUX,JB_ENV_DIR su --whitelist-environment=VIMINIT,TMUX,JB_ENV_DIR'
 
 EOF
 chmod 0644 "$JB_ENV_DIR/.gitconfig"
