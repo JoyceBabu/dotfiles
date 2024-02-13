@@ -135,6 +135,8 @@ nnoremap <silent> <C-h> :call TmuxMove('h')<cr>
 nnoremap <silent> <C-j> :call TmuxMove('j')<cr>
 nnoremap <silent> <C-k> :call TmuxMove('k')<cr>
 nnoremap <silent> <C-l> :call TmuxMove('l')<cr>
+inoremap <silent> <C-j> :call TmuxMove('j')<cr>
+inoremap <silent> <C-l> :call TmuxMove('l')<cr>
 
 " }}}
 
