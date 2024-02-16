@@ -10,7 +10,7 @@ if [ -e "$JB_ENV_DIR" ] && [ -z "`find "$JB_ENV_DIR" -user "$ENV_UID" -print -pr
 fi
 
 mkdir -p "$JB_ENV_DIR"
-chmod 0744 "$JB_ENV_DIR"
+chmod 0755 "$JB_ENV_DIR"
 
 jb_dl_config_file() {
   if jb_check_for_executable curl; then
@@ -75,7 +75,7 @@ alias sudo='\sudo --preserve-env=VIMINIT,TMUX,JB_ENV_DIR'
 alias ssu='\sudo --preserve-env=VIMINIT,TMUX,JB_ENV_DIR su --whitelist-environment=VIMINIT,TMUX,JB_ENV_DIR'
 
 EOF
-chmod 0644 "$JB_ENV_DIR/.gitconfig"
+chmod 0644 "$JB_ENV_DIR/.shrc"
 
 jb_dl_config_file vim/.config/nvim/basic.vim .vimrc
 
@@ -96,8 +96,8 @@ else
   JB_ENV="$JB_ENV_DIR/.shrc"
 fi
 
-chmod 0755 "$JB_ENV_DIR"
-chmod 0644 "$JB_ENV_DIR"/*
+find "$JB_ENV_DIR" -maxdepth 1 -exec chmod 0644 {} +
+chmod 0744 "$JB_ENV_DIR"
 
 if jb_check_for_executable tmux; then
   # tmux installation detected
