@@ -13,7 +13,11 @@ mkdir -p "$JB_ENV_DIR"
 chmod 0744 "$JB_ENV_DIR"
 
 jb_dl_config_file() {
-  curl -s https://raw.githubusercontent.com/JoyceBabu/dotfiles/master/$1 > "$JB_ENV_DIR/$2"
+  if jb_check_for_executable curl; then
+    curl -s https://raw.githubusercontent.com/JoyceBabu/dotfiles/master/$1 > "$JB_ENV_DIR/$2"
+  else
+    wget -q -O- https://raw.githubusercontent.com/JoyceBabu/dotfiles/master/$1 > "$JB_ENV_DIR/$2"
+  fi
   chmod 0644 "$JB_ENV_DIR/$2"
 }
 
