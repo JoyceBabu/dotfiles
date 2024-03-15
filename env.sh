@@ -96,8 +96,8 @@ else
   JB_ENV="$JB_ENV_DIR/.shrc"
 fi
 
-find "$JB_ENV_DIR" -maxdepth 1 -exec chmod 0644 {} +
-chmod 0744 "$JB_ENV_DIR"
+find "$JB_ENV_DIR" -maxdepth 1 -type f -exec chmod 0644 {} +
+chmod 0755 "$JB_ENV_DIR"
 
 if jb_check_for_executable tmux; then
   # tmux installation detected
