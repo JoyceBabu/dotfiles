@@ -1,0 +1,31 @@
+---
+gui:
+  filterMode: 'fuzzy'
+  enlargedSideViewLocation: top
+  border: rounded
+  # use the mocha catpuccin theme
+  theme:
+    activeBorderColor:
+      - "#a6e3a1"   # Green
+      - bold
+    cherryPickedCommitBgColor:
+      - "#94e2d5"   # Teal
+    cherryPickedCommitFgColor:
+      - "#89b4fa"   # Blue
+    inactiveBorderColor:
+      - "#cdd6f4"   # Text
+    lightTheme: false
+    optionsTextColor:
+      - "#89b4fa"   # Blue
+    selectedLineBgColor:
+      - "#313244"   # Surface0
+    selectedRangeBgColor:
+      - "#313244"   # Surface0
+    unstagedChangesColor:
+      - red   # Red
+git:
+  paging:
+    colorArg: always
+    pager: delta --dark --paging=never --diff-so-fancy --line-numbers
+    # externalDiffCommand: difft --color=always --display=inline
+

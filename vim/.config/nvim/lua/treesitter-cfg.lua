@@ -1,5 +1,5 @@
 require'nvim-treesitter.configs'.setup {
-  ensure_installed = { "norg", "php", "javascript", "css", "typescript" --[[ other parsers you would wish to have ]] },
+  ensure_installed = { "norg", "php", "javascript", "css", "typescript" },
   highlight = {
     enable = true,
     custom_captures = {
