@@ -35,8 +35,6 @@ autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
   \| PlugInstall --sync | source $MYVIMRC
 \| endif
 
-"
-
 "  Load Plugins
 
 call plug#begin('~/.local/share/nvim/plugged')
@@ -48,6 +46,10 @@ if has('nvim')
   Plug 'nvim-telescope/telescope.nvim'
   Plug 'nvim-telescope/telescope-ui-select.nvim'
   Plug 'olimorris/onedarkpro.nvim'
+  " Required by hardtime.nvim
+  Plug 'MunifTanjim/nui.nvim'
+  Plug 'm4xshen/hardtime.nvim'
+
   " Plug 'ldelossa/nvim-ide'
   " LSP Support
   Plug 'neovim/nvim-lspconfig'
@@ -148,7 +150,6 @@ if has('nvim')
 endif
 
 "
-
 "  Language Support
 
 "  vlang
