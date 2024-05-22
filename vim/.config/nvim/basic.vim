@@ -335,8 +335,8 @@ nnoremap <expr> gvp '`[' . strpart(getregtype(), 0, 1) . '`]'
 " Reselect last pasted text
 nnoremap gp `[v`]
 
-noremap H ^
-noremap L $
+noremap <leader>h ^
+noremap <leader>l $
 
 " Retain cursor position when joining lines
 noremap J mzJ`z
