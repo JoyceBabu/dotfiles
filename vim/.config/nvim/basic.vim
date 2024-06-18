@@ -428,6 +428,8 @@ noremap N Nzzzv
 
 " Replace selection with last yanked text without modifying unnamed registers
 vnoremap <leader>p "_dP
+nnoremap <leader>p "+p " Paste from clipboard
+nnoremap <leader>P "+P " Paste from clipboard
 " Delete without modifying unnamed registers
 nnoremap <leader>d "_d
 vnoremap <leader>d "_d
