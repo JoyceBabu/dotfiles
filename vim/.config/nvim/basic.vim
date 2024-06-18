@@ -175,6 +175,49 @@ if !exists('g:is_posix') && !exists('g:is_bash') && !exists('g:is_kornshell') &&
   let g:is_posix = 1
 endif
 
+" {{{ Text Objects
+
+" {{{ Indentation
+
+function! IndentObj(skipblank, header, footer) abort
+  let line = nextnonblank('.')
+  let level = indent(line)
+  let start = line | let end = line
+  while start > 1 && !(getline(start - 1) =~ '\S' ? indent(start - 1) < level : !a:skipblank)
+    let start -= 1
+  endwhile
+
+  let start = a:header ? prevnonblank(start - 1) : nextnonblank(start)
+  while end < line('$') && !(getline(end + 1) =~ '\S' ? indent(end + 1) < level : !a:skipblank)
+    let end += 1
+  endwhile
+
+  let end = a:footer ? nextnonblank(end + 1) : prevnonblank(end)
+  " union of the current visual region and the block/paragraph containing the cursor
+  if mode() =~# "[vV\<C-v>]"
+    let start = min([start, line("'<")])
+    let end = max([end, line("'>")])
+    exe "normal! \<Esc>"
+  endif
+
+  if end - start > winheight(0) | exe "normal! m'" | endif
+  exe start | exe 'normal! V' | exe end
+endfunction
+
+xnoremap <silent> ii :<C-U>exe 'normal! gv'\|call IndentObj(0,0,0)<CR>
+onoremap <silent> ii :<C-u>call IndentObj(0,0,0)<CR>
+xnoremap <silent> ai :<C-U>exe 'normal! gv'\|call IndentObj(0,1,1)<CR>
+onoremap <silent> ai :<C-u>call IndentObj(0,1,1)<CR>
+
+xnoremap <silent> iI :<C-U>exe 'normal! gv'\|call IndentObj(1,0,0)<CR>
+onoremap <silent> iI :<C-u>call IndentObj(1,0,0)<CR>
+xnoremap <silent> aI :<C-U>exe 'normal! gv'\|call IndentObj(1,1,1)<CR>
+onoremap <silent> aI :<C-u>call IndentObj(1,1,1)<CR>
+
+" }}}
+
+" }}}
+
 " }}}
 
 " {{{ Code Navigation

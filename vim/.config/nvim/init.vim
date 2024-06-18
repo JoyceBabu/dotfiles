@@ -133,7 +133,6 @@ Plug 'mg979/vim-visual-multi', {'branch': 'master'} " Multi cursor support
 
 " Editing
 Plug 'mbbill/undotree'                 " Visualize undo tree
-Plug 'michaeljsmith/vim-indent-object' " Text objects for indentation level
 Plug 'vim-scripts/argtextobj.vim'
 
 " Debugging
