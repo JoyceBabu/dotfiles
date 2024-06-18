@@ -121,8 +121,6 @@ Plug 'junegunn/fzf', {
 Plug 'junegunn/fzf.vim'
 Plug 'jesseleite/vim-agriculture'      " Allow passing flags in :Ag
 Plug 'justinmk/vim-dirvish'
-" Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
-Plug 'Xuyuanp/nerdtree-git-plugin', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
 Plug 'ryanoasis/vim-devicons'
 " Plug 'wsdjeg/vim-fetch'                " Handle line & col no in filename
 Plug 'editorconfig/editorconfig-vim'   " Support for EditorConfig
@@ -250,16 +248,6 @@ nnoremap <silent> gz :ZoomToggle<CR>
 "
 
 "  File Management
-
-" NERDTree Toggle
-let NERDTreeHijackNetrw = 0
-let g:NERDTreeUpdateOnCursorHold = 0
-let g:NERDTreeUpdateOnWrite  = 0
-let NERDTreeShowHidden = 1
-let NERDTreeIgnore = ['\.DS_Store', '\~$', '\.swp']
-
-noremap <silent> <Leader>n :NERDTreeToggle<CR> <C-w>=
-noremap <silent> <Leader>f :NERDTreeFind<CR> <C-w>=
 
 " nnoremap <C-p> :GFiles<CR>
 
