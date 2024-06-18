@@ -175,6 +175,12 @@ if !exists('g:is_posix') && !exists('g:is_bash') && !exists('g:is_kornshell') &&
   let g:is_posix = 1
 endif
 
+" Abbreviations
+
+" We have to use <c-o>i since <Left> is disabled
+:autocmd FileType php
+  \ :iabbrev <buffer> <?php= <?php<cr><cr>declare(strict_types=1);<cr><cr>namespace ;<c-o>i
+
 " {{{ Text Objects
 
 " {{{ Indentation
