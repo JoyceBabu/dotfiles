@@ -488,6 +488,32 @@ nnoremap ds' di'va'p`[
 
 " }}}
 
+" {{{ Mapping: Vim Commentary
+
+function! s:commentOp(...)
+  '[,']call s:toggleComment()
+endfunction
+
+function! s:toggleComment() range
+  let comment = substitute(get(b:, 'commentstring', &commentstring), '\s*\(%s\)\s*', '%s', '')
+  let pattern = '\V' . printf(escape(comment, '\'), '\(\s\{-}\)\s\(\S\.\{-}\)\s\=')
+  let replace = '\1\2'
+  if getline('.') !~ pattern
+    let indent = matchstr(getline('.'), '^\s*')
+    let pattern = '^' . indent . '\zs\(\s*\)\(\S.*\)'
+    let replace = printf(comment, '\1 \2' . (comment =~ '%s$' ? '' : ' '))
+  endif
+  for lnum in range(a:firstline, a:lastline)
+    call setline(lnum, substitute(getline(lnum), pattern, replace, ''))
+  endfor
+endfunction
+
+nnoremap gcc :<c-u>.,.+<c-r>=v:count<cr>call <SID>toggleComment()<cr>
+nnoremap gc :<c-u>set opfunc=<SID>commentOp<cr>g@
+xnoremap gc :call <SID>toggleComment()<cr>
+
+" }}}
+
 " {{{ Mapping: Execute Macro Over Visual Range
 
 " Apply a macro line by line on the selected range in visual block mode
