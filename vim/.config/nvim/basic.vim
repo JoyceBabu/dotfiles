@@ -340,6 +340,8 @@ autocmd vimrc_basic FileType yaml setlocal shiftwidth=2 softtabstop=2
 
 " {{{ Custom Mappings
 
+" {{{ Mapping: Vim Config
+
 function! DropOrNewTab(filename, tabname)
   " Check if the buffer is already open
   let bufnum = bufnr(a:filename)
@@ -374,13 +376,9 @@ nnoremap <leader>veb :call DropOrNewTab(expand('~/.config/nvim/basic.vim'), 'Vim
 "nnoremap <leader>veb :tabnew ~/.config/nvim/basic.vim<cr>
 nnoremap <leader>vr :source $MYVIMRC<cr>
 
-" Browse in separate window. Requires g:netrw_browse_split = 4
-" Also need to experiment with g:netrw_chgwin to use both :Exp and :Lex
-" nnoremap <leader>9 :Lex \| vertical resize 35<cr>
-nnoremap <leader>9 :execute exists("w:netrw_rexlocal")?":Rexplore":":Explore"<cr>
+" }}}
 
-" Experimental Mappings
-nnoremap <leader>/ :nohlsearch<CR>
+" {{{ Mapping: Emacs/Bash keymap
 
 " Bash like keys for the insert/command line mode
 " https://github.com/tpope/vim-rsi/blob/master/plugin/rsi.vim
@@ -401,10 +399,25 @@ cnoremap <C-e> <End>
 inoremap <C-U> <C-G>u<C-U>
 inoremap <C-W> <C-G>u<C-W>
 
+" cnoremap <C-k> <C-o>D
+
+" }}}
+
+" {{{ Mapping: Search and Replace
+
+" Experimental Mappings
+nnoremap <leader>/ :nohlsearch<CR>
+
 " Use * to search the current selection
 vnoremap <silent> * "zy/<C-R>=@z<CR><CR>
+nnoremap <leader>bs /<C-R>=escape(expand("<cWORD>"), "/")<CR><CR>
 
-" cnoremap <C-k> <C-o>D
+" Search/Replace word under cursor
+nnoremap <leader>h :%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>
+
+" }}}
+
+" {{{ Mapping: Selection
 
 " Indent without killing the selection in vmode
 vmap < <gv
@@ -413,6 +426,10 @@ vmap > >gv
 nnoremap <expr> gvp '`[' . strpart(getregtype(), 0, 1) . '`]'
 " Reselect last pasted text
 nnoremap gp `[v`]
+
+" }}}
+
+" {{{ Mapping: Cursor Movement
 
 noremap <leader>h ^
 noremap <leader>l $
@@ -426,6 +443,10 @@ noremap <C-u> <C-u>zz
 noremap n nzzzv
 noremap N Nzzzv
 
+" }}}
+
+" {{{ Mapping: Copy and Paste
+
 " Replace selection with last yanked text without modifying unnamed registers
 vnoremap <leader>p "_dP
 nnoremap <leader>p "+p " Paste from clipboard
@@ -437,7 +458,15 @@ vnoremap <leader>d "_d
 nnoremap <leader>y "+y
 vnoremap <leader>y "+y
 
-nnoremap <leader>bs /<C-R>=escape(expand("<cWORD>"), "/")<CR><CR>
+" }}}
+
+" {{{ Mapping: File Explorer
+
+" Browse in separate window. Requires g:netrw_browse_split = 4
+" Also need to experiment with g:netrw_chgwin to use both :Exp and :Lex
+" nnoremap <leader>9 :Lex \| vertical resize 35<cr>
+nnoremap <leader>9 :execute exists("w:netrw_rexlocal")?":Rexplore":":Explore"<cr>
+
 nnoremap <leader>pv :Lex<CR>
 
 cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
@@ -447,14 +476,19 @@ map <leader>es :sp %%
 map <leader>ev :vsp %%
 map <leader>et :tabe %%
 
-" Search/Replace word under cursor
-nnoremap <leader>h :%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>
+" }}}
+
+" {{{ Mapping: Vim Surround
 
 " Vim surround emulation
 nnoremap ds( di(va(p`[
 nnoremap dsb di(va(p`[
 nnoremap ds" di"va"p`[
 nnoremap ds' di'va'p`[
+
+" }}}
+
+" {{{ Mapping: Execute Macro Over Visual Range
 
 " Apply a macro line by line on the selected range in visual block mode
 xnoremap @ :<C-u>call ExecuteMacroOverVisualRange()<CR>
@@ -463,6 +497,8 @@ function! ExecuteMacroOverVisualRange()
   echo "@".getcmdline()
   execute ":'<,'>normal @".nr2char(getchar())
 endfunction
+
+" }}}
 
 " }}}
 
