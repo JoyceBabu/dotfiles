@@ -69,12 +69,11 @@ unset jb_check_for_executable
 [ -f "\$HOME/.\${SHELL}rc" ] && . "\$HOME/.\${SHELL}rc"
 
 alias tmux='\tmux -f"$JB_ENV_DIR/.tmux.conf"'
-alias jbenvtest='ls -lah'
-alias sd='sudo '
 alias sudo='\sudo --preserve-env=VIMINIT,TMUX,JB_ENV_DIR'
-alias ssu='\sudo --preserve-env=VIMINIT,TMUX,JB_ENV_DIR su --whitelist-environment=VIMINIT,TMUX,JB_ENV_DIR'
-
+#alias ssu='\sudo --preserve-env=VIMINIT,TMUX,JB_ENV_DIR su --whitelist-environment=VIMINIT,TMUX,JB_ENV_DIR'
+alias ssu="\sudo --preserve-env=TMUX su - --whitelist-environment=TMUX -c 'source <(curl -s https://env.joycebabu.com); $SHELL"
 EOF
+
 chmod 0644 "$JB_ENV_DIR/.shrc"
 
 jb_dl_config_file vim/.config/nvim/basic.vim .vimrc
