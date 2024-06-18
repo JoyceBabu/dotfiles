@@ -340,6 +340,40 @@ autocmd vimrc_basic FileType yaml setlocal shiftwidth=2 softtabstop=2
 
 " {{{ Custom Mappings
 
+function! DropOrNewTab(filename, tabname)
+  " Check if the buffer is already open
+  let bufnum = bufnr(a:filename)
+  if bufnum != -1
+    " Buffer exists, use :drop to open it in the current window
+    execute 'drop ' . a:filename
+  else
+    " Buffer does not exist, check if the tab with the given name exists
+    let tabfound = 0
+    for i in range(tabpagenr('$'))
+      if gettabvar(i + 1, 'tabname', '') == a:tabname
+        let tabfound = i + 1
+        break
+      endif
+    endfor
+
+    if tabfound
+      execute tabfound . 'tabnext'
+    else
+      tabnew
+      let tabnum = tabpagenr()
+      call settabvar(tabnum, 'tabname', a:tabname)
+      execute 'file ' . a:filename
+    endif
+    execute 'edit ' . a:filename
+  endif
+endfunction
+
+" Quick edit $MYVIMRC
+nnoremap <leader>ve :call DropOrNewTab($MYVIMRC, 'VimConfig')<CR>
+nnoremap <leader>veb :call DropOrNewTab(expand('~/.config/nvim/basic.vim'), 'VimConfig')<CR>
+"nnoremap <leader>veb :tabnew ~/.config/nvim/basic.vim<cr>
+nnoremap <leader>vr :source $MYVIMRC<cr>
+
 " Browse in separate window. Requires g:netrw_browse_split = 4
 " Also need to experiment with g:netrw_chgwin to use both :Exp and :Lex
 " nnoremap <leader>9 :Lex \| vertical resize 35<cr>
@@ -347,10 +381,6 @@ nnoremap <leader>9 :execute exists("w:netrw_rexlocal")?":Rexplore":":Explore"<cr
 
 " Experimental Mappings
 nnoremap <leader>/ :nohlsearch<CR>
-
-" Quick edit $MYVIMRC
-nnoremap <leader>ve :vsp $MYVIMRC<cr>
-nnoremap <leader>vr :source $MYVIMRC<cr>
 
 " Bash like keys for the insert/command line mode
 " https://github.com/tpope/vim-rsi/blob/master/plugin/rsi.vim
