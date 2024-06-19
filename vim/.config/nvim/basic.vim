@@ -483,6 +483,9 @@ map <leader>et :tabe %%
 " Vim surround emulation
 nnoremap ds( di(va(p`[
 nnoremap dsb di(va(p`[
+nnoremap ds[ di[va[p`[
+nnoremap dsB di[va[p`[
+nnoremap ds< di<va<p`[
 nnoremap ds" di"va"p`[
 nnoremap ds' di'va'p`[
 
