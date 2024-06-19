@@ -481,13 +481,13 @@ map <leader>et :tabe %%
 " {{{ Mapping: Vim Surround
 
 " Vim surround emulation
-nnoremap ds( di(va(p`[
-nnoremap dsb di(va(p`[
-nnoremap ds[ di[va[p`[
-nnoremap dsB di[va[p`[
-nnoremap ds< di<va<p`[
-nnoremap ds" di"va"p`[
-nnoremap ds' di'va'p`[
+
+function! SurroundDelete(old)
+  let l:char = nr2char(a:old)
+  execute "normal! di" . l:char . "va" . l:char . "p`["
+endfunction
+
+nnoremap <silent>ds :call SurroundDelete(getchar())<CR>
 
 " }}}
 
