@@ -128,6 +128,23 @@ unset jb_check_for_executable
 alias tmux='\tmux -f"$JB_ENV_DIR/.tmux.conf"'
 alias sd='\sudo --preserve-env=VIMINIT,TMUX,JB_ENV_DIR'
 alias sudo='jb_sudo'
+
+# Press <C-z> in shell to bring the last suspended process to foreground
+# Useful to toggle between vim and shell using <C-z>
+if [ "\$-" != "\${-#*i}" ]; then
+  stty susp undef
+
+  if [ -n "\$BASH_VERSION" ]; then
+    bind '"\\C-z":" fg\\015"'
+  elif [ -n "\$ZSH_VERSION" ]; then
+	fg_widget() {
+      fg
+    }
+    zle -N fg_widget
+    bindkey '^Z' fg_widget
+  fi
+fi
+
 EOF
 
 chmod 0644 "$JB_ENV_DIR/.shrc"
