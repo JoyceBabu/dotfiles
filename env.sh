@@ -63,6 +63,40 @@ cat <<EOF > $JB_ENV_DIR/.gitconfig
 EOF
 chmod 0644 "$JB_ENV_DIR/.gitconfig"
 
+cat <<EOF > $JB_ENV_DIR/.inputrc
+\$include /etc/inputrc
+
+set editing-mode vi
+\$if mode=vi
+  # https://unix.stackexchange.com/a/533628/102730
+  set show-mode-in-prompt on
+  set vi-ins-mode-string \1\e[6 q\2
+  set vi-cmd-mode-string \1\e[2 q\2
+  set keymap vi-insert
+    "\C-a": beginning-of-line
+    "\C-p":history-search-backward
+    "\C-n":history-search-forward
+    "\C-d": delete-char
+    "\C-f": forward-char
+    "\C-b": backward-char
+    "\C-w": unix-word-rubout
+    "\C-k": kill-line
+    # switch to block cursor before executing a command
+    RETURN: "\e\n"
+  set keymap vi-command
+  "\C-h":"tmux select-pane -L \C-m"
+  "\C-gd":"\C-u\`date +%Y%m%d%H%M\`\e\C-e\C-a\C-y\C-e"
+  #"\C-p":history-search-backward
+  #"\C-n":history-search-forward
+  #"\C-h":""
+\$endif
+
+set colored-stats On
+set mark-symlinked-directories On
+#set show-all-if-ambiguous On
+set visible-stats On
+EOF
+
 cat <<EOF > $JB_ENV_DIR/.shrc
 jb_check_for_executable() {
   type \$1 >/dev/null 2>/dev/null
@@ -85,6 +119,7 @@ fi
 
 export JB_ENV_DIR="$JB_ENV_DIR"
 export GIT_CONFIG_GLOBAL="\$JB_ENV_DIR/.gitconfig"
+export INPUTRC="\$JB_ENV_DIR/.inputrc"
 
 unset jb_check_for_executable
 
