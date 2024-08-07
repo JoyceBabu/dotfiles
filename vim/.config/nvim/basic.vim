@@ -475,6 +475,7 @@ map <leader>E :e %%
 map <leader>es :sp %%
 map <leader>ev :vsp %%
 map <leader>et :tabe %%
+nnoremap <leader>fo :browse oldfiles<CR>
 
 " }}}
 
