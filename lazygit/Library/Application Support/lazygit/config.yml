@@ -3,6 +3,9 @@ gui:
   filterMode: 'fuzzy'
   enlargedSideViewLocation: top
   border: rounded
+  showDivergenceFromBaseBranch: arrowAndNumber
+  expandFocusedSidePanel: true
+  expandedSidePanelWeight: 3
   # use the mocha catpuccin theme
   theme:
     activeBorderColor:
