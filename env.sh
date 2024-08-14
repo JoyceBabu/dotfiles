@@ -97,6 +97,11 @@ set mark-symlinked-directories On
 set visible-stats On
 EOF
 
+_PREVIEW_CMD='cat'
+if command -v bat >/dev/null 2>&1; then
+  _PREVIEW_CMD='bat --style=numbers --color=always'
+fi
+
 cat <<EOF > $JB_ENV_DIR/.shrc
 jb_check_for_executable() {
   type \$1 >/dev/null 2>/dev/null
@@ -117,6 +122,30 @@ elif ! jb_check_for_executable vim; then
   alias vim='vi'
 fi
 
+jb_fuzzy_find() {
+  fzf --preview "$_PREVIEW_CMD {}"
+}
+
+jb_filter_non_binary () {
+  # List of common binary file extensions to exclude
+  local binary_extensions='\.(avif|jpe?g|png|gif|ico|svg|tif|tiff|webp|min\.js|min\.css|map|exe|dll|s?o|out|dylib|zip|[rt]ar|gz|bz2|7z|pdf|doc|docx|ppt|pptx|xls|xlsx|bin|iso|dmg|img|msi|jar|class|pyc|pyo|wav|mp[34]|avi|mov|mkv|db|sqlite|bak)$'
+  grep -iEv "\$binary_extensions"
+}
+
+jb_vim_edit_files() {
+  if [ "\$1" = "-a" ] || [ "$1" = "--all" ] || ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    file=\$(find . -type f | jb_filter_non_binary | jb_fuzzy_find)
+  else
+    file=\$(git ls-files | jb_filter_non_binary | jb_fuzzy_find)
+  fi
+
+  if [ -n "\$file" ]; then
+    vim "\$file"
+  fi
+}
+
+alias fvim=jb_vim_edit_files
+
 export JB_ENV_DIR="$JB_ENV_DIR"
 export GIT_CONFIG_GLOBAL="\$JB_ENV_DIR/.gitconfig"
 export INPUTRC="\$JB_ENV_DIR/.inputrc"
@@ -128,7 +157,7 @@ unset jb_check_for_executable
 alias tmux='\tmux -f"$JB_ENV_DIR/.tmux.conf"'
 alias sd='\sudo --preserve-env=VIMINIT,TMUX,JB_ENV_DIR'
 alias sudo='jb_sudo'
-alias fvim='vim \$(fzf)'
+#alias fvim='vim \$(fzf)'
 
 # Press <C-z> in shell to bring the last suspended process to foreground
 # Useful to toggle between vim and shell using <C-z>
