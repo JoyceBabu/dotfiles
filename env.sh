@@ -108,9 +108,9 @@ jb_check_for_executable() {
 }
 
 jb_sudo() {
-  if [ \$# -eq 3 ] &&[ "\$1" = "su" ] && [ "\$2" = "-" ]; then
-    \sudo --preserve-env=TMUX "\$@" -P --whitelist-environment=TMUX \\
-      -c 'JB_SKIP_TMUX_UPDATE=1; eval "\`$JB_FETCH_EXE $JB_FETCH_FLAGS https://env.joycebabu.com\`"' -P "\$3"
+  if [ \$# -ge 2 ] && [ "\$1" = "su" ] && [ "\$2" = "-" ]; then
+    \sudo --preserve-env=TMUX su -P --whitelist-environment=TMUX \\
+      -c 'JB_SKIP_TMUX_UPDATE=1; eval "\`$JB_FETCH_EXE $JB_FETCH_FLAGS https://env.joycebabu.com\`"' "\${@:2}"
   else
     \sudo "\$@"
   fi
