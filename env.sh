@@ -74,8 +74,9 @@ set editing-mode vi
   set vi-cmd-mode-string \1\e[2 q\2
   set keymap vi-insert
     "\C-a": beginning-of-line
-    "\C-p":history-search-backward
-    "\C-n":history-search-forward
+    "\C-e": end-of-line
+    "\C-p": history-search-backward
+    "\C-n": history-search-forward
     "\C-d": delete-char
     "\C-f": forward-char
     "\C-b": backward-char
