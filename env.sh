@@ -134,8 +134,8 @@ jb_filter_non_binary () {
 }
 
 jb_vim_edit_files() {
-  if [ "\$1" = "-a" ] || [ "$1" = "--all" ] || ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    file=\$(find . -type f | jb_filter_non_binary | jb_fuzzy_find)
+  if [ -n "\$1" ] || ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    file=\$(find "\${1:-.}" -type f | jb_filter_non_binary | jb_fuzzy_find)
   else
     file=\$(git ls-files | jb_filter_non_binary | jb_fuzzy_find)
   fi
