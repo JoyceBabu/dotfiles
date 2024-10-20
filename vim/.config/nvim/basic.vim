@@ -58,6 +58,7 @@ if has("nvim-0.5.0") || has("patch-8.1.1564")
 else
   set signcolumn=yes             " Always show sign colum to prevent resize
 endif
+
 if has('nvim')
   " Highlight yanked text
   autocmd vimrc_basic TextYankPost * silent! lua vim.highlight.on_yank()
@@ -260,6 +261,14 @@ if v:version > 703
   set formatoptions+=j " Delete comment character when joining commented lines
 endif
 
+augroup vimrc_basic
+  autocmd BufLeave *.css,*.scss  normal! mC
+  autocmd BufLeave *.js,*.ts     normal! mJ
+  autocmd BufLeave *.php         normal! mP
+  autocmd BufLeave *.sh          normal! mS
+augroup END
+
+
 " {{{ Code Foldings
 
 set nofoldenable                   " Enable block folding
@@ -285,7 +294,7 @@ augroup END
 " {{{ File Management
 
 " Search down into subfolders. Provide tab-completion for all file related tasks
-set path+=**
+set path=.,**
 
 set wildmenu                     " visual autocomplete for command menu
 
@@ -482,6 +491,10 @@ map <leader>es :sp %%
 map <leader>ev :vsp %%
 map <leader>et :tabe %%
 nnoremap <leader>fo :browse oldfiles<CR>
+nnoremap gb :ls<CR>:b<Space>
+nnoremap <leader>ff :find *
+set wildcharm=<C-z>
+nnoremap <leader>b :buffer <C-z><S-Tab>
 
 " }}}
 
