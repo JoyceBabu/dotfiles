@@ -58,6 +58,10 @@ if has("nvim-0.5.0") || has("patch-8.1.1564")
 else
   set signcolumn=yes             " Always show sign colum to prevent resize
 endif
+if has('nvim')
+  " Highlight yanked text
+  autocmd vimrc_basic TextYankPost * silent! lua vim.highlight.on_yank()
+endif
 
 if &background == "dark"
     highlight ColorColumn guibg=darkgrey ctermbg=235
@@ -163,7 +167,9 @@ set timeoutlen=500
 "set clipboard=unnamed,unnamedplus
 "set clipboard=unnamed
 set complete=.,w,b,u,t
-set diffopt=internal,filler
+if has("nvim")
+  set diffopt=internal,filler
+endif
 
 if exists(":DiffOrig") != 2
   command DiffOrig vert new | set bt=nofile | r ++edit # | 0d_
