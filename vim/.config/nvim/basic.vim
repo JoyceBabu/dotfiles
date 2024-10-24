@@ -444,6 +444,19 @@ nnoremap <leader>bs /<C-R>=escape(expand("<cWORD>"), "/")<CR><CR>
 " Search/Replace word under cursor
 nnoremap <leader>h :%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>
 
+
+" Text object for next and last parens/brackets.
+" Use xnoremap to enable the text objects for visual mode.
+onoremap inb :<c-u>execute "normal! /(\r:noh\rvi("<CR>
+onoremap ilb :<c-u>execute "normal! ?)\r:noh\rvi)"<CR>
+onoremap anb :<c-u>execute "normal! /(\r:noh\rva("<CR>
+onoremap alb :<c-u>execute "normal! ?)\r:noh\rva)"<CR>
+
+onoremap inB :<c-u>execute "normal! /{\r:noh\rvi{"<CR>
+onoremap ilB :<c-u>execute "normal! ?}\r:noh\rvi}"<CR>
+onoremap anB :<c-u>execute "normal! /{\r:noh\rva{"<CR>
+onoremap alB :<c-u>execute "normal! ?}\r:noh\rva}"<CR>
+
 " }}}
 
 " {{{ Mapping: Selection
