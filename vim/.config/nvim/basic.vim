@@ -64,21 +64,35 @@ if has('nvim')
   autocmd vimrc_basic TextYankPost * silent! lua vim.highlight.on_yank()
 endif
 
-if &background == "dark"
-    highlight ColorColumn guibg=darkgrey ctermbg=235
-else
-    highlight ColorColumn guibg=lightgrey ctermbg=252
-endif
-
 " Disable a legacy behavior that can break plugin maps.
 if has('langmap') && exists('+langremap') && &langremap
   set nolangremap
 endif
 
 set nojoinspaces
-set background=dark
 set laststatus=2
 set ruler
+
+" {{{ Default theme
+
+set background=dark
+if &background == "dark"
+    highlight ColorColumn guibg=darkgrey ctermbg=235
+else
+    highlight ColorColumn guibg=lightgrey ctermbg=252
+endif
+
+highlight cursorline ctermbg=lightyellow ctermfg=black
+highlight Normal ctermbg=0 ctermfg=white
+highlight Comment ctermfg=darkgrey
+highlight Constant ctermfg=lightcyan
+highlight Label ctermfg=lightgreen
+highlight Identifier ctermfg=red
+highlight Statement ctermfg=lightmagenta
+highlight special ctermfg=lightgrey
+highlight Function ctermfg=lightgreen
+
+" }}}
 
 " {{{ Word Wrap
 
