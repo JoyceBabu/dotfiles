@@ -582,8 +582,44 @@ endfunction
 
 " {{{ MakeTags - Build ctags database
 
+function! GetProjectRoot()
+  let l:git_dir = system('git rev-parse --show-toplevel')
+
+  if v:shell_error
+    " Return current file's directory in case of error
+  	return expand('%:p:h')
+  endif
+
+  return substitute(l:git_dir, '\n', '', '')
+endfunction
+
+function! MakeTags()
+  " Get the project root directory
+  let l:project_root = GetProjectRoot()
+
+  " Initialize the ctags command
+  let l:ctags_cmd = 'ctags --recurse=yes --verbose -f ' . l:project_root . '/.tags --exclude=.git --exclude=BUILD --exclude=.svn --exclude=vendor --exclude=node_modules --exclude=db --exclude=log'
+
+  " Check for the existence of .ctagsignore or .ignore in the project root
+  if filereadable(l:project_root . '/.ctagsignore')
+    let l:ignore_file = l:project_root . '/.ctagsignore'
+  elseif filereadable(l:project_root . '/.ignore')
+    let l:ignore_file = l:project_root . '/.ignore'
+  else
+    let l:ignore_file = ''
+  endif
+
+  " Add the ignore file to the ctags command if it exists
+  if !empty(l:ignore_file)
+    let l:ctags_cmd .= ' --exclude=@' . l:ignore_file
+  endif
+
+  " Execute the ctags command
+  execute '!' . l:ctags_cmd
+endfunction
+
 set tags+=.tags
-command! MakeTags !ctags --recurse=yes --verbose -f .tags --exclude=.git --exclude=BUILD --exclude=.svn --exclude=vendor/* --exclude=node_modules/* --exclude=db/* --exclude=log/*
+command! MakeTags call MakeTags()
 
 " }}}
 
@@ -781,6 +817,39 @@ inoremap <expr> <S-TAB> pumvisible() ? "\<C-p>" : "\<TAB>"
 
 " }}}
 
+" {{{ Setup current working directory based on open file
+"
+" follow symlinked file
+function! FollowSymlink()
+  let current_file = expand('%:p')
+  " check if file type is a symlink
+  if getftype(current_file) == 'link'
+    " if it is a symlink resolve to the actual file path
+    "   and open the actual file
+    let actual_file = resolve(current_file)
+    silent! execute 'file ' . actual_file
+  end
+endfunction
+
+function! SetProjectRoot()
+  " Get the project root directory
+  let l:project_root = GetProjectRoot()
+  " Change local directory to the project root
+  lcd `=l:project_root`
+endfunction
+
+" follow symlink and set working directory
+"autocmd VimEnter * call FollowSymlink() | call SetProjectRoot()
+"autocmd BufRead * call FollowSymlink() | call SetProjectRoot()
+" netrw: follow symlink and set working directory
+autocmd vimrc_basic CursorMoved silent *
+  " short circuit for non-netrw files
+  \ if &filetype == 'netrw' |
+  \   call FollowSymlink() |
+  \   call SetProjectRoot() |
+  \ endif
+
+" }}}
 
 " }}}
 
