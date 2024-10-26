@@ -94,25 +94,112 @@ else
 endif
 
 if ($TERM =~ '256' || &t_Co >= 256) || has("gui_running")
-    hi CursorLine ctermbg=8 ctermfg=122 cterm=NONE guibg=#292e42 guifg=#00ccff gui=NONE
+    " Main text and background
     hi Normal ctermbg=17 ctermfg=15 cterm=NONE guibg=#1e1e2e guifg=#f8f8f8 gui=NONE
+    hi NonText ctermbg=17 ctermfg=8 cterm=NONE guibg=#1e1e2e guifg=#585b70 gui=NONE
+
+    " Syntax groups
     hi Comment ctermbg=17 ctermfg=8 cterm=NONE guibg=#1e1e2e guifg=#585b70 gui=NONE
     hi Constant ctermbg=17 ctermfg=19 cterm=NONE guibg=#1e1e2e guifg=#0099e6 gui=NONE
+    hi String ctermbg=17 ctermfg=11 cterm=NONE guibg=#1e1e2e guifg=#f5e0dc gui=NONE
     hi Identifier ctermbg=17 ctermfg=215 cterm=NONE guibg=#1e1e2e guifg=#f99058 gui=NONE
+    hi Function ctermbg=17 ctermfg=215 cterm=NONE guibg=#1e1e2e guifg=#f99058 gui=NONE
     hi Statement ctermbg=17 ctermfg=122 cterm=NONE guibg=#1e1e2e guifg=#00ccff gui=NONE
+    hi Keyword ctermbg=17 ctermfg=122 cterm=NONE guibg=#1e1e2e guifg=#00ccff gui=NONE
+    hi Operator ctermbg=17 ctermfg=206 cterm=NONE guibg=#1e1e2e guifg=#f77fbe gui=NONE
+    hi PreProc ctermbg=17 ctermfg=206 cterm=NONE guibg=#1e1e2e guifg=#f77fbe gui=NONE
+    hi Include ctermbg=17 ctermfg=200 cterm=NONE guibg=#1e1e2e guifg=#f5c2e7 gui=NONE
+    hi Type ctermbg=17 ctermfg=122 cterm=NONE guibg=#1e1e2e guifg=#00ccff gui=NONE
     hi Special ctermbg=17 ctermfg=200 cterm=NONE guibg=#1e1e2e guifg=#f5c2e7 gui=NONE
-    hi Folded ctermbg=17 ctermfg=19 cterm=NONE guibg=#3b4261 guifg=#7aa2f7 gui=NONE
-    hi Function guifg=#7aa2f7
+    hi Error ctermbg=17 ctermfg=88 cterm=NONE guibg=#1e1e2e guifg=#790914 gui=NONE
+    hi Todo ctermbg=17 ctermfg=88 cterm=NONE guibg=#1e1e2e guifg=#790914 gui=NONE
+
+    " UI elements
+    hi LineNr ctermbg=17 ctermfg=25 cterm=NONE guibg=#1e1e2e guifg=#77AAFF gui=NONE
+    hi CursorLine ctermbg=8 ctermfg=122 cterm=NONE guibg=#585b70 guifg=#00ccff gui=NONE
+    hi CursorLineNr ctermbg=8 ctermfg=122 cterm=NONE guibg=#585b70 guifg=#00ccff gui=NONE
+    hi Search ctermbg=215 ctermfg=17 cterm=NONE guibg=#f99058 guifg=#1e1e2e gui=NONE
+    hi IncSearch ctermbg=206 ctermfg=8 cterm=NONE guibg=#f77fbe guifg=#585b70 gui=NONE
+    hi Visual ctermbg=8 ctermfg=122 cterm=NONE guibg=#585b70 guifg=#00ccff gui=NONE
+    hi MatchParen ctermbg=17 ctermfg=215 cterm=NONE guibg=#1e1e2e guifg=#f99058 gui=NONE
+    hi StatusLine ctermbg=19 ctermfg=17 cterm=NONE guibg=#0099e6 guifg=#1e1e2e gui=NONE
+    hi StatusLineNC ctermbg=25 ctermfg=17 cterm=NONE guibg=#77AAFF guifg=#1e1e2e gui=NONE
+    hi VertSplit ctermbg=17 ctermfg=206 cterm=NONE guibg=#1e1e2e guifg=#f77fbe gui=NONE
+    hi Pmenu ctermbg=17 ctermfg=25 cterm=NONE guibg=#1e1e2e guifg=#77AAFF gui=NONE
+    hi PmenuSel ctermbg=25 ctermfg=17 cterm=NONE guibg=#77AAFF guifg=#1e1e2e gui=NONE
+    hi Folded ctermbg=17 ctermfg=19 cterm=NONE guifg=#7aa2f7 guibg=#3b4261 gui=NONE
+
+    " Diff highlighting
+    hi DiffAdd ctermbg=17 ctermfg=15 cterm=NONE guibg=#1e1e2e guifg=#f8f8f8 gui=NONE
+    hi DiffChange ctermbg=17 ctermfg=11 cterm=NONE guibg=#1e1e2e guifg=#f5e0dc gui=NONE
+    hi DiffDelete ctermbg=17 ctermfg=88 cterm=NONE guibg=#1e1e2e guifg=#701c1c gui=NONE
+    hi DiffText ctermbg=17 ctermfg=215 cterm=NONE guibg=#1e1e2e guifg=#f99058 gui=NONE
+
 elseif &t_Co == 8 || $TERM !~# '^linux' || &t_Co == 16
     set t_Co=16
-    hi CursorLine ctermbg=darkgray ctermfg=cyan cterm=NONE
+
+    " Main text and background
     hi Normal ctermbg=black ctermfg=white cterm=NONE
+    hi NonText ctermbg=black ctermfg=darkgray cterm=NONE
+
+    " Syntax groups
     hi Comment ctermbg=black ctermfg=darkgray cterm=NONE
     hi Constant ctermbg=black ctermfg=lightblue cterm=NONE
+    hi String ctermbg=black ctermfg=yellow cterm=NONE
     hi Identifier ctermbg=black ctermfg=orange cterm=NONE
+    hi Function ctermbg=black ctermfg=orange cterm=NONE
     hi Statement ctermbg=black ctermfg=cyan cterm=NONE
+    hi Keyword ctermbg=black ctermfg=cyan cterm=NONE
+    hi Operator ctermbg=black ctermfg=rose cterm=NONE
+    hi PreProc ctermbg=black ctermfg=rose cterm=NONE
+    hi Include ctermbg=black ctermfg=pink cterm=NONE
+    hi Type ctermbg=black ctermfg=cyan cterm=NONE
     hi Special ctermbg=black ctermfg=pink cterm=NONE
+    hi Error ctermbg=black ctermfg=darkred cterm=NONE
+    hi Todo ctermbg=black ctermfg=darkred cterm=NONE
+
+    " UI elements
+    hi LineNr ctermbg=black ctermfg=blue cterm=NONE
+    hi CursorLine ctermbg=darkgray ctermfg=cyan cterm=NONE
+    hi CursorLineNr ctermbg=darkgray ctermfg=cyan cterm=NONE
+    hi Search ctermbg=orange ctermfg=black cterm=NONE
+    hi IncSearch ctermbg=rose ctermfg=darkgray cterm=NONE
+    hi Visual ctermbg=darkgray ctermfg=cyan cterm=NONE
+    hi MatchParen ctermbg=black ctermfg=orange cterm=NONE
+    hi StatusLine ctermbg=lightblue ctermfg=black cterm=NONE
+    hi StatusLineNC ctermbg=blue ctermfg=black cterm=NONE
+    hi VertSplit ctermbg=black ctermfg=rose cterm=NONE
+    hi Pmenu ctermbg=black ctermfg=blue cterm=NONE
+    hi PmenuSel ctermbg=blue ctermfg=black cterm=NONE
+
+    " Diff highlighting
+    hi DiffAdd ctermbg=black ctermfg=white cterm=NONE
+    hi DiffChange ctermbg=black ctermfg=yellow cterm=NONE
+    hi DiffDelete ctermbg=black ctermfg=red cterm=NONE
+    hi DiffText ctermbg=black ctermfg=orange cterm=NONE
 endif
+
+" Common links
+hi link Number Constant
+hi link Boolean Constant
+hi link Float Number
+hi link Conditional Statement
+hi link Repeat Statement
+hi link Label Statement
+hi link Exception Statement
+hi link Define PreProc
+hi link Macro PreProc
+hi link PreCondit PreProc
+hi link StorageClass Type
+hi link Structure Type
+hi link Typedef Type
+hi link Tag Special
+hi link SpecialChar Special
+hi link Delimiter Special
+hi link SpecialComment Special
+hi link Debug Special
+hi link StatusLineTerm StatusLine
+hi link StatusLineTermNC StatusLineNC
 
 " }}}
 
@@ -570,6 +657,13 @@ function! s:toggleComment() range
   let comment = substitute(get(b:, 'commentstring', &commentstring), '\s*\(%s\)\s*', '%s', '')
   let pattern = '\V' . printf(escape(comment, '\'), '\(\s\{-}\)\s\(\S\.\{-}\)\s\=')
   let replace = '\1\2'
+
+  " for lnum in range(a:firstline, a:lastline)
+  "   let nextindent = matchstr(getline(lnum), '^\s*')
+  "   if !exists('indent') || (strlen(nextindent) <= strlen(indent))
+  "     let indent = nextindent
+  "   endif
+  " endfor
   if getline('.') !~ pattern
     let indent = matchstr(getline('.'), '^\s*')
     let pattern = '^' . indent . '\zs\(\s*\)\(\S.*\)'
