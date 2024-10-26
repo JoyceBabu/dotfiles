@@ -96,44 +96,44 @@ endif
 if ($TERM =~ '256' || &t_Co >= 256) || has("gui_running")
     " Main text and background
     hi Normal ctermbg=17 ctermfg=15 cterm=NONE guibg=#1e1e2e guifg=#f8f8f8 gui=NONE
-    hi NonText ctermbg=17 ctermfg=8 cterm=NONE guibg=#1e1e2e guifg=#585b70 gui=NONE
+    hi NonText ctermfg=8 guifg=#585b70
 
     " Syntax groups
-    hi Comment ctermbg=17 ctermfg=8 cterm=NONE guibg=#1e1e2e guifg=#585b70 gui=NONE
-    hi Constant ctermbg=17 ctermfg=19 cterm=NONE guibg=#1e1e2e guifg=#0099e6 gui=NONE
-    hi String ctermbg=17 ctermfg=11 cterm=NONE guibg=#1e1e2e guifg=#f5e0dc gui=NONE
-    hi Identifier ctermbg=17 ctermfg=215 cterm=NONE guibg=#1e1e2e guifg=#f99058 gui=NONE
-    hi Function ctermbg=17 ctermfg=215 cterm=NONE guibg=#1e1e2e guifg=#f99058 gui=NONE
-    hi Statement ctermbg=17 ctermfg=122 cterm=NONE guibg=#1e1e2e guifg=#00ccff gui=NONE
-    hi Keyword ctermbg=17 ctermfg=122 cterm=NONE guibg=#1e1e2e guifg=#00ccff gui=NONE
-    hi Operator ctermbg=17 ctermfg=206 cterm=NONE guibg=#1e1e2e guifg=#f77fbe gui=NONE
-    hi PreProc ctermbg=17 ctermfg=206 cterm=NONE guibg=#1e1e2e guifg=#f77fbe gui=NONE
-    hi Include ctermbg=17 ctermfg=200 cterm=NONE guibg=#1e1e2e guifg=#f5c2e7 gui=NONE
-    hi Type ctermbg=17 ctermfg=122 cterm=NONE guibg=#1e1e2e guifg=#00ccff gui=NONE
-    hi Special ctermbg=17 ctermfg=200 cterm=NONE guibg=#1e1e2e guifg=#f5c2e7 gui=NONE
-    hi Error ctermbg=17 ctermfg=88 cterm=NONE guibg=#1e1e2e guifg=#790914 gui=NONE
-    hi Todo ctermbg=17 ctermfg=88 cterm=NONE guibg=#1e1e2e guifg=#790914 gui=NONE
+    hi Comment ctermfg=8 guifg=#585b70
+    hi Constant ctermfg=19 guifg=#0099e6
+    hi String ctermfg=11 guifg=#f5e0dc
+    hi Identifier ctermfg=215 guifg=#f99058
+    hi Function ctermfg=215 guifg=#7aa2f7
+    hi Statement ctermfg=122 guifg=#00ccff
+    hi Keyword ctermfg=122 guifg=#00ccff
+    hi Operator ctermfg=206 guifg=#f77fbe
+    hi PreProc ctermfg=206 guifg=#f77fbe
+    hi Include ctermfg=200 guifg=#f5c2e7
+    hi Type ctermfg=122 guifg=#00ccff
+    hi Special ctermfg=200 guifg=#f5c2e7
+    hi Error ctermfg=88 guifg=#790914
+    hi Todo ctermfg=88 guifg=#790914
 
     " UI elements
-    hi LineNr ctermbg=17 ctermfg=25 cterm=NONE guibg=#1e1e2e guifg=#77AAFF gui=NONE
-    hi CursorLine ctermbg=8 ctermfg=122 cterm=NONE guibg=#585b70 guifg=#00ccff gui=NONE
-    hi CursorLineNr ctermbg=8 ctermfg=122 cterm=NONE guibg=#585b70 guifg=#00ccff gui=NONE
-    hi Search ctermbg=215 ctermfg=17 cterm=NONE guibg=#f99058 guifg=#1e1e2e gui=NONE
-    hi IncSearch ctermbg=206 ctermfg=8 cterm=NONE guibg=#f77fbe guifg=#585b70 gui=NONE
-    hi Visual ctermbg=8 ctermfg=122 cterm=NONE guibg=#585b70 guifg=#00ccff gui=NONE
-    hi MatchParen ctermbg=17 ctermfg=215 cterm=NONE guibg=#1e1e2e guifg=#f99058 gui=NONE
-    hi StatusLine ctermbg=19 ctermfg=17 cterm=NONE guibg=#0099e6 guifg=#1e1e2e gui=NONE
-    hi StatusLineNC ctermbg=25 ctermfg=17 cterm=NONE guibg=#77AAFF guifg=#1e1e2e gui=NONE
-    hi VertSplit ctermbg=17 ctermfg=206 cterm=NONE guibg=#1e1e2e guifg=#f77fbe gui=NONE
-    hi Pmenu ctermbg=17 ctermfg=25 cterm=NONE guibg=#1e1e2e guifg=#77AAFF gui=NONE
-    hi PmenuSel ctermbg=25 ctermfg=17 cterm=NONE guibg=#77AAFF guifg=#1e1e2e gui=NONE
-    hi Folded ctermbg=17 ctermfg=19 cterm=NONE guifg=#7aa2f7 guibg=#3b4261 gui=NONE
+    hi LineNr ctermfg=25 guifg=#77AAFF
+    hi CursorLine ctermbg=8 ctermfg=122 guibg=#292e42
+    hi CursorLineNr ctermbg=8 ctermfg=122 guibg=#292e42 guifg=#ff9e64
+    hi Search ctermbg=215 ctermfg=17 guibg=#f99058 guifg=#1e1e2e
+    hi IncSearch ctermbg=206 ctermfg=8 guibg=#f77fbe guifg=#585b70
+    hi Visual ctermbg=8 ctermfg=122 guibg=#585b70 guifg=#00ccff
+    hi MatchParen ctermfg=215 guifg=#f99058
+    hi StatusLine ctermbg=19 ctermfg=17 guibg=#0099e6 guifg=#1e1e2e
+    hi StatusLineNC ctermbg=25 ctermfg=17 guibg=#77AAFF guifg=#1e1e2e
+    hi VertSplit ctermfg=206 guifg=#f77fbe
+    hi Pmenu ctermfg=25 guifg=#77AAFF
+    hi PmenuSel ctermbg=25 ctermfg=17 guibg=#77AAFF guifg=#1e1e2e
+    hi Folded ctermfg=19 guifg=#7aa2f7 guibg=#3b4261
 
     " Diff highlighting
-    hi DiffAdd ctermbg=17 ctermfg=15 cterm=NONE guibg=#1e1e2e guifg=#f8f8f8 gui=NONE
-    hi DiffChange ctermbg=17 ctermfg=11 cterm=NONE guibg=#1e1e2e guifg=#f5e0dc gui=NONE
-    hi DiffDelete ctermbg=17 ctermfg=88 cterm=NONE guibg=#1e1e2e guifg=#701c1c gui=NONE
-    hi DiffText ctermbg=17 ctermfg=215 cterm=NONE guibg=#1e1e2e guifg=#f99058 gui=NONE
+    hi DiffAdd ctermfg=15 guifg=#f8f8f8
+    hi DiffChange ctermfg=11 guifg=#f5e0dc
+    hi DiffDelete ctermfg=88 guifg=#701c1c
+    hi DiffText ctermfg=215 guifg=#f99058
 
 elseif &t_Co == 8 || $TERM !~# '^linux' || &t_Co == 16
     set t_Co=16
