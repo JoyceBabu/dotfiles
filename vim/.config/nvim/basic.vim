@@ -75,6 +75,17 @@ set ruler
 
 " {{{ Default theme
 
+function! SetupColors()
+  if ($TERM =~ '256color' || &term =~ '256color') && has('termguicolors')
+    let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+    let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+    set termguicolors
+  endif
+endfunction
+
+autocmd vimrc_basic VimEnter * call SetupColors()
+call SetupColors()
+
 set background=dark
 if &background == "dark"
     highlight ColorColumn guibg=darkgrey ctermbg=235
@@ -82,15 +93,26 @@ else
     highlight ColorColumn guibg=lightgrey ctermbg=252
 endif
 
-highlight cursorline ctermbg=lightyellow ctermfg=black
-highlight Normal ctermbg=0 ctermfg=white
-highlight Comment ctermfg=darkgrey
-highlight Constant ctermfg=lightcyan
-highlight Label ctermfg=lightgreen
-highlight Identifier ctermfg=red
-highlight Statement ctermfg=lightmagenta
-highlight special ctermfg=lightgrey
-highlight Function ctermfg=lightgreen
+if ($TERM =~ '256' || &t_Co >= 256) || has("gui_running")
+    hi CursorLine ctermbg=8 ctermfg=122 cterm=NONE guibg=#292e42 guifg=#00ccff gui=NONE
+    hi Normal ctermbg=17 ctermfg=15 cterm=NONE guibg=#1e1e2e guifg=#f8f8f8 gui=NONE
+    hi Comment ctermbg=17 ctermfg=8 cterm=NONE guibg=#1e1e2e guifg=#585b70 gui=NONE
+    hi Constant ctermbg=17 ctermfg=19 cterm=NONE guibg=#1e1e2e guifg=#0099e6 gui=NONE
+    hi Identifier ctermbg=17 ctermfg=215 cterm=NONE guibg=#1e1e2e guifg=#f99058 gui=NONE
+    hi Statement ctermbg=17 ctermfg=122 cterm=NONE guibg=#1e1e2e guifg=#00ccff gui=NONE
+    hi Special ctermbg=17 ctermfg=200 cterm=NONE guibg=#1e1e2e guifg=#f5c2e7 gui=NONE
+    hi Folded ctermbg=17 ctermfg=19 cterm=NONE guibg=#3b4261 guifg=#7aa2f7 gui=NONE
+    hi Function guifg=#7aa2f7
+elseif &t_Co == 8 || $TERM !~# '^linux' || &t_Co == 16
+    set t_Co=16
+    hi CursorLine ctermbg=darkgray ctermfg=cyan cterm=NONE
+    hi Normal ctermbg=black ctermfg=white cterm=NONE
+    hi Comment ctermbg=black ctermfg=darkgray cterm=NONE
+    hi Constant ctermbg=black ctermfg=lightblue cterm=NONE
+    hi Identifier ctermbg=black ctermfg=orange cterm=NONE
+    hi Statement ctermbg=black ctermfg=cyan cterm=NONE
+    hi Special ctermbg=black ctermfg=pink cterm=NONE
+endif
 
 " }}}
 
