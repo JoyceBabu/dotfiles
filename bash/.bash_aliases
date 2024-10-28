@@ -1,29 +1,29 @@
 alias adb_init='
-    export ANDROID_SDK_ROOT=$ANDROID_HOME
-    export ANDROID_NDK_HOME="${ANDROID_NDK_ROOT:-$ANDROID_HOME/ndk-bundle}"
-    export ANDROID_NDK_ROOT=$ANDROID_NDK_HOME
-    export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/${OS_NAME}-x86_64:$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools/:$ANDROID_HOME/tools/bin:$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/${OS_NAME}-x86_64/bin
+  export ANDROID_SDK_ROOT=$ANDROID_HOME
+  export ANDROID_NDK_HOME="${ANDROID_NDK_ROOT:-$ANDROID_HOME/ndk-bundle}"
+  export ANDROID_NDK_ROOT=$ANDROID_NDK_HOME
+  export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/${OS_NAME}-x86_64:$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools/:$ANDROID_HOME/tools/bin:$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/${OS_NAME}-x86_64/bin
 '
 # alias java_init='export JAVA_HOME=$(/usr/libexec/java_home -v 1.8);PATH=${JAVA_HOME}/bin:${PATH}'
 alias node_init='
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 '
 alias ruby_init='
-    if /usr/bin/which rbenv > /dev/null; then
-        eval "$(rbenv init -)"
-    fi
+  if /usr/bin/which rbenv > /dev/null; then
+      eval "$(rbenv init -)"
+  fi
 '
 alias go_init='
-    export GOPATH=${GOPATH:-$HOME/Projects/golang};
-    export GOROOT=${GOROOT:-/usr/local/opt/go/libexec}
-    export PATH="$PATH:${GOPATH}/bin:${GOROOT}/bin"
+  export GOPATH=${GOPATH:-$HOME/Projects/golang};
+  export GOROOT=${GOROOT:-/usr/local/opt/go/libexec}
+  export PATH="$PATH:${GOPATH}/bin:${GOROOT}/bin"
 '
 alias rust_init='
-    export RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.rustup}
-    export CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
-    export PATH=$CARGO_HOME/bin:$PATH
+  export RUSTUP_HOME=${RUSTUP_HOME:-$HOME/.rustup}
+  export CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
+  export PATH=$CARGO_HOME/bin:$PATH
 '
 alias python_init="alias venv='python3 -m venv'"
 alias composer_init='PATH=$PATH:~/.composer/vendor/bin'
@@ -33,31 +33,32 @@ alias ssh=tssh
 alias pstorm=phpstorm
 alias gg=lazygit
 
-if /usr/bin/which nvim > /dev/null; then
-    alias vim=nvim
-    alias vi=nvim
+if /usr/bin/which nvim >/dev/null; then
+  alias vim=nvim
+  alias vi=nvim
+fi
 fi
 
-function tssh () {
-    if [ "$#" -ne 1 ]; then
-        # More than one argument. Just pass all to ssh.
-        \ssh "$@"
-    else
-        # Only the server name is given. Try to attach to tmux session.
-        \ssh "$1" -t "
-            tmux attach -t tssh 2>/dev/null || {
-				source <(curl --max-time 3 -fsSL 'https://env.joycebabu.com') 2>/dev/null
-			}
+function tssh() {
+  if [ "$#" -ne 1 ]; then
+    # More than one argument. Just pass all to ssh.
+    \ssh "$@"
+  else
+    # Only the server name is given. Try to attach to tmux session.
+    \ssh "$1" -t "
+            tmux attach -t 0 2>/dev/null || {
+        source <(curl --max-time 5 -fsSL 'https://env.joycebabu.com') 2>/dev/null
+      }
         "
-    fi
+  fi
 }
 
-proxy-start () {
-    if [ $# -eq 0 ]; then
-        echo "Usage: proxy-start <remote_host> [<local_port=8123>]"
-        return 1
-    fi
-    \ssh -D ${2:-8123} -q -C -N ${1}
+proxy-start() {
+  if [ $# -eq 0 ]; then
+    echo "Usage: proxy-start <remote_host> [<local_port=8123>]"
+    return 1
+  fi
+  \ssh -D ${2:-8123} -q -C -N ${1}
 }
 
 docker-ip() {
@@ -65,21 +66,21 @@ docker-ip() {
 }
 
 docker-ips() {
-    docker ps | while read line; do
-        if `echo $line | grep -q 'CONTAINER ID'`; then
-            echo -e "IP ADDRESS\t$line"
-        else
-            CID=$(echo $line | awk '{print $1}');
-            IP=$(docker inspect -f "{{ .NetworkSettings.IPAddress }}" $CID);
-            printf "${IP}\t${line}\n"
-        fi
-    done;
+  docker ps | while read line; do
+    if $(echo $line | grep -q 'CONTAINER ID'); then
+      echo -e "IP ADDRESS\t$line"
+    else
+      CID=$(echo $line | awk '{print $1}')
+      IP=$(docker inspect -f "{{ .NetworkSettings.IPAddress }}" $CID)
+      printf "${IP}\t${line}\n"
+    fi
+  done
 }
 
 mygrants() {
-  mysql -B -N $@ -e "SELECT DISTINCT CONCAT(
+  mysql -uroot -B -N $@ -e "SELECT DISTINCT CONCAT(
     'SHOW GRANTS FOR \'', user, '\'@\'', host, '\';'
-    ) AS query FROM mysql.user" | \
-  mysql $@ | \
-  sed 's/\(GRANT .*\)/\1;/;s/^\(Grants for .*\)/## \1 ##/;/##/{x;p;x;}'
+    ) AS query FROM mysql.user" |
+    mysql -uroot $@ |
+    sed 's/\(GRANT .*\)/\1;/;s/^\(Grants for .*\)/## \1 ##/;/##/{x;p;x;}'
 }
