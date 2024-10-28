@@ -15,6 +15,7 @@ base=(
 useronly=(
     editorconfig
     git
+    karabiner
     kitty
     ripgrep
     tmux
