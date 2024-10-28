@@ -22,6 +22,7 @@ useronly=(
     tmux
     vim
     wezterm
+    yazi
     zellij
     zsh
 )
