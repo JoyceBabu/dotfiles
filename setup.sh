@@ -17,6 +17,7 @@ useronly=(
     git
     karabiner
     kitty
+    phpactor
     ripgrep
     tmux
     vim

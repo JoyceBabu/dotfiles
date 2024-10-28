@@ -1,0 +1,28 @@
+code_transform.class_new.variants:
+  interface: interface
+  trait: trait
+  strict-class: strict-class
+language_server_phpstan.bin: "%project_root%/vendor/bin/phpstan"
+language_server_phpstan.enabled: true
+language_server_psalm.enabled: false
+language_server_php_cs_fixer.enabled: true
+language_server_php_cs_fixer.bin: "%project_root%/vendor/bin/php-cs-fixer"
+language_server_php_cs_fixer.show_diagnostics: true
+language_server_code_transform.import_globals: false
+phpunit.enabled: true
+composer.autoloader_path:
+  - "%project_root%/vendor/autoload.php"
+completion.dedupe: true
+completion.dedupe_match_fqn: true
+indexer.exclude_patterns:
+- .git/**/*,
+- /.var/cache/**/*
+- /node_modules/**/*
+- /var/cache/**/*
+- /vendor-bin/**/vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
+- /vendor/**/Tests/**/*
+- /vendor/**/tests/**/*
+- /vendor/composer/**/*
+- /.data/
+- /logs/
+- /var/
