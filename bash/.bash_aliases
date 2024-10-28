@@ -30,14 +30,44 @@ alias composer_init='PATH=$PATH:~/.composer/vendor/bin'
 alias open_ports="sudo lsof -iTCP -sTCP:LISTEN -P -n"
 alias ..='cd ..'
 alias ssh=tssh
+alias fvim=jb_vim_edit_files
 alias pstorm=phpstorm
-alias gg=lazygit
+alias alert='toastify send "$([ $? = 0 ] && echo Completed || echo Error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+alias lg=lazygit
 
 if /usr/bin/which nvim >/dev/null; then
   alias vim=nvim
   alias vi=nvim
 fi
+
+_PREVIEW_CMD='cat'
+if command -v bat >/dev/null 2>&1; then
+  _PREVIEW_CMD='bat --style=numbers --color=always'
 fi
+
+jb_fuzzy_find() {
+  fzf --preview "$_PREVIEW_CMD {}"
+}
+
+jb_filter_non_binary () {
+  # List of common binary file extensions to exclude
+  local binary_extensions='\.(avif|jpe?g|png|gif|ico|svg|tif|tiff|webp|min\.js|min\.css|map|exe|dll|s?o|out|dylib|zip|[rt]ar|gz|bz2|7z|pdf|doc|docx|ppt|pptx|xls|xlsx|bin|iso|dmg|img|msi|jar|class|pyc|pyo|wav|mp[34]|avi|mov|mkv|db|sqlite|bak)$'
+  grep -iEv "$binary_extensions"
+}
+
+jb_vim_edit_files() {
+  if [ "$1" = "-a" ] || [ "$1" = "--all" ] || ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    file=$(find . -type f | jb_filter_non_binary | jb_fuzzy_find)
+  elif [ ! -z "$1" ]; then
+    file=$(find "$1" -type f | jb_filter_non_binary | jb_fuzzy_find)
+  else
+    file=$(git ls-files | jb_filter_non_binary | jb_fuzzy_find)
+  fi
+
+  if [ -n "$file" ]; then
+    vim "$file"
+  fi
+}
 
 function tssh() {
   if [ "$#" -ne 1 ]; then
