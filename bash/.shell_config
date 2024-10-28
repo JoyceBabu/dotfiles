@@ -67,3 +67,21 @@ eval "$(direnv hook $shell)"
 unset _source_file
 unset shell
 
+
+# Press <C-z> in shell to bring the last suspended process to foreground
+# Useful to toggle between vim and shell using <C-z>
+if [ "$-" != "${-#*i}" ]; then
+  if [ -n "$BASH_VERSION" ]; then
+    stty susp undef
+    bind '"\C-z":" fg\015"'
+  elif [ -n "$ZSH_VERSION" ]; then
+	fg_widget() {
+      fg
+    }
+    stty susp undef
+    zle -N fg_widget
+    bindkey '^Z' fg_widget
+  fi
+else
+  echo "Non-interactive shell"
+fi
