@@ -62,6 +62,8 @@ _source_file ~/.bash_aliases
 
 eval "$(zoxide init $shell)"
 
+eval "$(direnv hook $shell)"
+
 unset _source_file
 unset shell
 
