@@ -21,6 +21,7 @@ useronly=(
     tmux
     vim
     wezterm
+    zellij
     zsh
 )
 
