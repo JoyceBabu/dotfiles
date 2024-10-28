@@ -15,6 +15,7 @@ base=(
 useronly=(
     editorconfig
     git
+    gitui
     karabiner
     kitty
     phpactor
