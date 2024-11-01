@@ -41,7 +41,26 @@ chmod 0755 "$JB_ENV_DIR"
 export MYVIMRC=$JB_ENV_DIR/.vimrc
 export VIMINIT=":set runtimepath^=$JB_ENV_DIR/.vim|:source $MYVIMRC"
 
+cat <<EOF > $JB_ENV_DIR/.ignore
+*~
+.DS_Store
+*.orig
+*.swp
+*.bak
+*.otd
+*.okd
+*-OKD
+*-OTD
+
+.idea/
+.cache/
+tmp/
+var/
+EOF
+
 cat <<EOF > $JB_ENV_DIR/.gitconfig
+[core]
+  excludesfile = $JB_ENV_DIR/.ignore
 [user]
   name = Joyce Babu
   email = joyce@ennexa.com
@@ -103,6 +122,13 @@ if command -v bat >/dev/null 2>&1; then
   _PREVIEW_CMD='bat --style=numbers --color=always'
 fi
 
+_FIND_CMD='find'
+if jb_check_for_executable fdfind; then
+  _FIND_CMD=fdfind
+elif jb_check_for_executable fd; then
+  _FIND_CMD=fd
+fi
+
 cat <<EOF > $JB_ENV_DIR/.shrc
 jb_check_for_executable() {
   type \$1 >/dev/null 2>/dev/null
@@ -135,7 +161,11 @@ jb_filter_non_binary () {
 
 jb_vim_edit_files() {
   if [ -n "\$1" ] || ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    file=\$(find "\${1:-.}" -type f | jb_filter_non_binary | jb_fuzzy_find)
+    if [ "$_FIND_CMD" = "find" ]; then
+      file=\$(find "\${1:-.}" -type f | jb_filter_non_binary | jb_fuzzy_find)
+    else
+      file=\$($_FIND_CMD . "\${1:-.}" --type f -H --ignore-file $JB_ENV_DIR/.ignore| jb_filter_non_binary | jb_fuzzy_find)
+    fi
   else
     file=\$(git ls-files | jb_filter_non_binary | jb_fuzzy_find)
   fi
