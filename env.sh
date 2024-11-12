@@ -160,18 +160,43 @@ jb_filter_non_binary () {
 }
 
 jb_vim_edit_files() {
-  if [ -n "\$1" ] || ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    if [ "$_FIND_CMD" = "find" ]; then
-      file=\$(find "\${1:-.}" -type f | jb_filter_non_binary | jb_fuzzy_find)
-    else
-      file=\$($_FIND_CMD . "\${1:-.}" --type f -H --ignore-file $JB_ENV_DIR/.ignore| jb_filter_non_binary | jb_fuzzy_find)
-    fi
+  clear_opcache=""
+  all_files=0
+  # Reset OPTIND to ensure we are starting from beginning
+  OPTIND=1
+
+  while getopts "acC" opt; do
+    case \$opt in
+      a) all_files=1 ;;
+      c) clear_opcache=1 ;;
+      C) clear_opcache=0 ;;
+    esac
+  done
+
+  shift \$((OPTIND - 1))
+
+  if [ "\$all_files" = "1" ] || ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    file=\$(find "\${1:-.}" -type f | jb_filter_non_binary | jb_fuzzy_find)
   else
-    file=\$(git ls-files | jb_filter_non_binary | jb_fuzzy_find)
+    file=\$(git ls-files "\${1:-.}" | jb_filter_non_binary | jb_fuzzy_find)
   fi
 
   if [ -n "\$file" ]; then
     vim "\$file"
+
+    # Run clear-opcache command if clear_opcache is non-empty (true) and file is .php
+    echo "\$file" | grep -q '\.php\$'
+    if [ \$? -ne 0 ]; then
+      clear_opcache=0
+    elif [ "\$clear_opcache" = "" ]; then
+      echo "Do you want to clear the opcache for \$file? (y/N): "
+      read -t 3 choice
+      clear_opcache=\$(echo 'n' | grep '^[yY]\$' && echo 1 || echo 0)
+    fi
+
+    if [ "\$clear_opcache" = "1" ]; then
+      ./bin/clear-opcache "\$file"
+    fi
   fi
 }
 
