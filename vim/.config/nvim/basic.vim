@@ -310,6 +310,7 @@ endif
 " We have to use <c-o>i since <Left> is disabled
 :autocmd FileType php
   \ :iabbrev <buffer> <?php= <?php<cr><cr>declare(strict_types=1);<cr><cr>namespace ;<c-o>i
+autocmd Filetype gitcommit setlocal spell textwidth=72
 
 " {{{ Text Objects
 
