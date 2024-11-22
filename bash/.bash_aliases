@@ -56,16 +56,30 @@ jb_filter_non_binary () {
 }
 
 jb_vim_edit_files() {
-  if [ "$1" = "-a" ] || [ "$1" = "--all" ] || ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    file=$(find . -type f | jb_filter_non_binary | jb_fuzzy_find)
-  elif [ ! -z "$1" ]; then
-    file=$(find "$1" -type f | jb_filter_non_binary | jb_fuzzy_find)
+  clear_opcache=0
+  all_files=0
+
+  while getopts "ac" opt; do
+    case $opt in
+      a) all_files=1 ;;
+      c) clear_opcache=1 ;;
+    esac
+  done
+
+  shift $((OPTIND - 1))
+
+  if [ "$all_files" = "1" ] || ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    file=$(find "${1:-.}" -type f | jb_filter_non_binary | jb_fuzzy_find)
   else
-    file=$(git ls-files | jb_filter_non_binary | jb_fuzzy_find)
+    file=$(git ls-files "${1:-.}" | jb_filter_non_binary | jb_fuzzy_find)
   fi
 
   if [ -n "$file" ]; then
     vim "$file"
+
+    if [ "$clear_opcache" = "1" ]; then
+      ./bin/clear-opcache "$file"
+    fi
   fi
 }
 
