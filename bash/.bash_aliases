@@ -83,6 +83,30 @@ jb_vim_edit_files() {
   fi
 }
 
+colourize() {
+  sed -E \
+    -e "s/\[red\]/"$'\e[31m'"/g" \
+    -e "s/\[\/red\]/"$'\e[m'"/g" \
+    -e "s/\[green\]/"$'\e[32m'"/g" \
+    -e "s/\[\/green\]/"$'\e[m'"/g" \
+    -e "s/\[yellow\]/"$'\e[33m'"/g" \
+    -e "s/\[\/yellow\]/"$'\e[m'"/g" \
+    -e "s/\[blue\]/"$'\e[34m'"/g" \
+    -e "s/\[\/blue\]/"$'\e[m'"/g" \
+    -e "s/\[magenta\]/"$'\e[35m'"/g" \
+    -e "s/\[\/magenta\]/"$'\e[m'"/g" \
+    -e "s/\[cyan\]/"$'\e[36m'"/g" \
+    -e "s/\[\/cyan\]/"$'\e[m'"/g" \
+    -e "s/\[white\]/"$'\e[37m'"/g" \
+    -e "s/\[\/white\]/"$'\e[m'"/g" \
+    -e "s/FATAL/"$'\e[31m'"&"$'\e[m'"/g" \
+    -e "s/ERROR/"$'\e[31m'"&"$'\e[m'"/g" \
+    -e "s/WARNING/"$'\e[33m'"&"$'\e[m'"/g" \
+    -e "s/INFO/"$'\e[32m'"&"$'\e[m'"/g" \
+    -e "s/DEBUG/"$'\e[34m'"&"$'\e[m'"/g"
+}
+
+
 function tssh() {
   if [ "$#" -ne 1 ]; then
     # More than one argument. Just pass all to ssh.
