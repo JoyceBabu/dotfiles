@@ -5,7 +5,19 @@ require("telescope").setup {
     mappings = {
       i = {
         ["<esc>"] = actions.close,
+        ["<C-q>"] = actions.send_selected_to_qflist + actions.open_qflist, -- send selected to quickfixlist
       },
+    },
+    file_ignore_patterns = {
+      "%.jpg",
+      "%.jpeg",
+      "%.png",
+      "%.svg",
+      "%.otf",
+      "%.ttf",
+      "node_modules/",
+      ".git/",
+      "dist/",
     },
   },
   extensions = {
@@ -29,11 +41,22 @@ require("telescope").setup {
       -- }
     }
   },
-  -- pickers = {
-  --   colorscheme = {
-  --     enable_preview = true
-  --   }
-  -- }
+  pickers = {
+    colorscheme = {
+      enable_preview = true
+    },
+    buffers = {
+      show_all_buffers = true,
+      sort_lastused = true,
+      theme = "dropdown",
+      previewer = false,
+      mappings = {
+        i = {
+          ["<c-o>d"] = "delete_buffer",
+        }
+      }
+    }
+  }
 }
 
 -- To get ui-select loaded and working with telescope, you need to call
