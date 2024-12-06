@@ -605,9 +605,11 @@ nnoremap <leader>p "+p " Paste from clipboard
 nnoremap <leader>P "+P " Paste from clipboard
 " Delete without modifying unnamed registers
 nnoremap <leader>d "_d
+nnoremap <leader>D "_d
 vnoremap <leader>d "_d
 " Yank to system clipboard
 nnoremap <leader>y "+y
+nnoremap <leader>Y "+Y
 vnoremap <leader>y "+y
 
 " }}}
