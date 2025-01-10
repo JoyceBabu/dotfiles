@@ -16,6 +16,7 @@ useronly=(
     editorconfig
     git
     gitui
+    hammerspoon
     karabiner
     kitty
     phpactor
