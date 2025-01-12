@@ -1,0 +1,10 @@
+theme = nvimdark	
+font-family = "JetBrains Mono"
+font-size = 16
+#font-thicken = true
+fullscreen = true
+
+keybind = ctrl+m=text:\x0D
+keybind = ctrl+i=text:\x09
+keybind = ctrl+[=text:\x1B
+#keybind = ctrl+d=text:\x7F

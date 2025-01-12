@@ -14,6 +14,7 @@ base=(
 # folders that should, or only need to be installed for a local user
 useronly=(
     editorconfig
+    ghostty
     git
     gitui
     hammerspoon

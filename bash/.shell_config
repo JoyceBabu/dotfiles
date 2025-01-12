@@ -85,3 +85,8 @@ if [ "$-" != "${-#*i}" ]; then
 else
   echo "Non-interactive shell"
 fi
+
+# Fix Missing or Unsuitable Terminal xterm-ghostty
+if [[ "$TERM_PROGRAM" == "ghostty" ]]; then
+    export TERM=xterm-256color
+fi
