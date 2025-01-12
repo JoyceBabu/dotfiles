@@ -45,12 +45,16 @@ echo "Stowing apps for user: ${whoami}"
 
 # install apps available to local users and root
 for app in ${base[@]}; do
+    echo ""
+    echo -e "\033[1mStowing $app\033[0m"
     stowit "${HOME}" $app
 done
 
 # install only user space folders
 for app in ${useronly[@]}; do
     if [[ ! "$(whoami)" = *"root"* ]]; then
+        echo ""
+        echo -e "\033[1mStowing $app\033[0m"
         stowit "${HOME}" $app
     fi
 done
