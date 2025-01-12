@@ -1,17 +1,22 @@
 {
+    "global": { "show_in_menu_bar": false },
     "profiles": [
         {
             "complex_modifications": {
                 "parameters": { "basic.to_if_alone_timeout_milliseconds": 250 },
                 "rules": [
                     {
-                        "description": "Left_Ctrl + p/n to up/down",
+                        "description": "Left_Ctrl + m/n/p/I to return/down/up/tab",
                         "manipulators": [
                             {
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^org\\.keepassxc\\.keepassxc$"
+                                            "^com\\.apple\\.finder$",
+                                            "^com\\.google\\.Chrome$",
+                                            "^com\\.descy\\.michael\\.TodoTxtMac$",
+                                            "^org\\.keepassxc\\.keepassxc$",
+                                            "^net\\.whatsapp\\.WhatsApp"
                                         ],
                                         "type": "frontmost_application_if"
                                     }
@@ -30,7 +35,11 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^org\\.keepassxc\\.keepassxc$"
+                                            "^com\\.apple\\.finder$",
+                                            "^com\\.google\\.Chrome$",
+                                            "^com\\.descy\\.michael\\.TodoTxtMac$",
+                                            "^org\\.keepassxc\\.keepassxc$",
+                                            "^net\\.whatsapp\\.WhatsApp"
                                         ],
                                         "type": "frontmost_application_if"
                                     }
@@ -44,11 +53,75 @@
                                 },
                                 "to": [{ "key_code": "down_arrow" }],
                                 "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.apple\\.Finder$",
+                                            "^com\\.google\\.Chrome$",
+                                            "^com\\.descy\\.michael\\.TodoTxtMac$",
+                                            "^org\\.keepassxc\\.keepassxc$",
+                                            "^net\\.whatsapp\\.WhatsApp"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "m",
+                                    "modifiers": {
+                                        "mandatory": ["left_control"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [{ "key_code": "return_or_enter" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.google\\.Chrome$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "i",
+                                    "modifiers": {
+                                        "mandatory": ["left_control"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [{ "key_code": "tab" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.google\\.Chrome$",
+                                            "^org\\.keepassxc\\.keepassxc$",
+                                            "^net\\.whatsapp\\.WhatsApp"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "open_bracket",
+                                    "modifiers": {
+                                        "mandatory": ["left_control"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [{ "key_code": "escape" }],
+                                "type": "basic"
                             }
                         ]
                     },
                     {
                         "description": "Post Esc if Caps is tapped, Control if held.",
+                        "enabled": false,
                         "manipulators": [
                             {
                                 "from": {
