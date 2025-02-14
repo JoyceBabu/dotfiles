@@ -639,14 +639,48 @@ nnoremap <leader>b :buffer <C-z><S-Tab>
 
 " {{{ Mapping: Vim Surround
 
-" Vim surround emulation
+" {{{ Surround delete emulation
+
+let s:surround_pairs = { '(' : ')', '[': ']', '{': '}', '<': '>' }
+let s:surround_inverted_pairs = {}
+let s:surround_alternate_pairs =  { 'b': '(', 'B': '{', 'r': '[', 'a': '<' }
+for [key, value] in items(s:surround_pairs)
+  let s:surround_inverted_pairs[value] = key
+endfor
 
 function! SurroundDelete(old)
   let l:char = nr2char(a:old)
-  execute "normal! di" . l:char . "va" . l:char . "p`["
+  let l:char = get(s:surround_alternate_pairs, l:char, l:char)
+  " execute "normal! di" . l:char . "va" . l:char . "p`["
+  execute "normal! vi" . l:char . "dvhp"
 endfunction
 
 nnoremap <silent>ds :call SurroundDelete(getchar())<CR>
+
+" }}}
+
+" {{{ Surround change emulation
+
+function! SurroundChange(old, new)
+  let l:old_char = nr2char(a:old)
+  let l:new_char = nr2char(a:new)
+  let l:old_char = get(s:surround_alternate_pairs, l:old_char, l:old_char)
+
+  let l:open_char = get(s:surround_alternate_pairs, l:new_char, l:new_char)
+  let l:close_char = l:open_char
+
+  if has_key(s:surround_pairs, l:open_char)
+    let l:close_char = get(s:surround_pairs, l:open_char)
+  else
+    let l:open_char = get(s:surround_inverted_pairs, l:close_char, l:open_char)
+  endif
+
+  execute "normal! vi" . l:old_char . "oh\<Esc>msvi" . l:old_char . "l\<Esc>s" . l:close_char . "\<Esc>`ss" . l:open_char . "\<Esc>"
+endfunction
+
+nnoremap <silent>cs :call SurroundChange(getchar(), getchar())<CR>
+
+" }}}
 
 " }}}
 
