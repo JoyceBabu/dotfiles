@@ -729,6 +729,23 @@ endfunction
 
 " }}}
 
+" {{{ Execute current line in $SHELL and replace it with the output
+
+noremap Q :call ConfirmExecuteLine()<CR>
+
+function! ConfirmExecuteLine()
+  " Prompt the user for confirmation
+  let l:confirm = confirm("Execute the current line in $SHELL?", "&Yes\n&No", 2)
+  if l:confirm == 1
+    " If confirmed, execute the current line and replace it with the output
+    execute "normal! !!$SHELL\<CR>"
+  else
+    echo "Operation canceled."
+  endif
+endfunction
+
+" }}}
+
 " }}}
 
 " {{{ Custom Commands
