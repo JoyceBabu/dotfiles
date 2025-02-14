@@ -545,7 +545,7 @@ inoremap <C-W> <C-G>u<C-W>
 " {{{ Mapping: Search and Replace
 
 " Experimental Mappings
-nnoremap <leader>/ :nohlsearch<CR>
+nnoremap <esc> :nohlsearch<CR>
 
 " Use * to search the current selection
 vnoremap <silent> * "zy/<C-R>=@z<CR><CR>
