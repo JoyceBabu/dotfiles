@@ -21,6 +21,7 @@ useronly=(
     karabiner
     kitty
     phpactor
+    process-compose
     ripgrep
     tmux
     vim

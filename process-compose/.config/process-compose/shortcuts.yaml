@@ -1,0 +1,10 @@
+---
+shortcuts:
+  log_select:
+    shortcut: Ctrl-V
+  process_start:
+    shortcut: Ctrl-S
+  process_stop:
+    shortcut: Ctrl-X
+  quit:
+    shortcut: q
