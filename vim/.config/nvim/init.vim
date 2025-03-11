@@ -8,11 +8,15 @@ if !1 | finish | endif
 
 source ~/.config/nvim/basic.vim
 
-set termguicolors
-if has('mac') && $COLORTERM == '' && !has('gui_vimr') && !has('gui_running')
-  set t_Co=256
-  set notermguicolors
-endif
+let g:have_nerd_font = 1
+
+set background=dark
+
+" set termguicolors
+" if has('mac') && $COLORTERM == '' && !has('gui_vimr') && !has('gui_running')
+"   set t_Co=256
+"   set notermguicolors
+" endif
 
 " Declare group for autocmd for whole init.vim, and clear it
 " Otherwise every autocmd will be added to group each time vimrc sourced!
@@ -40,13 +44,19 @@ autocmd VimEnter * if len(filter(values(g:plugs), '!isdirectory(v:val.dir)'))
 call plug#begin('~/.local/share/nvim/plugged')
 
 if has('nvim')
+  Plug 'folke/todo-comments.nvim'
   Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+
+  " Telescope
   Plug 'nvim-lua/plenary.nvim'
-  Plug 'nvim-neorg/neorg'
+  Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
   Plug 'nvim-telescope/telescope.nvim'
   Plug 'nvim-telescope/telescope-ui-select.nvim'
-  Plug 'olimorris/onedarkpro.nvim'
-  " Required by hardtime.nvim
+
+  " Themes
+  Plug 'folke/tokyonight.nvim'
+
+  " Hardtime
   Plug 'MunifTanjim/nui.nvim'
   Plug 'm4xshen/hardtime.nvim'
 
@@ -70,7 +80,7 @@ if has('nvim')
   Plug 'j-hui/fidget.nvim'
 
   " Additional lua configuration, makes nvim stuff amazing
-  Plug 'folke/neodev.nvim'
+  Plug 'folke/lazydev.nvim', { 'for': 'lua' }
 
   " Snippets
   Plug 'L3MON4D3/LuaSnip'
@@ -79,6 +89,7 @@ if has('nvim')
   Plug 'VonHeikemen/lsp-zero.nvim', { 'branch': 'v1.x' }
 else
   Plug 'joshdick/onedark.vim'
+  Plug 'Everblush/everblush.vim'
 endif
 
 " Theme
@@ -99,8 +110,6 @@ Plug 'AndrewRadev/splitjoin.vim' , { 'on': ['SplitjoinSplit', 'SplitjoinJoin']}
 Plug 'machakann/vim-highlightedyank'
 Plug 'Yggdroot/indentLine'
 Plug 'vim-airline/vim-airline'         " Airline status bar
-" Plug 'camspiers/lens.vim'              " Auto expand active window
-Plug 'thaerkh/vim-workspace'           " Workspace
 
 " Search & Replace
 Plug 'tpope/vim-abolish'               " Case aware substitution, autocorrection
@@ -120,10 +129,9 @@ Plug 'junegunn/fzf', {
       \ 'do': './install --all --no-update-rc'
       \}
 Plug 'junegunn/fzf.vim'
-Plug 'jesseleite/vim-agriculture'      " Allow passing flags in :Ag
 Plug 'justinmk/vim-dirvish'
 Plug 'ryanoasis/vim-devicons'
-" Plug 'wsdjeg/vim-fetch'                " Handle line & col no in filename
+Plug 'wsdjeg/vim-fetch'                " Handle line & col no in filename
 Plug 'editorconfig/editorconfig-vim'   " Support for EditorConfig
 
 " Navigation
@@ -134,29 +142,19 @@ Plug 'mg979/vim-visual-multi', {'branch': 'master'} " Multi cursor support
 Plug 'mbbill/undotree'                 " Visualize undo tree
 Plug 'vim-scripts/argtextobj.vim'
 
-" Debugging
-" Plug 'vim-vdebug/vdebug'
-
 call plug#end()
-
-"
 
 "  Configure Plugins
 
 if has('nvim')
   lua require('treesitter-cfg')
+  lua require("hardtime").setup { disable_mouse = false }
+  lua require("todo-comments").setup {}
+
+  colorscheme tokyonight-night
+else
+  colorscheme onedark
 endif
-
-"
-"  Language Support
-
-"  vlang
-
-let g:v_autofmt_bufwritepre = 1        " Auto format on save
-
-"
-
-"
 
 "  Project / Session
 
@@ -166,8 +164,6 @@ let g:workspace_session_directory = $HOME . '/.cache/vim/sessions/'
 let g:workspace_persist_undo_history = 1
 let g:workspace_undodir='.undodir'
 let g:workspace_session_disable_on_args = 1
-
-"
 
 "  Undo History
 
@@ -183,10 +179,6 @@ if has('persistent_undo')
   set noswapfile
   set nobackup
 endif
-
-"
-
-"
 
 "  User Interface
 
@@ -214,11 +206,7 @@ nnoremap <silent> <leader>lg :LazyGit<CR>
 
 " let g:airline_theme='gruvbox'
 
-set background=dark
-colorscheme onedark
 highlight Comment cterm=italic gui=italic
-
-"
 
 "  IndentLine Settings
 
@@ -233,8 +221,6 @@ let g:indentLine_leadingSpaceChar = '.'
 let g:indentLine_char_list = ['|', '¦', '┆', '┊']
 " autocmd! User indentLine doautocmd indentLine Syntax
 
-"
-
 "  Windows / Tabs
 
 " Disable vim->tmux navigation when the Vim pane is zoomed in tmux
@@ -242,44 +228,14 @@ let g:tmux_navigator_disable_when_zoomed = 1
 
 nnoremap <silent> gz :ZoomToggle<CR>
 
-"
 
-"
 
-"  Debugging
 
-" let g:vdebug_options = {'ide_key': 'xdebug'}
-" let g:vdebug_options = {'break_on_open': 0}
-" let g:vdebug_options = {'server': '127.0.0.1'}
-" let g:vdebug_options = {'port': '10000'}
-
-"
-
-"  File Management
-
-" nnoremap <C-p> :GFiles<CR>
-
-nnoremap <leader>ps :GFiles<CR>
-
-" Find files using Telescope command-line sugar.
-nnoremap <leader>fa <cmd>Telescope find_files<cr>
-nnoremap <leader>ff <cmd>Telescope git_files<cr>
-nnoremap <leader>fb <cmd>Telescope buffers<cr>
-nnoremap <leader>fo <cmd>Telescope oldfiles<cr>
-nnoremap <leader>sf <cmd>Telescope live_grep<cr>
-nnoremap <leader>sh <cmd>Telescope help_tags<cr>
-
-"
-"  Command Line Modes
-"
+" }}}
 
 "  Custom Mappings
 
-
-" Execute current line in $SHELL and replace it with the output
-noremap Q !!$SHELL<cr>
-
-"  Vim Visual Multi
+" {{{  Vim Visual Multi
 
 let g:VM_theme = 'iceblue'
 let g:VM_highlight_matches = 'underline'
@@ -301,18 +257,12 @@ let g:VM_mouse_mappings = 1    " Equivalent to following mappings
 " nmap   <C-RightMouse>      <Plug>(VM-Mouse-Word)
 " nmap   <M-C-RightMouse>    <Plug>(VM-Mouse-Column)
 
-"
+" }}}
 
-" Home-row shortcut for escape key
-" cnoremap kj <esc>
-" inoremap kj <esc>
-" vnoremap kj <esc>
-
-"  Overrides
+"  {{{ Local Overrides
 
 if filereadable(expand("~/.vimrc.local"))
   source ~/.vimrc.local
 endif
 
-"
-
+" }}}
