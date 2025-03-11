@@ -112,6 +112,7 @@ Plug 'junegunn/gv.vim'
 " Plug 'jreybert/vimagit'
 Plug 'shumphrey/fugitive-gitlab.vim'   " for :Gbrowse
 Plug 'airblade/vim-gitgutter', { 'on': ['GitGutterEnable', 'GitGutterDisable'] } " Git integration in gutter
+Plug 'kdheepak/lazygit.nvim'
 
 " File Management
 Plug 'junegunn/fzf', {
@@ -200,7 +201,14 @@ let g:lens#disabled_filetypes = ['nerdtree', 'fzf', 'netrw']
 
 let g:fugitive_gitlab_domains = ['https://git.ennexa.org']
 
-"
+" LazyGit
+let g:lazygit_use_custom_config_file_path = 1
+let g:lazygit_config_file_path = [
+  \$HOME . '/.config/lazygit/config.yml',
+  \$HOME . '/.config/lazygit/config.nvim.yml',
+\]
+let g:lazygit_floating_window_scaling_factor = 1
+nnoremap <silent> <leader>lg :LazyGit<CR>
 
 "  Theme
 
