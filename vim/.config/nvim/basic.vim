@@ -240,7 +240,7 @@ augroup vimrc_basic
     " Disable line number in builtin terminal
     autocmd TermOpen * setlocal nonumber norelativenumber
     " Escape from terminal
-    autocmd TermOpen * tnoremap <buffer> <Esc> <c-\><c-n>
+    autocmd TermOpen * if &filetype != 'lazygit' | tnoremap <buffer> <Esc> <c-\><c-n> | endif
   endif
   autocmd FileType qf nnoremap <buffer> q :ccl<CR>
   autocmd FileType qf nnoremap <buffer> p <CR>zz<C-w>p
