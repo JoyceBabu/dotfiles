@@ -148,6 +148,7 @@ call plug#end()
 
 if has('nvim')
   lua require('treesitter-cfg')
+  lua require('config.plugins.lazygit')
   lua require("hardtime").setup { disable_mouse = false }
   lua require("todo-comments").setup {}
 
@@ -192,15 +193,6 @@ let g:lens#disabled_filetypes = ['nerdtree', 'fzf', 'netrw']
 "  Git Integration
 
 let g:fugitive_gitlab_domains = ['https://git.ennexa.org']
-
-" LazyGit
-let g:lazygit_use_custom_config_file_path = 1
-let g:lazygit_config_file_path = [
-  \$HOME . '/.config/lazygit/config.yml',
-  \$HOME . '/.config/lazygit/config.nvim.yml',
-\]
-let g:lazygit_floating_window_scaling_factor = 1
-nnoremap <silent> <leader>lg :LazyGit<CR>
 
 "  Theme
 
