@@ -24,6 +24,7 @@ local config = require("config")
 hs.loadSpoon("SpoonInstall")
 hs.loadSpoon("EmmyLua")
 
+require("mousekey")
 -- {{{ Show Clock
 
 hs.loadSpoon("AClock")
