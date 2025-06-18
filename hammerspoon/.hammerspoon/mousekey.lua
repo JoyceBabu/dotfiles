@@ -16,8 +16,10 @@ All state is cleaned up on Hammerspoon reload/quit.
 --------------------------------------------------------------------]]
 
 ------------------------------ CONFIG ------------------------------
-local moveSpeeds = { 4, 14, 36 } -- px per tick: slow, normal, fast
-local speedThreshold = { 0.35, 1 } -- sec pressed → speed stage
+local speedMin = 4 -- px per tick the instant a key is pressed
+local speedMax = 36 -- px per tick after a long hold
+local speedCurveK = 5 -- curve steepness (higher = snappier ramp-up)
+local speedCurveMid = 0.5 -- seconds at which speed is halfway (σ = 0.5)
 local tickRate = 0.02 -- sec between cursor updates (≈50 Hz)
 local iconDistance = 40 -- px before badge hops
 local logLevel = "info" -- 'debug' | 'info' | 'warning'
@@ -30,7 +32,7 @@ local now = hs.timer.secondsSinceEpoch
 
 ------------------------------- STATE ------------------------------
 local mouseMode = false -- inside Mouse Mode right now?
-local primed = false -- Control was tapped once
+local primed = nil -- Control was tapped once
 local primedTimer = nil -- clears the primed flag
 local moveTimer = nil -- drives continuous cursor motion
 local wrapEdges = false
@@ -87,10 +89,19 @@ local wrapToggle = keyCode("b")
 --------------------------- UTILITIES ------------------------------
 local function currentSpeed()
     if not pressStart then
-        return moveSpeeds[1]
+        return speedMin
     end
     local held = now() - pressStart
-    return (held < speedThreshold[1]) and moveSpeeds[1] or (held < speedThreshold[2]) and moveSpeeds[2] or moveSpeeds[3]
+
+    -- logistic sigmoid, normalised so that t = 0 → σ = 0
+    local logistic = 1 / (1 + math.exp(-speedCurveK * (held - speedCurveMid)))
+    local sigma0 = 1 / (1 + math.exp(speedCurveK * speedCurveMid))
+    local sigma = (logistic - sigma0) / (1 - sigma0)
+    if sigma < 0 then
+        sigma = 0
+    end -- guard against tiny negatives
+
+    return speedMin + (speedMax - speedMin) * sigma
 end
 
 local function clampOrWrap(pt)
