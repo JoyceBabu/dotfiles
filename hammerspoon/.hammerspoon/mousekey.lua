@@ -61,31 +61,27 @@ for k, vec in pairs({ h = { -1, 0 }, j = { 0, 1 }, k = { 0, -1 }, l = { 1, 0 } }
         moveKeys[c] = vec
     end
 end
-if keyCode("m") then
-    clickKeys[keyCode("m")] = function()
-        hs.eventtap.leftClick(hs.mouse.absolutePosition())
-    end
+
+clickKeys[keyCode("m")] = function()
+    hs.eventtap.leftClick(hs.mouse.absolutePosition())
 end
-if keyCode(",") then
-    clickKeys[keyCode(",")] = function()
-        hs.eventtap.otherClick(hs.mouse.absolutePosition(), 2)
-    end
+
+clickKeys[keyCode(",")] = function()
+    hs.eventtap.otherClick(hs.mouse.absolutePosition(), 2)
 end
-if keyCode(".") then
-    clickKeys[keyCode(".")] = function()
-        hs.eventtap.rightClick(hs.mouse.absolutePosition())
-    end
+
+clickKeys[keyCode(".")] = function()
+    hs.eventtap.rightClick(hs.mouse.absolutePosition())
 end
-if keyCode("u") then
-    scrollKeys[keyCode("u")] = function()
-        hs.eventtap.scrollWheel({ 0, 80 }, {}, "pixel")
-    end
+
+scrollKeys[keyCode("y")] = function()
+    hs.eventtap.scrollWheel({ 0, 80 }, {}, "pixel")
 end
-if keyCode("n") then
-    scrollKeys[keyCode("n")] = function()
-        hs.eventtap.scrollWheel({ 0, -80 }, {}, "pixel")
-    end
+
+scrollKeys[keyCode("e")] = function()
+    hs.eventtap.scrollWheel({ 0, -80 }, {}, "pixel")
 end
+
 local wrapToggle = keyCode("b")
 
 --------------------------- UTILITIES ------------------------------
