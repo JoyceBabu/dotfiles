@@ -23,8 +23,13 @@ local speedCurveMid = 0.5 -- seconds at which speed is halfway (σ = 0.5)
 
 local ctrlPrimeDelay = 0.6 -- delay for second control press
 local tickRate = 0.02 -- sec between cursor updates (≈50 Hz)
-local iconDistance = 40 -- px before badge hops
 local logLevel = "info" -- 'debug' | 'info' | 'warning'
+
+local iconDistance = 40 -- px before badge hops
+local iconSize = { w = 45, h = 22 }
+local iconText = " M "
+local iconFont = "Helvetica-Bold"
+local iconFontSize = 14
 --------------------------------------------------------------------
 
 local log = hs.logger.new("MouseKey", logLevel)
@@ -84,6 +89,66 @@ end
 
 local wrapToggle = keyCode("b")
 
+------------------------------ BADGE -------------------------------
+local function updateBadgePosition(pos, newPos)
+    if not badge then
+        return
+    end
+
+    local bf = badge:frame()
+    if
+        newPos ~= nil
+        or math.abs(pos.x - (bf.x + bf.w / 2)) < iconDistance and math.abs(pos.y - (bf.y + bf.h / 2)) < iconDistance
+    then
+        badgeCorner = newPos or (badgeCorner % 4) + 1
+        local ow, oh = bf.w + 10, bf.h + 10
+        local f = hs.screen.mainScreen():frame()
+        local corners = {
+            { x = f.x + 4, y = f.y + f.h - oh },
+            { x = f.x + f.w - ow, y = f.y + f.h - oh },
+            { x = f.x + f.w - ow, y = f.y + 4 },
+            { x = f.x + 4, y = f.y + 4 },
+        }
+        badge:topLeft(corners[badgeCorner])
+    end
+end
+
+local function showBadge()
+    if badge then
+        badge:delete()
+        badge = nil
+    end
+
+    badge = hs.canvas.new({ x = 0, y = 0, w = iconSize.w, h = iconSize.h })
+    badge:appendElements({
+        type = "rectangle",
+        fillColor = { red = 0.2, green = 0.2, blue = 0.8, alpha = 0.85 },
+        strokeColor = { white = 0.5, alpha = 0.5 },
+        strokeWidth = 1,
+        radius = 5,
+        frame = { x = 0, y = 0, w = iconSize.w, h = iconSize.h },
+    })
+    badge:appendElements({
+        type = "text",
+        text = iconText,
+        textColor = { white = 1, alpha = 1.0 },
+        textFont = iconFont,
+        textSize = iconFontSize,
+        frame = { x = 0, y = 0, w = iconSize.w, h = iconSize.h },
+        textAlignment = "center",
+    })
+
+    updateBadgePosition(hs.mouse.absolutePosition(), 1)
+    badge:show()
+end
+
+local function hideBadge()
+    if badge then
+        badge:delete()
+        badge = nil
+    end
+end
+
 --------------------------- UTILITIES ------------------------------
 local function currentSpeed()
     if not pressStart then
@@ -136,40 +201,8 @@ local function moveCursor(dx, dy)
     local new = { x = pos.x + dx * speed, y = pos.y + dy * speed }
     hs.mouse.absolutePosition(clampOrWrap(new))
     lastProgMove = now()
-    -- badge hop logic
-    if badge then
-        local bf = badge:frame()
-        if
-            math.abs(new.x - (bf.x + bf.w / 2)) < iconDistance
-            and math.abs(new.y - (bf.y + bf.h / 2)) < iconDistance
-        then
-            badgeCorner = (badgeCorner % 4) + 1
-            local f = hs.screen.mainScreen():frame()
-            local cr = {
-                { x = f.x + 4, y = f.y + f.h - 24 },
-                { x = f.x + f.w - 20, y = f.y + f.h - 24 },
-                { x = f.x + f.w - 20, y = f.y + 4 },
-                { x = f.x + 4, y = f.y + 4 },
-            }
-            badge:setTopLeft(cr[badgeCorner])
-        end
-    end
-end
 
------------------------------- BADGE -------------------------------
-local function showBadge()
-    if badge then
-        badge:delete()
-    end
-    local sf = hs.screen.mainScreen():frame()
-    badgeCorner = 1
-    badge = hs.drawing.text(hs.geometry.rect(sf.x + 4, sf.y + sf.h - 24, 16, 20), "M")
-    badge
-        :setLevel(hs.drawing.windowLevels.status)
-        :setBehavior(hs.drawing.windowBehaviors.canJoinAllSpaces)
-        :setTextColor({ hex = "#00ff00" })
-        :setAlpha(0.8)
-        :show()
+    updateBadgePosition(new)
 end
 
 --------------------------- KEY WATCHER ----------------------------
@@ -270,10 +303,7 @@ local function exitMouseMode(reason)
         moveTimer:stop()
         moveTimer = nil
     end
-    if badge then
-        badge:delete()
-        badge = nil
-    end
+    hideBadge()
 end
 
 ---------------------- CONTROL‑KEY PRIMING -------------------------
