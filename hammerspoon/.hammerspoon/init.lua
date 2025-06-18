@@ -6,21 +6,20 @@ hs.alert.defaultStyle.fillColor = { red = 0, green = 0, blue = 0, alpha = 0.6 }
 hs.alert.defaultStyle.textSize = 24
 
 -- {{{ Open Preference
-hs.hotkey.bind(super, 'P', function()
+hs.hotkey.bind(super, "P", function()
     hs.openPreferences()
 end)
 -- }}}
 
 -- {{{ Reload config
-hs.hotkey.bind(super, 'R', function()
-    hs.reload()
+hs.hotkey.bind(super, "R", function()
     hs.console.clearConsole()
     hs.alert("Reloading Hammerspoon config")
     hs.timer.doAfter(0.5, hs.reload)
 end)
 -- }}}
 
-local config = require 'config'
+local config = require("config")
 
 hs.loadSpoon("SpoonInstall")
 hs.loadSpoon("EmmyLua")
@@ -36,7 +35,7 @@ end)
 
 -- {{{ WiFi - Notify and mute audio
 
-local wifi = require 'wifi';
+local wifi = require("wifi")
 wifi:init(config.homeNetworks)
 
 --- }}}
