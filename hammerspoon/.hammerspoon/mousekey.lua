@@ -20,6 +20,8 @@ local speedMin = 4 -- px per tick the instant a key is pressed
 local speedMax = 36 -- px per tick after a long hold
 local speedCurveK = 5 -- curve steepness (higher = snappier ramp-up)
 local speedCurveMid = 0.5 -- seconds at which speed is halfway (σ = 0.5)
+
+local ctrlPrimeDelay = 0.6 -- delay for second control press
 local tickRate = 0.02 -- sec between cursor updates (≈50 Hz)
 local iconDistance = 40 -- px before badge hops
 local logLevel = "info" -- 'debug' | 'info' | 'warning'
@@ -283,9 +285,29 @@ local flagsWatcher = hs.eventtap
     .new({ hs.eventtap.event.types.flagsChanged }, function(e)
         local flags = e:getFlags()
         local ctrl = flags.ctrl
+        local ctrlOnly = flags:containExactly({ "ctrl" })
 
-        if ctrl and primed and not mouseMode then
+        if ctrlOnly and primed == nil then
+            -- Control is down. Wait for release and second tap.
             primed = false
+            if primedTimer then
+                primedTimer:stop()
+            end
+            primedTimer = hs.timer.doAfter(ctrlPrimeDelay, function()
+                primed = nil
+            end)
+
+            return false
+        end
+
+        if primed == false and next(flags) == nil then
+            -- Wait for next control press
+            primed = true
+        end
+
+        if ctrlOnly and primed and not mouseMode then
+            -- Control is primed. Enter mouse mode.
+            primed = nil
             if primedTimer then
                 primedTimer:stop()
                 primedTimer = nil
@@ -294,18 +316,10 @@ local flagsWatcher = hs.eventtap
         end
 
         if not ctrl and mouseMode then
+            primed = nil
             exitMouseMode("Control released")
         end
 
-        if not ctrl and next(flags) == nil then
-            primed = true
-            if primedTimer then
-                primedTimer:stop()
-            end
-            primedTimer = hs.timer.doAfter(0.8, function()
-                primed = false
-            end)
-        end
         return false
     end)
     :start()
