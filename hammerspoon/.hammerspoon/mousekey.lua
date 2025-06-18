@@ -16,14 +16,17 @@ All state is cleaned up on Hammerspoon reload/quit.
 --------------------------------------------------------------------]]
 
 ------------------------------ CONFIG ------------------------------
-local moveSpeeds = { 4, 12, 32 } -- px/step: slow, normal, fast
-local speedThreshold = { 0.4, 1.0 } -- seconds held for speed steps
-local tickRate = 0.02 -- seconds between movement ticks
-local iconDistance = 40 -- px before the badge hops corner
+local moveSpeeds = { 4, 14, 36 } -- px per tick: slow, normal, fast
+local speedThreshold = { 0.35, 1 } -- sec pressed → speed stage
+local tickRate = 0.02 -- sec between cursor updates (≈50 Hz)
+local iconDistance = 40 -- px before badge hops
 local logLevel = "info" -- 'debug' | 'info' | 'warning'
 --------------------------------------------------------------------
 
 local log = hs.logger.new("MouseKey", logLevel)
+
+-- use wall-clock time instead of CPU time
+local now = hs.timer.secondsSinceEpoch
 
 ------------------------------- STATE ------------------------------
 local mouseMode = false -- inside Mouse Mode right now?
@@ -31,19 +34,15 @@ local primed = false -- Control was tapped once
 local primedTimer = nil -- clears the primed flag
 local moveTimer = nil -- drives continuous cursor motion
 local wrapEdges = false
-local activeKeys = {} -- keyCode → true while pressed
-local holdStart = {} -- keyCode → press timestamp
 local lastProgMove = 0 -- last timestamp we moved the cursor
 local badge = nil -- hs.drawing for the "M" badge
 local badgeCorner = 1 -- 1 BL → 2 BR → 3 TR → 4 TL
+local activeKeys = {} -- keyCode → true while held
+local pressStart = nil -- timestamp when first movement key pressed
 
-local function kcOf(key)
-    -- Resolve a key name or literal char to a key‑code for *this* layout.
-    local code = hs.keycodes.map[key]
-    if not code and #key == 1 then
-        code = hs.keycodes.keyCodeForChar(key)
-    end
 --------------------------- KEY HELPERS ----------------------------
+local function keyCode(key)
+    local code = hs.keycodes.map[key] or (#key == 1 and hs.keycodes.keyCodeForChar(key))
     if not code then
         log.wf("Key '%s' not in keymap – binding skipped", key)
     end
@@ -53,52 +52,44 @@ end
 --------------------------- KEY MAPS -------------------------------
 local moveKeys, clickKeys, scrollKeys = {}, {}, {}
 for k, vec in pairs({ h = { -1, 0 }, j = { 0, 1 }, k = { 0, -1 }, l = { 1, 0 } }) do
-    local kc = kcOf(k)
-    if kc then
-        moveKeys[kc] = vec
+    local c = keyCode(k)
+    if c then
+        moveKeys[c] = vec
     end
 end
-local kcM = kcOf("m")
-if kcM then
-    clickKeys[kcM] = function()
+if keyCode("m") then
+    clickKeys[keyCode("m")] = function()
         hs.eventtap.leftClick(hs.mouse.absolutePosition())
     end
 end
-local kcC = kcOf(",")
-if kcC then
-    clickKeys[kcC] = function()
+if keyCode(",") then
+    clickKeys[keyCode(",")] = function()
         hs.eventtap.otherClick(hs.mouse.absolutePosition(), 2)
     end
 end
-local kcP = kcOf(".")
-if kcP then
-    clickKeys[kcP] = function()
+if keyCode(".") then
+    clickKeys[keyCode(".")] = function()
         hs.eventtap.rightClick(hs.mouse.absolutePosition())
     end
 end
-local kcU = kcOf("u")
-if kcU then
-    scrollKeys[kcU] = function()
-        hs.eventtap.scrollWheel({ 0, 60 }, {}, "pixel")
+if keyCode("u") then
+    scrollKeys[keyCode("u")] = function()
+        hs.eventtap.scrollWheel({ 0, 80 }, {}, "pixel")
     end
 end
-local kcN = kcOf("n")
-if kcN then
-    scrollKeys[kcN] = function()
-        hs.eventtap.scrollWheel({ 0, -60 }, {}, "pixel")
+if keyCode("n") then
+    scrollKeys[keyCode("n")] = function()
+        hs.eventtap.scrollWheel({ 0, -80 }, {}, "pixel")
     end
 end
-local wrapToggleKc = kcOf("b")
+local wrapToggle = keyCode("b")
 
 --------------------------- UTILITIES ------------------------------
 local function currentSpeed()
-    local now, oldest = os.clock(), os.clock()
-    for _, t in pairs(holdStart) do
-        if t < oldest then
-            oldest = t
-        end
+    if not pressStart then
+        return moveSpeeds[1]
     end
-    local held = now - oldest
+    local held = now() - pressStart
     return (held < speedThreshold[1]) and moveSpeeds[1] or (held < speedThreshold[2]) and moveSpeeds[2] or moveSpeeds[3]
 end
 
@@ -173,18 +164,27 @@ local function showBadge()
 end
 
 --------------------------- KEY WATCHER ----------------------------
-local keyWatcher, moveTimer
+local keyWatcher
+local keyUp = hs.eventtap.event.types.keyUp
+local keyDown = hs.eventtap.event.types.keyDown
+
 local function startKeyWatcher()
     keyWatcher = hs.eventtap
-        .new({ hs.eventtap.event.types.keyDown, hs.eventtap.event.types.keyUp }, function(e)
+        .new({ keyDown, keyUp }, function(e)
             if not mouseMode then
                 return false
             end
             local code, etype = e:getKeyCode(), e:getType()
-            if moveKeys[code] then -- movement keys
-                if etype == hs.eventtap.event.types.keyDown and not activeKeys[code] then
+
+            -- movement keys
+            if moveKeys[code] then
+                if etype == keyDown and not activeKeys[code] then
+                    local firstKey = next(activeKeys) == nil
                     activeKeys[code] = true
-                    holdStart[code] = os.clock()
+                    if firstKey then
+                        pressStart = now()
+                    end
+
                     if not moveTimer then
                         moveTimer = hs.timer.doEvery(tickRate, function()
                             local dx, dy = 0, 0
@@ -197,21 +197,33 @@ local function startKeyWatcher()
                             end
                         end)
                     end
-                elseif etype == hs.eventtap.event.types.keyUp then
-                    activeKeys[code], holdStart[code] = nil, nil
-                    if not next(activeKeys) and moveTimer then
-                        moveTimer:stop()
-                        moveTimer = nil
+                elseif etype == keyUp then
+                    activeKeys[code] = nil
+                    if next(activeKeys) == nil then
+                        pressStart = nil
+                        if moveTimer then
+                            moveTimer:stop()
+                            moveTimer = nil
+                        end
                     end
                 end
-                return true -- swallow
-            elseif clickKeys[code] and etype == hs.eventtap.event.types.keyDown then
+                return true
+            end
+
+            -- clicks
+            if clickKeys[code] and etype == keyDown then
                 clickKeys[code]()
                 return true
-            elseif scrollKeys[code] and etype == hs.eventtap.event.types.keyDown then
+            end
+
+            -- scroll
+            if scrollKeys[code] and etype == keyDown then
                 scrollKeys[code]()
                 return true
-            elseif wrapToggleKc and code == wrapToggleKc and etype == hs.eventtap.event.types.keyDown then
+            end
+
+            -- wrap toggle
+            if wrapToggle and code == wrapToggle and etype == keyDown then
                 wrapEdges = not wrapEdges
                 hs.alert.show("Wrap " .. (wrapEdges and "ON" or "OFF"), 0.4)
                 return true
@@ -240,6 +252,7 @@ local function exitMouseMode(reason)
     log.i("Exit Mouse Mode – " .. (reason or "?"))
     hs.alert.show("Mouse Mode Off", 0.4)
     mouseMode = false
+    activeKeys, pressStart = {}, nil
     if keyWatcher then
         keyWatcher:stop()
         keyWatcher = nil
@@ -248,7 +261,6 @@ local function exitMouseMode(reason)
         moveTimer:stop()
         moveTimer = nil
     end
-    activeKeys, holdStart = {}, {}
     if badge then
         badge:delete()
         badge = nil
@@ -259,18 +271,22 @@ end
 local flagsWatcher = hs.eventtap
     .new({ hs.eventtap.event.types.flagsChanged }, function(e)
         local flags = e:getFlags()
-        local ctrlDown = flags.ctrl
-        if ctrlDown and primed and not mouseMode then
+        local ctrl = flags.ctrl
+
+        if ctrl and primed and not mouseMode then
             primed = false
             if primedTimer then
                 primedTimer:stop()
                 primedTimer = nil
             end
             enterMouseMode()
-        elseif not ctrlDown and mouseMode then
+        end
+
+        if not ctrl and mouseMode then
             exitMouseMode("Control released")
         end
-        if not ctrlDown and next(flags) == nil then -- solitary control tap
+
+        if not ctrl and next(flags) == nil then
             primed = true
             if primedTimer then
                 primedTimer:stop()
@@ -286,7 +302,7 @@ local flagsWatcher = hs.eventtap
 --------------------- PHYSICAL MOUSE MOVEMENT ----------------------
 local physWatcher = hs.eventtap
     .new({ hs.eventtap.event.types.mouseMoved }, function()
-        if mouseMode and os.clock() - lastProgMove > 0.2 then
+        if mouseMode and (now() - lastProgMove) > 0.25 then
             exitMouseMode("Physical move")
         end
         return false
