@@ -276,6 +276,10 @@ local function startKeyWatcher()
 end
 
 ---------------------- ENTER / EXIT MODE ---------------------------
+local function setKarabinerVariable(val)
+    hs.task.new("/opt/homebrew/bin/karabiner_cli", nil, { "--set-variables", '{"mouse_mode":' .. val .. "}" }):start()
+end
+
 local function enterMouseMode()
     if mouseMode then
         return
@@ -285,6 +289,7 @@ local function enterMouseMode()
     hs.alert.show("🖱️ Mouse Mode", 0.6)
     showBadge()
     startKeyWatcher()
+    setKarabinerVariable(1)
 end
 
 local function exitMouseMode(reason)
@@ -304,6 +309,7 @@ local function exitMouseMode(reason)
         moveTimer = nil
     end
     hideBadge()
+    setKarabinerVariable(0)
 end
 
 ---------------------- CONTROL‑KEY PRIMING -------------------------
