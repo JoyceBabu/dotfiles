@@ -21,6 +21,11 @@ local speedMax = 36 -- px per tick after a long hold
 local speedCurveK = 5 -- curve steepness (higher = snappier ramp-up)
 local speedCurveMid = 0.5 -- seconds at which speed is halfway (σ = 0.5)
 
+local scrollSpeedMin = 10 -- px per tick at key press
+local scrollSpeedMax = 200 -- px per tick after a long hold
+local scrollCurveK = 0.3 -- steepness of the sigmoid
+local scrollCurveMid = 0.8 -- sec at which speed is halfway
+
 local ctrlPrimeDelay = 0.6 -- delay for second control press
 local tickRate = 0.02 -- sec between cursor updates (≈50 Hz)
 local logLevel = "info" -- 'debug' | 'info' | 'warning'
@@ -49,7 +54,11 @@ local badge = nil -- hs.drawing for the "M" badge
 local badgeCorner = 1 -- 1 BL → 2 BR → 3 TR → 4 TL
 local activeKeys = {} -- keyCode → true while held
 local pressStart = nil -- timestamp when first movement key pressed
-
+local lastClickAt = 0 -- timestamp of previous click
+local lastClickPos = nil -- position of previous click
+local scrollTimer = nil -- drives continuous scroll
+local scrollPressStart = nil -- when the scroll key was first held
+local activeScrollDir = 0 --  1 = up, –1 = down
 --------------------------- KEY HELPERS ----------------------------
 local function keyCode(key)
     local code = hs.keycodes.map[key] or (#key == 1 and hs.keycodes.keyCodeForChar(key))
@@ -80,15 +89,9 @@ clickKeys[keyCode(".")] = function()
     hs.eventtap.rightClick(hs.mouse.absolutePosition())
 end
 
-scrollKeys[keyCode("y")] = function()
-    hs.eventtap.scrollWheel({ 0, 80 }, {}, "pixel")
-end
-
-scrollKeys[keyCode("e")] = function()
-    hs.eventtap.scrollWheel({ 0, -80 }, {}, "pixel")
-end
-
 local wrapToggle = keyCode("b")
+local scrollUpKey = keyCode("y")
+local scrollDownKey = keyCode("e")
 
 ------------------------------ BADGE -------------------------------
 local function updateBadgePosition(pos, newPos)
@@ -124,7 +127,7 @@ local function showBadge()
         x = 0,
         y = 0,
         w = iconSize.w + iconOffset.x * 2,
-        h = iconSize.h + iconOffset.y * 2
+        h = iconSize.h + iconOffset.y * 2,
     })
     badge:appendElements({
         type = "rectangle",
@@ -156,21 +159,25 @@ local function hideBadge()
 end
 
 --------------------------- UTILITIES ------------------------------
-local function currentSpeed()
-    if not pressStart then
-        return speedMin
+local function sigmoid(start, curveK, curveMid, min, max)
+    if not start then
+        return min
     end
-    local held = now() - pressStart
 
-    -- logistic sigmoid, normalised so that t = 0 → σ = 0
-    local logistic = 1 / (1 + math.exp(-speedCurveK * (held - speedCurveMid)))
-    local sigma0 = 1 / (1 + math.exp(speedCurveK * speedCurveMid))
+    local held = now() - start
+    local logistic = 1 / (1 + math.exp(-curveK * (held - curveMid)))
+    local sigma0 = 1 / (1 + math.exp(curveK * curveMid))
     local sigma = (logistic - sigma0) / (1 - sigma0)
+
     if sigma < 0 then
         sigma = 0
-    end -- guard against tiny negatives
+    end
 
-    return speedMin + (speedMax - speedMin) * sigma
+    return min + math.floor((max - min) * sigma)
+end
+
+local function currentSpeed()
+    return sigmoid(pressStart, speedCurveK, speedCurveMid, speedMin, speedMax)
 end
 
 local function clampOrWrap(pt)
@@ -211,6 +218,33 @@ local function moveCursor(dx, dy)
     updateBadgePosition(new)
 end
 
+local function currentScrollSpeed()
+    return sigmoid(scrollPressStart, scrollCurveK, scrollCurveMid, scrollSpeedMin, scrollSpeedMax)
+end
+
+local function startScroll(dir)
+    -- start or change direction
+    activeScrollDir = dir
+    if not scrollTimer then
+        scrollPressStart = now()
+        scrollTimer = hs.timer.doEvery(tickRate, function()
+            if activeScrollDir ~= 0 then
+                local delta = currentScrollSpeed() * activeScrollDir
+                log.d("Delta", delta)
+                hs.eventtap.scrollWheel({ 0, delta }, {}, "pixel")
+            end
+        end)
+    end
+end
+
+local function endScroll()
+    activeScrollDir = 0
+    scrollPressStart = nil
+    if scrollTimer then
+        scrollTimer:stop()
+        scrollTimer = nil
+    end
+end
 --------------------------- KEY WATCHER ----------------------------
 local keyWatcher
 local keyUp = hs.eventtap.event.types.keyUp
@@ -265,8 +299,13 @@ local function startKeyWatcher()
             end
 
             -- scroll
-            if scrollKeys[code] and etype == keyDown then
-                scrollKeys[code]()
+            if code == scrollUpKey or code == scrollDownKey then
+                local dir = (code == scrollUpKey) and 1 or -1
+                if etype == keyDown then
+                    startScroll(dir)
+                else
+                    endScroll()
+                end
                 return true
             end
 
@@ -302,18 +341,23 @@ local function exitMouseMode(reason)
     if not mouseMode then
         return
     end
+
     log.i("Exit Mouse Mode – " .. (reason or "?"))
     hs.alert.show("Mouse Mode Off", 0.4)
     mouseMode = false
     activeKeys, pressStart = {}, nil
+
     if keyWatcher then
         keyWatcher:stop()
         keyWatcher = nil
     end
+
     if moveTimer then
         moveTimer:stop()
         moveTimer = nil
     end
+
+    endScroll()
     hideBadge()
     setKarabinerVariable(0)
 end
