@@ -25,6 +25,7 @@ local ctrlPrimeDelay = 0.6 -- delay for second control press
 local tickRate = 0.02 -- sec between cursor updates (≈50 Hz)
 local logLevel = "info" -- 'debug' | 'info' | 'warning'
 
+local iconOffset = { x = 10, y = 5 }
 local iconDistance = 40 -- px before badge hops
 local iconSize = { w = 45, h = 22 }
 local iconText = " M "
@@ -101,13 +102,13 @@ local function updateBadgePosition(pos, newPos)
         or math.abs(pos.x - (bf.x + bf.w / 2)) < iconDistance and math.abs(pos.y - (bf.y + bf.h / 2)) < iconDistance
     then
         badgeCorner = newPos or (badgeCorner % 4) + 1
-        local ow, oh = bf.w + 10, bf.h + 10
-        local f = hs.screen.mainScreen():frame()
+        local ow, oh = bf.w, bf.h
+        local f = hs.screen.mainScreen():fullFrame()
         local corners = {
-            { x = f.x + 4, y = f.y + f.h - oh },
+            { x = f.x, y = f.y + f.h - oh },
             { x = f.x + f.w - ow, y = f.y + f.h - oh },
-            { x = f.x + f.w - ow, y = f.y + 4 },
-            { x = f.x + 4, y = f.y + 4 },
+            { x = f.x + f.w - ow, y = f.y },
+            { x = f.x, y = f.y },
         }
         badge:topLeft(corners[badgeCorner])
     end
@@ -119,14 +120,19 @@ local function showBadge()
         badge = nil
     end
 
-    badge = hs.canvas.new({ x = 0, y = 0, w = iconSize.w, h = iconSize.h })
+    badge = hs.canvas.new({
+        x = 0,
+        y = 0,
+        w = iconSize.w + iconOffset.x * 2,
+        h = iconSize.h + iconOffset.y * 2
+    })
     badge:appendElements({
         type = "rectangle",
         fillColor = { red = 0.2, green = 0.2, blue = 0.8, alpha = 0.85 },
         strokeColor = { white = 0.5, alpha = 0.5 },
         strokeWidth = 1,
         radius = 5,
-        frame = { x = 0, y = 0, w = iconSize.w, h = iconSize.h },
+        frame = { x = iconOffset.x, y = iconOffset.y, w = iconSize.w, h = iconSize.h },
     })
     badge:appendElements({
         type = "text",
@@ -134,7 +140,7 @@ local function showBadge()
         textColor = { white = 1, alpha = 1.0 },
         textFont = iconFont,
         textSize = iconFontSize,
-        frame = { x = 0, y = 0, w = iconSize.w, h = iconSize.h },
+        frame = { x = iconOffset.x, y = iconOffset.y, w = iconSize.w, h = iconSize.h },
         textAlignment = "center",
     })
 
@@ -172,7 +178,7 @@ local function clampOrWrap(pt)
         -- Wrap across virtual desktop bounds (all screens)
         local minX, minY, maxX, maxY = math.huge, math.huge, -math.huge, -math.huge
         for _, s in ipairs(hs.screen.allScreens()) do
-            local f = s:frame()
+            local f = s:fullFrame()
             minX, minY = math.min(minX, f.x), math.min(minY, f.y)
             maxX, maxY = math.max(maxX, f.x + f.w), math.max(maxY, f.y + f.h)
         end
@@ -188,7 +194,7 @@ local function clampOrWrap(pt)
         end
     else
         -- Clamp inside current screen
-        local f = hs.mouse.getCurrentScreen():frame()
+        local f = hs.mouse.getCurrentScreen():fullFrame()
         pt.x = math.min(math.max(pt.x, f.x), f.x + f.w - 1)
         pt.y = math.min(math.max(pt.y, f.y), f.y + f.h - 1)
     end
