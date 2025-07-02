@@ -26,7 +26,7 @@ fi
 
 source ~/.iterm2_shell_integration.$shell
 
-export PATH=$HOME/.local/bin:$PATH
+export PATH=/opt/homebrew/bin:$HOME/.local/bin:$PATH
 
 #############################
 # Configure fzf
@@ -64,6 +64,7 @@ eval "$(zoxide init $shell)"
 
 eval "$(direnv hook $shell)"
 
+eval "$(starship init $shell)"
 unset _source_file
 unset shell
 
