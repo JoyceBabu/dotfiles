@@ -33,9 +33,9 @@ wezterm.on("gui-startup", function()
 end)
 
 return {
-    color_scheme = 'OneDark (Gogh)',
+    color_scheme = 'NvimDark',
     -- default_prog = {"/usr/bin/zsh", "-l"},
-    font = font_with_sym_fallback("JetBrains Mono",{foreground="#b0b0b0"}),
+    font = font_with_sym_fallback("JetBrains Mono", { foreground="#b0b0b0" }),
     font_size = 16.0,
     -- dpi = 96.0,
     enable_scroll_bar = true,
@@ -187,4 +187,3 @@ return {
     window_decorations = "RESIZE", -- Hide title bar
     hide_tab_bar_if_only_one_tab = true
 }
-
