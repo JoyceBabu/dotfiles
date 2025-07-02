@@ -1,0 +1,33 @@
+# Run warpd --list-options to see all options
+exit: q
+speed: 50
+max_speed: 5000
+acceleration: 2500
+decelerator: z
+accelerator: a
+hint: ;
+copy_and_exit: unbind
+copy_and_exit: y
+
+hint_font: JetBrainsMono Nerd Font
+cursor_color: #BF616A
+grid_color: #4C566A
+grid_keys: k i j l
+hint_bgcolor: #4C566A
+hint_fgcolor: #E5E9F0
+indicator: topleft
+indicator_color: #A3BE8C
+
+scroll_up: u
+scroll_down: d
+#scroll_right: l
+#scroll_left: h
+scroll_speed: 300
+scroll_acceleration: 1600
+
+activation_key: M-S-.
+grid_activation_key: M-S-'
+hint_activation_key: M-S-;
+#hint2_activation_key: M-S-.
+buttons: m , .
+#oneshot_buttons: "M > ?"
