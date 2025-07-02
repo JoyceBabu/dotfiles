@@ -10,8 +10,6 @@ export ZSH="$HOME/.oh-my-zsh"
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
 # ZSH_THEME="agnoster"
-POWERLEVEL9K_MODE="awesome-patched"
-ZSH_THEME="powerlevel10k/powerlevel10k"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -66,22 +64,20 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
-# Which plugins would you like to load?
-# Standard plugins can be found in ~/.oh-my-zsh/plugins/*
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(
-  git
-  zsh-autosuggestions
-  zsh-completions
-  zsh-syntax-highlighting
-  fzf
-  zsh-vi-mode
-  tmux
-)
+function zvm_after_init() {
+  # Re-enable ^R binding from fzf after zsh-vi-mode is initialized
+#  [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+  try_source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
+  try_source /opt/homebrew/opt/fzf/shell/completion.zsh
+}
 
-[ -f $ZSH/oh-my-zsh.sh ] && source $ZSH/oh-my-zsh.sh
+function try_source() {
+  [ -f "$1" ] && source "$1"
+}
+
+try_source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+try_source ~/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+try_source ~/.zsh/zsh-vi-mode/zsh-vi-mode.zsh
 
 # User configuration
 
@@ -110,9 +106,7 @@ plugins=(
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
 [[ -f ~/.shell_config ]] && source ~/.shell_config
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 setopt HIST_IGNORE_SPACE
 
