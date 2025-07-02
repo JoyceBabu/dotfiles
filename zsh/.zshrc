@@ -117,6 +117,15 @@ tmux-go-left() {
 
 zle -N tmux-go-left
 bindkey -M vicmd '^h' tmux-go-left
+bindkey -M viins '^A' beginning-of-line
+bindkey -M viins '^E' end-of-line
+bindkey -M viins '^F' forward-char
+bindkey -M viins '^B' backward-char
+bindkey -M viins '^K' kill-line
+bindkey -M viins '^L' clear-screen
+bindkey -M viins '^P' up-line-or-history
+bindkey -M viins '^N' down-line-or-history
+bindkey -M viins '^R' history-incremental-search-backward
 
 # This speeds up pasting w/ autosuggest
 # https://github.com/zsh-users/zsh-autosuggestions/issues/238
