@@ -205,10 +205,11 @@ alias fvim=jb_vim_edit_files
 export JB_ENV_DIR="$JB_ENV_DIR"
 export GIT_CONFIG_GLOBAL="\$JB_ENV_DIR/.gitconfig"
 export INPUTRC="\$JB_ENV_DIR/.inputrc"
+JB_SHELL=\$(basename \$SHELL)
 
 unset jb_check_for_executable
 
-[ -f "\$HOME/.\${SHELL}rc" ] && . "\$HOME/.\${SHELL}rc"
+[ -f "\$HOME/.\${JB_SHELL}rc" ] && . "\$HOME/.\${JB_SHELL}rc"
 
 alias tmux='\tmux -f"$JB_ENV_DIR/.tmux.conf"'
 alias sd='\sudo --preserve-env=VIMINIT,TMUX,JB_ENV_DIR'
@@ -238,7 +239,7 @@ chmod 0644 "$JB_ENV_DIR/.shrc"
 jb_dl_config_file vim/.config/nvim/basic.vim .vimrc
 
 # Setup shell
-for ENV_SHELL in zsh bash `echo $SHELL|rev|cut -d/ -f1|rev`; do
+for ENV_SHELL in zsh bash "$SHELL"; do
   if jb_check_for_executable "$ENV_SHELL"; then
     JB_ENV_TMUX_DEF_CMD=$(which "$ENV_SHELL")
     break
