@@ -18,3 +18,7 @@ function! s:LuaInclude(fname) abort
 	endfor
 	return a:fname
 endfunction
+
+nnoremap <leader><leader>x :source %<cr>
+nnoremap <leader>x :.lua<cr>
+vnoremap <leader>x :lua<cr>
