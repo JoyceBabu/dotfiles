@@ -1243,3 +1243,28 @@ tnoremap <c-t> <C-\><C-N>:ToggleTerminal<CR>
 inoremap <c-t>   <C-O>:ToggleTerminal<CR>
 
 " }}}
+
+" {{{ Yank Path
+
+let s:path_patterns = { 'abs': '%:p', 'rel': '%:.', 'dir_abs': '%:p:h', 'dir_rel': '%:.:h' }
+
+function! s:PromptCopyPath() abort
+  let l:idx = inputlist(['Copy path', '1. Abs path', '2. Rel path', '3. Abs dir', '4. Rel dir'])
+  if l:idx <= 0 || l:idx > 4
+    return
+  endif
+  let l:kinds = ['abs', 'rel', 'dir_abs', 'dir_rel']
+  let l:path = expand(s:path_patterns[l:kinds[l:idx - 1]])
+
+  " Clipboard-aware yank
+  if has('clipboard') || has('unnamedplus')
+    let @+ = l:path
+  else
+    let @" = l:path
+  endif
+  echo 'copied: ' . l:path
+endfunction
+
+nnoremap <silent> <leader>yp :call <SID>PromptCopyPath()<CR>
+
+"  }}
