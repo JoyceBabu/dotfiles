@@ -450,7 +450,7 @@ function! NetrwMapping()
     let g:netrw_sort_sequence = '[\/]$,*'
     let g:netrw_altv = 1         " Open file in left right split when pressing v
 
-    let g:netrw_list_hide= '.*.swp$,
+    let g:netrw_list_hide = '.*.swp$,
             \ *.pyc$,
             \ *.log$,
             \ *.o$,
@@ -928,6 +928,14 @@ if !has('ide')
 
   if $JB_ENV_DIR != ""
     call s:ToggleClipboard()
+
+    set swapfile dir=$JB_ENV_DIR/.vim/swp
+    call mkdir(&dir, "p", 0o700)
+
+    if has('persistent_undo')
+      set undofile undodir=$JB_ENV_DIR/.vim/undo
+      call mkdir(&undodir, "p", 0o700)
+    endif
   endif
 
   let &cpo = s:save_cpo
@@ -1124,15 +1132,15 @@ function! NeovimCompat()
   let s:configdir = Stdpath('config')
 
   " backupdir isn't set exactly like Neovim, because it's odd.
-  let &backupdir = s:datadir . '/backup//'
-  let &viewdir   = s:datadir . '/view//'
+  let &backupdir = s:datadir . '/backup/'
+  let &viewdir   = s:datadir . '/view/'
   if ! executable('nvim')
-    let &directory = s:datadir . '/swap//'
-    let &undodir   = s:datadir . '/undo//'
+    let &directory = s:datadir . '/swap/'
+    let &undodir   = s:datadir . '/undo/'
   else
     " Vim/Neovim have different file formats
-    let &directory = s:datadir . '/vimswap//'
-    let &undodir   = s:datadir . '/vimundo//'
+    let &directory = s:datadir . '/vimswap/'
+    let &undodir   = s:datadir . '/vimundo/'
   endif
 
   let s:shadadir   = s:datadir  . '/shada'

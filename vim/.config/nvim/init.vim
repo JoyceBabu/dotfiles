@@ -166,19 +166,17 @@ let g:workspace_persist_undo_history = 1
 let g:workspace_undodir='.undodir'
 let g:workspace_session_disable_on_args = 1
 
-"  Undo History
+" Backup / Swap / Persistent Undo
+
+set autoread
+set nobackup
+
+set swapfile dir=~/.vim/swap
+call mkdir(&dir, "p", 0o700)
 
 if has('persistent_undo')
-  let target_path = expand('~/.cache/vim/vim-persisted-undo/')
-
-  if !isdirectory(target_path)
-    call system('mkdir -p ' . target_path)
-  endif
-
-  let &undodir = target_path
-  set undofile
-  set noswapfile
-  set nobackup
+  set undofile undodir=expand('~/.cache/vim/vim-persisted-undo/')
+  call mkdir(&undodir, "p", 0o700)
 endif
 
 "  User Interface
