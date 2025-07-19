@@ -144,7 +144,10 @@ jb_sudo() {
 }
 
 if jb_check_for_executable nvim; then
-  alias vim='nvim -c "let g:tty='\''\$(tty)'\''"'
+  alias vim='nvim'
+  if [ -n "\$TMUX" ]; then
+    alias nvim='jb_nvim'
+  fi
 elif ! jb_check_for_executable vim; then
   alias vim='vi'
 fi
@@ -197,6 +200,65 @@ jb_vim_edit_files() {
     if [ "\$clear_opcache" = "1" ]; then
       ./bin/clear-opcache "\$file"
     fi
+  fi
+}
+
+jb_nvim() {
+  if [ -z "\$TMUX" ]; then
+    command nvim -c "let g:tty='\$(tty)'" "\$@"
+    return
+  fi
+
+  local CURRENT_SESS=\$(tmux display -p '#{session_name}')
+  local CURRENT_WIN=\$(tmux display -p '#{window_id}')
+  local IN_SCRATCH=0
+
+  case "\$CURRENT_SESS" in
+    scratch-*)
+      local PARENT_INFO=\${CURRENT_SESS#scratch-}
+      CURRENT_SESS=\${PARENT_INFO%-*}
+      CURRENT_WIN=\${PARENT_INFO##*-}
+          IN_SCRATCH=1
+          ;;
+  esac
+
+  # Find nvim socket in current window
+  local SOCK=''
+  local SOCKET_PATH="\${XDG_RUNTIME_DIR:-\${TMPDIR:-/tmp/}nvim.\${USER}}"
+  for s in \$(find "\$SOCKET_PATH" -type s -user "\$USER" -name 'nvim.*.0' -maxdepth 3 2>/dev/null); do
+    local PID=\$(echo \$s | awk -F'.' '{print \$(NF-1)}')
+    local SEARCH_PID=\$PID
+    local FOUND_WIN=''
+
+    while [ -n "\$SEARCH_PID" ] && [ "\$SEARCH_PID" -gt 1 ]; do
+      local PANE_INFO=\$(tmux list-panes -a -F "#{session_name} #{window_id} #{pane_index}" -f "#{==:#{pane_pid},\$SEARCH_PID}" 2>/dev/null)
+
+      if [ -n "\$PANE_INFO" ]; then
+        local SESS=\$(echo \$PANE_INFO | cut -d' ' -f1)
+        local WIN=\$(echo \$PANE_INFO | cut -d' ' -f2)
+        local PANE_IDX=\$(echo \$PANE_INFO | cut -d' ' -f3)
+
+        if [ "\$SESS" = "\$CURRENT_SESS" ] && [ "\$WIN" = "\$CURRENT_WIN" ]; then
+          SOCK=\$s
+          local FOUND_WIN="\$CURRENT_SESS:\$CURRENT_WIN"
+          break 2
+        fi
+      fi
+      SEARCH_PID=\$(ps -o ppid= -p \$SEARCH_PID 2>/dev/null | tr -d ' ')
+    done
+  done
+
+  if [ -n "\$SOCK" ] && [ -e "\$SOCK" ]; then
+    if [ \$# -ne 0 ]; then
+      command nvim --server "\$SOCK" --remote "\$@"
+    fi
+
+    tmux select-window -t "\$FOUND_WIN"
+    tmux select-pane -t "\$FOUND_WIN.\$PANE_IDX"
+
+    [ \$IN_SCRATCH -eq 1 ] && tmux detach-client
+  else
+    command nvim -c "let g:tty='\$(tty)'" "\$@"
   fi
 }
 
