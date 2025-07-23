@@ -116,11 +116,7 @@ function tssh() {
     \ssh "$@"
   else
     # Only the server name is given. Try to attach to tmux session.
-    \ssh "$1" -t "
-            tmux attach -t 0 2>/dev/null || {
-        source <(curl --max-time 5 -fsSL 'https://env.joycebabu.com') 2>/dev/null
-      }
-        "
+	ssh "$1" -tt 'tmux attach -t 0 2>/dev/null || eval "$(curl -s https://env.joycebabu.com)"'
   fi
 }
 

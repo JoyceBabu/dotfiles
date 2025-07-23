@@ -308,11 +308,12 @@ for ENV_SHELL in zsh bash "$SHELL"; do
   fi
 done
 
+JB_ENV_TMUX_DEF_ARGS='-i'
 if [ "zsh" = "$ENV_SHELL" ]; then
   export JB_ZDOTDIR=$JB_ENV_DIR
   ln -sf $JB_ENV_DIR/.shrc $JB_ENV_DIR/.zshrc
 elif [ "bash" = "$ENV_SHELL" ]; then
-  JB_ENV_TMUX_DEF_CMD="$JB_ENV_TMUX_DEF_CMD --rcfile $JB_ENV_DIR/.shrc"
+  JB_ENV_TMUX_DEF_ARGS="--rcfile $JB_ENV_DIR/.shrc -i"
 else
   JB_ENV="$JB_ENV_DIR/.shrc"
 fi
@@ -325,7 +326,7 @@ if [ -z "$JB_SKIP_TMUX_UPDATE" ]; then
   echo "tmux found"
   jb_dl_config_file tmux/.tmux.conf .tmux.conf
 
-  echo "set-option -g default-command '$JB_ENV_TMUX_DEF_CMD -i'" >> $JB_ENV_DIR/.tmux.conf
+  echo "set-option -g default-command '$JB_ENV_TMUX_DEF_CMD $JB_ENV_TMUX_DEF_ARGS'" >> $JB_ENV_DIR/.tmux.conf
   if [ -n "$JB_ENV" ]; then
     echo "set-environment -g ENV '$JB_ENV'" >> $JB_ENV_DIR/.tmux.conf
   fi
@@ -342,12 +343,23 @@ if [ -z "$JB_SKIP_TMUX_UPDATE" ]; then
     tmux -f"$JB_ENV_DIR/.tmux.conf" new
   fi
 else
-  ENV="$JB_ENV" ZDOTDIR="$JB_ZDOTDIR" $JB_ENV_TMUX_DEF_CMD -i
+  if [ -t 0 ] && [ -t 1 ]; then
+    printf '\n'
+
+    export ENV="$JB_ENV"
+    export ZDOTDIR="$JB_ZDOTDIR"
+
+    eval "exec $JB_ENV_TMUX_DEF_CMD $JB_ENV_TMUX_DEF_ARGS"
+  else
+    echo "Error: This script requires an interactive terminal" >&2
+    exit 1
+  fi
 fi
 
 # Cleanup
 unset jb_dl_config_file
 unset jb_check_for_executable
+unset JB_ENV_TMUX_DEF_ARGS
 unset JB_ENV_TMUX_DEF_CMD
 unset JB_TMP_DIR
 unset JB_ENV_UID
@@ -357,4 +369,3 @@ unset JB_SKIP_TMUX_UPDATE
 unset JB_FETCH_EXE
 unset JB_FETCH_FLAGS
 unset JB_USER
-
