@@ -22,8 +22,17 @@ if [ ! -f "$AUTH_KEYS" ]; then
   chmod 600 "$AUTH_KEYS"
 fi
 
+if command -v curl >/dev/null 2>&1; then
+    DL="curl -fsSL"
+elif command -v wget >/dev/null 2>&1; then
+    DL="wget -qO-"
+else
+    echo "Error: neither curl nor wget is installed" >&2
+    exit 1
+fi
+
 # Download keys and add if not present
-curl -fsSL "https://raw.githubusercontent.com/JoyceBabu/dotfiles/refs/heads/master/ssh-keys.pub" | \
+$DL "https://raw.githubusercontent.com/JoyceBabu/dotfiles/refs/heads/master/ssh-keys.pub" | \
 while IFS= read -r key; do
   [ -n "$key" ] || continue  # skip empty lines
 
