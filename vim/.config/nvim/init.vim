@@ -175,7 +175,8 @@ set swapfile dir=~/.vim/swap
 call mkdir(&dir, "p", 0o700)
 
 if has('persistent_undo')
-  set undofile undodir=expand('~/.cache/vim/vim-persisted-undo/')
+  set undofile
+  let &undodir=expand('~/.cache/vim/vim-persisted-undo/')
   call mkdir(&undodir, "p", 0o700)
 endif
 
