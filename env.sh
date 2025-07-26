@@ -224,8 +224,9 @@ jb_nvim() {
 
   # Find nvim socket in current window
   local SOCK=''
-  local SOCKET_PATH="\${XDG_RUNTIME_DIR:-\${TMPDIR:-/tmp/}nvim.\${USER}}"
-  for s in \$(find "\$SOCKET_PATH" -type s -user "\$USER" -name 'nvim.*.0' -maxdepth 3 2>/dev/null); do
+  local SOCKET_PATH="\${XDG_RUNTIME_DIR:-\${TMPDIR:-/tmp/}}"
+
+  for s in \$(find "\$SOCKET_PATH" "\${TMPDIR:-/tmp/}" -type s -user "\$USER" -path '*/nvim*' -name 'nvim.*.0' -maxdepth 3 2>/dev/null); do
     local PID=\$(echo \$s | awk -F'.' '{print \$(NF-1)}')
     local SEARCH_PID=\$PID
     local FOUND_WIN=''
