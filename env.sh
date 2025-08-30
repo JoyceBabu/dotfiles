@@ -250,7 +250,9 @@ jb_nvim() {
   done
 
   if [ -n "\$SOCK" ] && [ -e "\$SOCK" ]; then
-    if [ \$# -ne 0 ]; then
+    if [ \$# -ne 1 ]; then
+      command nvim --server "\$SOCK" --remote "$(realpath \"\$1\")"
+    elif [ \$# -ne 0 ]; then
       command nvim --server "\$SOCK" --remote "\$@"
     fi
 
