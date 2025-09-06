@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 JB_USER=$(id -un)
 JB_TMP_DIR=$(mktemp -u 2>/dev/null || echo "/tmp/tmp")
 JB_ENV_DIR="$(dirname $JB_TMP_DIR)/jb-$JB_USER-tmux"
