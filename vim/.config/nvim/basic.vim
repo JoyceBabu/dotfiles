@@ -405,17 +405,19 @@ augroup END
 set nofoldenable                   " Enable block folding
 
 augroup code_folding
-    autocmd!
-    " autocmd FileType php setlocal foldmethod=manual
-    autocmd FileType php setlocal foldlevel=1
-    autocmd FileType javascript setlocal foldmethod=syntax
-    autocmd FileType javascript.jsx setlocal foldmethod=syntax
-    autocmd FileType typescript setlocal foldmethod=syntax
-    autocmd FileType typescript.tsx setlocal foldmethod=syntax
-    autocmd FileType json setlocal foldmethod=syntax
-    autocmd FileType html setlocal foldmethod=manual
-    autocmd FileType scss setlocal foldmethod=indent
-    autocmd FileType css setlocal foldmethod=indent
+  autocmd!
+  " autocmd FileType php setlocal foldmethod=manual
+  autocmd FileType php setlocal foldlevel=1
+  autocmd FileType python setlocal expandtab foldmethod=indent
+  autocmd FileType javascript setlocal foldmethod=syntax
+  autocmd FileType javascript.jsx setlocal foldmethod=syntax
+  autocmd FileType typescript setlocal foldmethod=syntax
+  autocmd FileType typescript.tsx setlocal foldmethod=syntax
+  autocmd FileType json setlocal foldmethod=syntax
+  autocmd FileType html setlocal foldmethod=manual
+  autocmd FileType scss setlocal foldmethod=indent
+  autocmd FileType css setlocal foldmethod=indent
+  autocmd FileType yaml setlocal ts=2 sts=2 sw=2 expandtab foldmethod=indent "foldlevelstart=99
 augroup END
 
 " }}}
@@ -1038,8 +1040,9 @@ autocmd vimrc_basic CursorMoved silent *
 
 " }}}
 
-" {{{ Builtin plugins
+" {{{ Plugins
 
+" {{{ Builtin
 if !exists('g:loaded_matchit') && findfile('plugin/matchit.vim', &rtp) ==# ''
   runtime macros/matchit.vim     " Hit `%` on `if` to jump to `else`.
 endif
@@ -1047,6 +1050,8 @@ endif
 if exists(":Man") != 2
   runtime! ftplugin/man.vim      " Enable the :Man command
 endif
+
+" }}}
 
 " }}}
 
