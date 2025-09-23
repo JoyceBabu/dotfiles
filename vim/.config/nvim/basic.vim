@@ -94,89 +94,96 @@ else
 endif
 
 if ($TERM =~ '256' || &t_Co >= 256) || has("gui_running")
-    " Main text and background
-    hi Normal ctermbg=17 ctermfg=15 cterm=NONE guibg=#1e1e2e guifg=#f8f8f8 gui=NONE
-    hi NonText ctermfg=8 guifg=#585b70
+  " Main text and background
+  hi Normal ctermbg=17 ctermfg=15 cterm=NONE guibg=#1e1e2e guifg=#f8f8f8 gui=NONE
+  hi NonText ctermfg=8 guifg=#585b70
 
-    " Syntax groups
-    hi Comment ctermfg=8 guifg=#585b70
-    hi Constant ctermfg=19 guifg=#0099e6
-    hi String ctermfg=11 guifg=#f5e0dc
-    hi Identifier ctermfg=215 guifg=#f99058
-    hi Function ctermfg=215 guifg=#7aa2f7
-    hi Statement ctermfg=122 guifg=#00ccff
-    hi Keyword ctermfg=122 guifg=#00ccff
-    hi Operator ctermfg=206 guifg=#f77fbe
-    hi PreProc ctermfg=206 guifg=#f77fbe
-    hi Include ctermfg=200 guifg=#f5c2e7
-    hi Type ctermfg=122 guifg=#00ccff
-    hi Special ctermfg=200 guifg=#f5c2e7
-    hi Error ctermfg=88 guifg=#790914
-    hi Todo ctermfg=88 guifg=#790914
+  " Syntax groups
+  hi Comment ctermfg=8 guifg=#585b70
+  hi Constant ctermfg=19 guifg=#0099e6
+  hi String ctermfg=11 guifg=#f5e0dc
+  hi Identifier ctermfg=215 guifg=#f99058
+  hi Function ctermfg=215 guifg=#7aa2f7
+  hi Statement ctermfg=122 guifg=#00ccff
+  hi Keyword ctermfg=122 guifg=#00ccff
+  hi Operator ctermfg=206 guifg=#f77fbe
+  hi PreProc ctermfg=206 guifg=#f77fbe
+  hi Include ctermfg=200 guifg=#f5c2e7
+  hi Type ctermfg=122 guifg=#00ccff
+  hi Special ctermfg=200 guifg=#f5c2e7
+  hi Error ctermfg=88 guifg=#790914
+  hi Todo ctermfg=88 guifg=#790914
 
-    " UI elements
-    hi LineNr ctermfg=25 guifg=#77AAFF
-    hi CursorLine ctermbg=8 ctermfg=122 guibg=#292e42
-    hi CursorLineNr ctermbg=8 ctermfg=122 guibg=#292e42 guifg=#ff9e64
-    hi Search ctermbg=215 ctermfg=17 guibg=#f99058 guifg=#1e1e2e
-    hi IncSearch ctermbg=206 ctermfg=8 guibg=#f77fbe guifg=#585b70
-    hi Visual ctermbg=8 ctermfg=122 guibg=#585b70 guifg=#00ccff
-    hi MatchParen ctermfg=215 guifg=#f99058
-    hi StatusLine ctermbg=19 ctermfg=17 guibg=#0099e6 guifg=#1e1e2e
-    hi StatusLineNC ctermbg=25 ctermfg=17 guibg=#77AAFF guifg=#1e1e2e
-    hi VertSplit ctermfg=206 guifg=#f77fbe
-    hi Pmenu ctermfg=25 guifg=#77AAFF
-    hi PmenuSel ctermbg=25 ctermfg=17 guibg=#77AAFF guifg=#1e1e2e
-    hi Folded ctermfg=19 guifg=#7aa2f7 guibg=#3b4261
+  " UI elements
+  hi LineNr ctermfg=25 guifg=#77AAFF
+  hi CursorLine ctermbg=8 ctermfg=122 guibg=#292e42
+  hi CursorLineNr ctermbg=8 ctermfg=122 guibg=#292e42 guifg=#ff9e64
+  hi Search ctermbg=215 ctermfg=17 guibg=#f99058 guifg=#1e1e2e
+  hi IncSearch ctermbg=206 ctermfg=8 guibg=#f77fbe guifg=#585b70
+  hi Visual ctermbg=8 ctermfg=122 guibg=#585b70 guifg=#00ccff
+  hi MatchParen ctermfg=215 guifg=#f99058
+  hi StatusLine ctermbg=19 ctermfg=17 guibg=#0099e6 guifg=#1e1e2e
+  hi StatusLineNC ctermbg=25 ctermfg=17 guibg=#77AAFF guifg=#1e1e2e
+  hi VertSplit ctermfg=206 guifg=#f77fbe
+  hi Pmenu ctermfg=25 guifg=#77AAFF
+  hi PmenuSel ctermbg=25 ctermfg=17 guibg=#77AAFF guifg=#1e1e2e
+  hi Folded ctermfg=19 guifg=#7aa2f7 guibg=#3b4261
 
-    " Diff highlighting
-    hi DiffAdd ctermfg=15 guifg=#f8f8f8
-    hi DiffChange ctermfg=11 guifg=#f5e0dc
-    hi DiffDelete ctermfg=88 guifg=#701c1c
-    hi DiffText ctermfg=215 guifg=#f99058
+  " Diff highlighting
+  hi DiffAdd ctermfg=15 guifg=#f8f8f8
+  hi DiffChange ctermfg=11 guifg=#f5e0dc
+  hi DiffDelete ctermfg=88 guifg=#701c1c
+  hi DiffText ctermfg=215 guifg=#f99058
 
-elseif &t_Co == 8 || $TERM !~# '^linux' || &t_Co == 16
-    set t_Co=16
+elseif &t_Co <= 16 && $TERM !=# 'linux'
+  set t_Co=16
+  " Main text and background
+  hi Normal ctermbg=black ctermfg=white cterm=NONE
+  hi NonText ctermbg=black ctermfg=darkgray cterm=NONE
 
-    " Main text and background
-    hi Normal ctermbg=black ctermfg=white cterm=NONE
-    hi NonText ctermbg=black ctermfg=darkgray cterm=NONE
+  " Syntax groups
+  hi Comment ctermbg=black ctermfg=darkgray cterm=NONE
+  hi Constant ctermbg=black ctermfg=lightblue cterm=NONE
+  hi String ctermbg=black ctermfg=yellow cterm=NONE
+  hi Identifier ctermbg=black ctermfg=yellow  cterm=NONE
+  hi Function ctermbg=black ctermfg=yellow cterm=NONE
+  hi Statement ctermbg=black ctermfg=cyan cterm=NONE
+  hi Keyword ctermbg=black ctermfg=cyan cterm=NONE
+  hi Operator ctermbg=black ctermfg=magenta cterm=NONE
+  hi PreProc ctermbg=black ctermfg=magenta cterm=NONE
+  hi Include ctermbg=black ctermfg=magenta cterm=NONE
+  hi Type ctermbg=black ctermfg=cyan cterm=NONE
+  hi Special ctermbg=black ctermfg=magenta cterm=NONE
+  hi Error ctermbg=black ctermfg=darkred cterm=NONE
+  hi Todo ctermbg=black ctermfg=darkred cterm=NONE
 
-    " Syntax groups
-    hi Comment ctermbg=black ctermfg=darkgray cterm=NONE
-    hi Constant ctermbg=black ctermfg=lightblue cterm=NONE
-    hi String ctermbg=black ctermfg=yellow cterm=NONE
-    hi Identifier ctermbg=black ctermfg=orange cterm=NONE
-    hi Function ctermbg=black ctermfg=orange cterm=NONE
-    hi Statement ctermbg=black ctermfg=cyan cterm=NONE
-    hi Keyword ctermbg=black ctermfg=cyan cterm=NONE
-    hi Operator ctermbg=black ctermfg=rose cterm=NONE
-    hi PreProc ctermbg=black ctermfg=rose cterm=NONE
-    hi Include ctermbg=black ctermfg=pink cterm=NONE
-    hi Type ctermbg=black ctermfg=cyan cterm=NONE
-    hi Special ctermbg=black ctermfg=pink cterm=NONE
-    hi Error ctermbg=black ctermfg=darkred cterm=NONE
-    hi Todo ctermbg=black ctermfg=darkred cterm=NONE
-
-    " UI elements
-    hi LineNr ctermbg=black ctermfg=blue cterm=NONE
-    hi CursorLine ctermbg=darkgray ctermfg=cyan cterm=NONE
-    hi CursorLineNr ctermbg=darkgray ctermfg=cyan cterm=NONE
+  " UI elements
+  hi LineNr ctermbg=black ctermfg=blue cterm=NONE
+  hi CursorLine ctermbg=darkgray ctermfg=cyan cterm=NONE
+  hi CursorLineNr ctermbg=darkgray ctermfg=cyan cterm=NONE
+  hi Visual ctermbg=darkgray ctermfg=cyan cterm=NONE
+  hi StatusLineNC ctermbg=blue ctermfg=black cterm=NONE
+  hi Pmenu ctermbg=black ctermfg=blue cterm=NONE
+  hi PmenuSel ctermbg=blue ctermfg=black cterm=NONE
+  try
     hi Search ctermbg=orange ctermfg=black cterm=NONE
     hi IncSearch ctermbg=rose ctermfg=darkgray cterm=NONE
-    hi Visual ctermbg=darkgray ctermfg=cyan cterm=NONE
     hi MatchParen ctermbg=black ctermfg=orange cterm=NONE
     hi StatusLine ctermbg=lightblue ctermfg=black cterm=NONE
-    hi StatusLineNC ctermbg=blue ctermfg=black cterm=NONE
-    hi VertSplit ctermbg=black ctermfg=rose cterm=NONE
-    hi Pmenu ctermbg=black ctermfg=blue cterm=NONE
-    hi PmenuSel ctermbg=blue ctermfg=black cterm=NONE
+    hi VertSplit ctermbg=black ctermfg=magenta cterm=NONE
+  catch /^Vim\%((\a\+)\)\=:E421/
+    hi Search ctermbg=yellow ctermfg=black cterm=NONE
+    hi IncSearch ctermbg=magenta ctermfg=darkgray cterm=NONE
+    hi MatchParen ctermbg=black ctermfg=yellow cterm=NONE
+    hi StatusLine ctermbg=cyan ctermfg=black cterm=NONE
+    hi VertSplit ctermbg=black ctermfg=magenta cterm=NONE
+  endtry
 
-    " Diff highlighting
-    hi DiffAdd ctermbg=black ctermfg=white cterm=NONE
-    hi DiffChange ctermbg=black ctermfg=yellow cterm=NONE
-    hi DiffDelete ctermbg=black ctermfg=red cterm=NONE
-    hi DiffText ctermbg=black ctermfg=orange cterm=NONE
+  " Diff highlighting
+  hi DiffAdd ctermbg=black ctermfg=white cterm=NONE
+  hi DiffChange ctermbg=black ctermfg=yellow cterm=NONE
+  hi DiffDelete ctermbg=black ctermfg=red cterm=NONE
+  hi DiffText ctermbg=black ctermfg=yellow cterm=NONE
 endif
 
 " Common links
