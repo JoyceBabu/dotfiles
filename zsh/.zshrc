@@ -139,3 +139,6 @@ pastefinish() {
 }
 zstyle :bracketed-paste-magic paste-init pasteinit
 zstyle :bracketed-paste-magic paste-finish pastefinish
+
+export HISTSIZE=1000000000
+export SAVEHIST=1000000000
