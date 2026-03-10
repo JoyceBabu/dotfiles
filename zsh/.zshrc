@@ -69,6 +69,8 @@ function zvm_after_init() {
 #  [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
   try_source /opt/homebrew/opt/fzf/shell/key-bindings.zsh
   try_source /opt/homebrew/opt/fzf/shell/completion.zsh
+  bindkey -r '^T'
+  bindkey "^]" fzf-file-widget
 }
 
 function try_source() {
