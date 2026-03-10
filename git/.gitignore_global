@@ -9,3 +9,8 @@
 *-OTD
 
 .idea/
+.devbox/
+.devenv/
+.zed/
+.phive/
+
