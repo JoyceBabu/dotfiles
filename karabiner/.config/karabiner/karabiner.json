@@ -6,6 +6,100 @@
                 "parameters": { "basic.to_if_alone_timeout_milliseconds": 250 },
                 "rules": [
                     {
+                        "description": "Left_Ctrl + p/n/b/f/a/e to up/down/left/right/home/end",
+                        "enabled": false,
+                        "manipulators": [
+                            {
+                                "from": {
+                                    "key_code": "p",
+                                    "modifiers": {
+                                        "mandatory": ["left_control"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [{ "key_code": "up_arrow" }],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "n",
+                                    "modifiers": {
+                                        "mandatory": ["left_control"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [{ "key_code": "down_arrow" }],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "b",
+                                    "modifiers": {
+                                        "mandatory": ["left_control"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [{ "key_code": "left_arrow" }],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "f",
+                                    "modifiers": {
+                                        "mandatory": ["left_control"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [{ "key_code": "right_arrow" }],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "a",
+                                    "modifiers": {
+                                        "mandatory": ["left_control"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "left_arrow",
+                                        "modifiers": "command"
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "e",
+                                    "modifiers": {
+                                        "mandatory": ["left_control"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "right_arrow",
+                                        "modifiers": "command"
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Disable Cmd+m minimise",
+                        "manipulators": [
+                            {
+                                "from": {
+                                    "key_code": "m",
+                                    "modifiers": { "mandatory": ["command"] }
+                                },
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
                         "description": "Left_Ctrl + m/n/p/I to return/down/up/tab",
                         "manipulators": [
                             {
@@ -14,9 +108,13 @@
                                         "bundle_identifiers": [
                                             "^com\\.apple\\.finder$",
                                             "^com\\.google\\.Chrome$",
+                                            "^com\\.microsoft\\.edgemac$",
                                             "^com\\.descy\\.michael\\.TodoTxtMac$",
                                             "^org\\.keepassxc\\.keepassxc$",
-                                            "^net\\.whatsapp\\.WhatsApp"
+                                            "^org\\.torproject\\.torbrowser$",
+                                            "^net\\.whatsapp\\.WhatsApp$",
+                                            "^org\\.freecad\\.FreeCAD$",
+                                            "^rg\\.jkiss\\.dbeaver\\.core\\.product"
                                         ],
                                         "type": "frontmost_application_if"
                                     }
@@ -37,9 +135,13 @@
                                         "bundle_identifiers": [
                                             "^com\\.apple\\.finder$",
                                             "^com\\.google\\.Chrome$",
+                                            "^com\\.microsoft\\.edgemac$",
                                             "^com\\.descy\\.michael\\.TodoTxtMac$",
                                             "^org\\.keepassxc\\.keepassxc$",
-                                            "^net\\.whatsapp\\.WhatsApp"
+                                            "^org\\.torproject\\.torbrowser$",
+                                            "^net\\.whatsapp\\.WhatsApp$",
+                                            "^org\\.freecad\\.FreeCAD$",
+                                            "^rg\\.jkiss\\.dbeaver\\.core\\.product"
                                         ],
                                         "type": "frontmost_application_if"
                                     }
@@ -60,11 +162,20 @@
                                         "bundle_identifiers": [
                                             "^com\\.apple\\.Finder$",
                                             "^com\\.google\\.Chrome$",
+                                            "^com\\.microsoft\\.edgemac$",
                                             "^com\\.descy\\.michael\\.TodoTxtMac$",
                                             "^org\\.keepassxc\\.keepassxc$",
-                                            "^net\\.whatsapp\\.WhatsApp"
+                                            "^org\\.torproject\\.torbrowser$",
+                                            "^net\\.whatsapp\\.WhatsApp$",
+                                            "^org\\.freecad\\.FreeCAD$",
+                                            "^rg\\.jkiss\\.dbeaver\\.core\\.product"
                                         ],
                                         "type": "frontmost_application_if"
+                                    },
+                                    {
+                                        "name": "mouse_mode",
+                                        "type": "variable_unless",
+                                        "value": 1
                                     }
                                 ],
                                 "from": {
@@ -81,7 +192,9 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.google\\.Chrome$"
+                                            "^com\\.google\\.Chrome$",
+                                            "^com\\.microsoft\\.edgemac$",
+                                            "^org\\.torproject\\.torbrowser$"
                                         ],
                                         "type": "frontmost_application_if"
                                     }
@@ -97,16 +210,6 @@
                                 "type": "basic"
                             },
                             {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.google\\.Chrome$",
-                                            "^org\\.keepassxc\\.keepassxc$",
-                                            "^net\\.whatsapp\\.WhatsApp"
-                                        ],
-                                        "type": "frontmost_application_if"
-                                    }
-                                ],
                                 "from": {
                                     "key_code": "open_bracket",
                                     "modifiers": {
