@@ -1,36 +1,49 @@
 #!/bin/sh
 
-set -e
-
 JB_USER=$(id -un)
 JB_TMP_DIR=$(mktemp -u 2>/dev/null || echo "/tmp/tmp")
-JB_ENV_DIR="$(dirname $JB_TMP_DIR)/jb-$JB_USER-tmux"
-ENV_UID=$(id -u)
+JB_ENV_DIR="$(dirname "$JB_TMP_DIR")/jb-$JB_USER-tmux"
+JB_ENV_UID=$(id -u)
 
-if [ -e "$JB_ENV_DIR" ] && [ -z "$(find "$JB_ENV_DIR" -user "$ENV_UID" -print -prune -o -prune)" ]; then
-  echo "The config directory '$JB_ENV_DIR' is not owned by $JB_USER."
-  exit 1
+if [ -e "$JB_ENV_DIR" ] && [ -z "$(find "$JB_ENV_DIR" -user "$JB_ENV_UID" -print -prune -o -prune)" ]; then
+  printf 'The config directory %s is not owned by %s.\n' "$JB_ENV_DIR" "$JB_USER" >&2
+  return 1 2>/dev/null || exit 1
 fi
 
 if [ -z "$SHELL" ]; then
   SHELL=$(ps | grep "^\s*$$\s" | sed -e "s/^ *$$ .* //" -e 's/^-//')
 fi
+export JB_SHELL="$SHELL"
 
 jb_check_for_executable() {
   type "$1" >/dev/null 2>/dev/null
 }
 
-jb_dl_file() {
-  $JB_FETCH_EXE $JB_FETCH_FLAGS https://raw.githubusercontent.com/JoyceBabu/dotfiles/master/$1 > "$JB_ENV_DIR/$2"
-  chmod 0644 "$JB_ENV_DIR/$2"
-}
+jb_dl_file() (
+  source_url="https://raw.githubusercontent.com/JoyceBabu/dotfiles/master/$1"
+  destination="$JB_ENV_DIR/$2"
+  temporary_file="$destination.tmp.$$"
 
-JB_FETCH_EXE='wget'
-JB_FETCH_FLAGS='-q -O-'
+  if ! $JB_FETCH_EXE $JB_FETCH_FLAGS "$source_url" > "$temporary_file"; then
+    rm -f "$temporary_file"
+    return 1
+  fi
+
+  if ! chmod 0644 "$temporary_file" || ! mv -f "$temporary_file" "$destination"; then
+    rm -f "$temporary_file"
+    return 1
+  fi
+)
 
 if jb_check_for_executable curl; then
   JB_FETCH_EXE='curl'
-  JB_FETCH_FLAGS='-s'
+  JB_FETCH_FLAGS='-fsSL'
+elif jb_check_for_executable wget; then
+  JB_FETCH_EXE='wget'
+  JB_FETCH_FLAGS='-q -O-'
+else
+  printf 'curl or wget is required to load the environment.\n' >&2
+  return 1 2>/dev/null || exit 1
 fi
 
 if [ -z "$JB_SKIP_TMUX_UPDATE" ] && ! jb_check_for_executable tmux; then
@@ -41,13 +54,13 @@ mkdir -p "$JB_ENV_DIR"
 chmod 0755 "$JB_ENV_DIR"
 
 mkdir -p "$JB_ENV_DIR/opt/bin" "$JB_ENV_DIR/opt/libexec"
-jb_dl_file opt/jb-setup.sh opt/libexec/jb-setup
+jb_dl_file opt/jb-setup.sh opt/libexec/jb-setup || {
+  printf 'Failed to download opt/jb-setup.sh.\n' >&2
+  return 1 2>/dev/null || exit 1
+}
 chmod 0755 "$JB_ENV_DIR/opt/libexec/jb-setup"
 
-case ":$PATH:" in
-  *:"$JB_ENV_DIR/opt/bin":*) ;;
-  *) PATH="$JB_ENV_DIR/opt/bin:$PATH" ;;
-esac
+PATH="$JB_ENV_DIR/opt/bin:$PATH"
 export PATH
 
 jb_setup() {
@@ -55,10 +68,10 @@ jb_setup() {
   hash -r 2>/dev/null || true
 }
 
-export MYVIMRC=$JB_ENV_DIR/.vimrc
+export MYVIMRC="$JB_ENV_DIR/.vimrc"
 export VIMINIT=":set runtimepath^=$JB_ENV_DIR/.vim|:source $MYVIMRC"
 
-cat <<EOF > $JB_ENV_DIR/.ignore
+cat <<EOF > "$JB_ENV_DIR/.ignore"
 *~
 .DS_Store
 *.orig
@@ -75,7 +88,7 @@ tmp/
 var/
 EOF
 
-cat <<EOF > $JB_ENV_DIR/.gitconfig
+cat <<EOF > "$JB_ENV_DIR/.gitconfig"
 [core]
   excludesfile = $JB_ENV_DIR/.ignore
 [user]
@@ -99,7 +112,7 @@ cat <<EOF > $JB_ENV_DIR/.gitconfig
 EOF
 chmod 0644 "$JB_ENV_DIR/.gitconfig"
 
-cat <<EOF > $JB_ENV_DIR/.inputrc
+cat <<EOF > "$JB_ENV_DIR/.inputrc"
 \$include /etc/inputrc
 
 set editing-mode vi
@@ -146,7 +159,7 @@ elif jb_check_for_executable fd; then
   _FIND_CMD=fd
 fi
 
-cat <<EOF > $JB_ENV_DIR/.shrc
+cat <<EOF > "$JB_ENV_DIR/.shrc"
 jb_check_for_executable() {
   type \$1 >/dev/null 2>/dev/null
 }
@@ -209,21 +222,41 @@ jb_vim_edit_files() {
   if [ -n "\$file" ]; then
     vim "\$file"
 
-    # Run clear-opcache command if clear_opcache is non-empty (true) and file is .php
-    echo "\$file" | grep -q '\.php\$'
-    if [ \$? -ne 0 ]; then
-      clear_opcache=0
-    elif [ "\$clear_opcache" = "" ]; then
-      echo "Do you want to clear the opcache for \$file? (y/N): "
-      read -t 3 choice
-      clear_opcache=\$(echo 'n' | grep '^[yY]\$' && echo 1 || echo 0)
-    fi
+    # Run clear-opcache only for PHP files, prompting when no option was given.
+    case "\$file" in
+      *.php)
+        if [ "\$clear_opcache" = "" ]; then
+          printf 'Do you want to clear the opcache for %s? (y/N): ' "\$file"
+          choice=n
+          IFS= read -r choice || choice=n
+          case "\$choice" in
+            y | Y) clear_opcache=1 ;;
+            *) clear_opcache=0 ;;
+          esac
+        fi
+        ;;
+      *) clear_opcache=0 ;;
+    esac
 
     if [ "\$clear_opcache" = "1" ]; then
       ./bin/clear-opcache "\$file"
     fi
   fi
 }
+
+jb_absolute_path() (
+  path=\$1
+  case "\$path" in
+    /*) printf '%s\n' "\$path" ;;
+    *)
+      path_dir=\${path%/*}
+      path_name=\${path##*/}
+      [ "\$path_dir" = "\$path" ] && path_dir=.
+      CDPATH= cd -P "\$path_dir" 2>/dev/null || exit 1
+      printf '%s/%s\n' "\$PWD" "\$path_name"
+      ;;
+  esac
+)
 
 jb_nvim() {
   if [ -z "\$TMUX" ]; then
@@ -273,7 +306,8 @@ jb_nvim() {
 
   if [ -n "\$SOCK" ] && [ -e "\$SOCK" ]; then
     if [ \$# -ne 1 ]; then
-      command nvim --server "\$SOCK" --remote "$(realpath \"\$1\")"
+      remote_file=\$(jb_absolute_path "\$1") || remote_file=\"\$1\"
+      command nvim --server "\$SOCK" --remote "\$remote_file"
     elif [ \$# -ne 0 ]; then
       command nvim --server "\$SOCK" --remote "\$@"
     fi
@@ -289,19 +323,17 @@ jb_nvim() {
 
 alias fvim=jb_vim_edit_files
 
+JB_SHELL=\$(basename \$SHELL)
+
+[ -f "\$HOME/.\${JB_SHELL}rc" ] && . "\$HOME/.\${JB_SHELL}rc"
+
 export JB_ENV_DIR="$JB_ENV_DIR"
 export GIT_CONFIG_GLOBAL="\$JB_ENV_DIR/.gitconfig"
 export INPUTRC="\$JB_ENV_DIR/.inputrc"
-case ":\$PATH:" in
-  *:"\$JB_ENV_DIR/opt/bin":*) ;;
-  *) PATH="\$JB_ENV_DIR/opt/bin:\$PATH" ;;
-esac
+PATH="\$JB_ENV_DIR/opt/bin:\$PATH"
 export PATH
-JB_SHELL=\$(basename \$SHELL)
 
 unset jb_check_for_executable
-
-[ -f "\$HOME/.\${JB_SHELL}rc" ] && . "\$HOME/.\${JB_SHELL}rc"
 
 alias tmux='\tmux -f"$JB_ENV_DIR/.tmux.conf"'
 alias sd='\sudo --preserve-env=VIMINIT,TMUX,JB_ENV_DIR'
@@ -328,20 +360,23 @@ EOF
 
 chmod 0644 "$JB_ENV_DIR/.shrc"
 
-jb_dl_file vim/.config/nvim/basic.vim .vimrc
+jb_dl_file vim/.config/nvim/basic.vim .vimrc || {
+  printf 'Failed to download the Neovim configuration.\n' >&2
+  return 1 2>/dev/null || exit 1
+}
 
 # Setup shell
 for ENV_SHELL in zsh bash "$SHELL"; do
   if jb_check_for_executable "$ENV_SHELL"; then
-    JB_ENV_TMUX_DEF_CMD=$(which "$ENV_SHELL")
+    JB_ENV_TMUX_DEF_CMD=$(command -v "$ENV_SHELL")
     break
   fi
 done
 
 JB_ENV_TMUX_DEF_ARGS='-i'
 if [ "zsh" = "$ENV_SHELL" ]; then
-  export JB_ZDOTDIR=$JB_ENV_DIR
-  ln -sf $JB_ENV_DIR/.shrc $JB_ENV_DIR/.zshrc
+  export JB_ZDOTDIR="$JB_ENV_DIR"
+  ln -sf "$JB_ENV_DIR/.shrc" "$JB_ENV_DIR/.zshrc"
 elif [ "bash" = "$ENV_SHELL" ]; then
   JB_ENV_TMUX_DEF_ARGS="--rcfile $JB_ENV_DIR/.shrc -i"
 else
@@ -354,14 +389,17 @@ chmod 0755 "$JB_ENV_DIR"
 if [ -z "$JB_SKIP_TMUX_UPDATE" ]; then
   # tmux installation detected
   echo "tmux found"
-  jb_dl_file tmux/.tmux.conf .tmux.conf
+  jb_dl_file tmux/.tmux.conf .tmux.conf || {
+    printf 'Failed to download the tmux configuration.\n' >&2
+    return 1 2>/dev/null || exit 1
+  }
 
-  echo "set-option -g default-command '$JB_ENV_TMUX_DEF_CMD $JB_ENV_TMUX_DEF_ARGS'" >> $JB_ENV_DIR/.tmux.conf
+  echo "set-option -g default-command '$JB_ENV_TMUX_DEF_CMD $JB_ENV_TMUX_DEF_ARGS'" >> "$JB_ENV_DIR/.tmux.conf"
   if [ -n "$JB_ENV" ]; then
-    echo "set-environment -g ENV '$JB_ENV'" >> $JB_ENV_DIR/.tmux.conf
+    echo "set-environment -g ENV '$JB_ENV'" >> "$JB_ENV_DIR/.tmux.conf"
   fi
   if [ -n "$JB_ZDOTDIR" ]; then
-    echo "set-environment -g ZDOTDIR '$JB_ZDOTDIR'" >> $JB_ENV_DIR/.tmux.conf
+    echo "set-environment -g ZDOTDIR '$JB_ZDOTDIR'" >> "$JB_ENV_DIR/.tmux.conf"
   fi
 
   if [ -n "$TMUX" ]; then
@@ -382,7 +420,7 @@ else
     eval "exec $JB_ENV_TMUX_DEF_CMD $JB_ENV_TMUX_DEF_ARGS"
   else
     echo "Error: This script requires an interactive terminal" >&2
-    exit 1
+    return 1 2>/dev/null || exit 1
   fi
 fi
 
