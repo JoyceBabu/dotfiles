@@ -20,7 +20,7 @@ jb_check_for_executable() {
   type "$1" >/dev/null 2>/dev/null
 }
 
-jb_dl_config_file() {
+jb_dl_file() {
   $JB_FETCH_EXE $JB_FETCH_FLAGS https://raw.githubusercontent.com/JoyceBabu/dotfiles/master/$1 > "$JB_ENV_DIR/$2"
   chmod 0644 "$JB_ENV_DIR/$2"
 }
@@ -39,6 +39,21 @@ fi
 
 mkdir -p "$JB_ENV_DIR"
 chmod 0755 "$JB_ENV_DIR"
+
+mkdir -p "$JB_ENV_DIR/opt/bin" "$JB_ENV_DIR/opt/libexec"
+jb_dl_file opt/jb-setup.sh opt/libexec/jb-setup
+chmod 0755 "$JB_ENV_DIR/opt/libexec/jb-setup"
+
+case ":$PATH:" in
+  *:"$JB_ENV_DIR/opt/bin":*) ;;
+  *) PATH="$JB_ENV_DIR/opt/bin:$PATH" ;;
+esac
+export PATH
+
+jb_setup() {
+  "$JB_ENV_DIR/opt/libexec/jb-setup" "$@" || return
+  hash -r 2>/dev/null || true
+}
 
 export MYVIMRC=$JB_ENV_DIR/.vimrc
 export VIMINIT=":set runtimepath^=$JB_ENV_DIR/.vim|:source $MYVIMRC"
@@ -134,6 +149,11 @@ fi
 cat <<EOF > $JB_ENV_DIR/.shrc
 jb_check_for_executable() {
   type \$1 >/dev/null 2>/dev/null
+}
+
+jb_setup() {
+  "\$JB_ENV_DIR/opt/libexec/jb-setup" "\$@" || return
+  hash -r 2>/dev/null || true
 }
 
 jb_sudo() {
@@ -272,6 +292,11 @@ alias fvim=jb_vim_edit_files
 export JB_ENV_DIR="$JB_ENV_DIR"
 export GIT_CONFIG_GLOBAL="\$JB_ENV_DIR/.gitconfig"
 export INPUTRC="\$JB_ENV_DIR/.inputrc"
+case ":\$PATH:" in
+  *:"\$JB_ENV_DIR/opt/bin":*) ;;
+  *) PATH="\$JB_ENV_DIR/opt/bin:\$PATH" ;;
+esac
+export PATH
 JB_SHELL=\$(basename \$SHELL)
 
 unset jb_check_for_executable
@@ -303,7 +328,7 @@ EOF
 
 chmod 0644 "$JB_ENV_DIR/.shrc"
 
-jb_dl_config_file vim/.config/nvim/basic.vim .vimrc
+jb_dl_file vim/.config/nvim/basic.vim .vimrc
 
 # Setup shell
 for ENV_SHELL in zsh bash "$SHELL"; do
@@ -329,7 +354,7 @@ chmod 0755 "$JB_ENV_DIR"
 if [ -z "$JB_SKIP_TMUX_UPDATE" ]; then
   # tmux installation detected
   echo "tmux found"
-  jb_dl_config_file tmux/.tmux.conf .tmux.conf
+  jb_dl_file tmux/.tmux.conf .tmux.conf
 
   echo "set-option -g default-command '$JB_ENV_TMUX_DEF_CMD $JB_ENV_TMUX_DEF_ARGS'" >> $JB_ENV_DIR/.tmux.conf
   if [ -n "$JB_ENV" ]; then
@@ -362,7 +387,7 @@ else
 fi
 
 # Cleanup
-unset jb_dl_config_file
+unset jb_dl_file
 unset jb_check_for_executable
 unset JB_ENV_TMUX_DEF_ARGS
 unset JB_ENV_TMUX_DEF_CMD
