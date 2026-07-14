@@ -15,6 +15,13 @@ Utilities:
   neovim | nvim
   yazi
   utils | coreutils | uutils
+  zoxide | z
+  tealdeer | tldr
+  ytop | top | htop
+  dust | du
+  procs | ps
+  herdr
+  lazygit
 EOF
 }
 
@@ -29,9 +36,13 @@ download() {
   DOWNLOAD_PATH=$PATH
 
   # Avoid using an installed curl replacement to bootstrap later downloads.
-  case "$DOWNLOAD_PATH" in
-    "$BIN_DIR":*) DOWNLOAD_PATH=${DOWNLOAD_PATH#*:} ;;
-  esac
+  while :; do
+    case "$DOWNLOAD_PATH" in
+      "$BIN_DIR") DOWNLOAD_PATH=; break ;;
+      "$BIN_DIR":*) DOWNLOAD_PATH=${DOWNLOAD_PATH#*:} ;;
+      *) break ;;
+    esac
+  done
 
   if CURL_EXE=$(PATH="$DOWNLOAD_PATH" command -v curl 2>/dev/null); then
     "$CURL_EXE" -fsSL --retry 3 -o "$destination" "$url"
@@ -105,6 +116,7 @@ VERSION=
 TAG=
 REPOSITORY=
 ASSET=
+ASSET_KIND=archive
 canonical=
 
 case "$(uname -s)" in
@@ -222,6 +234,90 @@ case "$requested" in
     esac
     ASSET="coreutils-$VERSION-$target.tar.gz"
     ;;
+  zoxide | z)
+    canonical=zoxide
+    VERSION=0.10.0
+    TAG=v$VERSION
+    REPOSITORY=ajeetdsouza/zoxide
+    case "$OS-$ARCH" in
+      darwin-aarch64) target=aarch64-apple-darwin ;;
+      darwin-x86_64) target=x86_64-apple-darwin ;;
+      linux-aarch64) target=aarch64-unknown-linux-musl ;;
+      linux-x86_64) target=x86_64-unknown-linux-musl ;;
+    esac
+    ASSET="zoxide-$VERSION-$target.tar.gz"
+    ;;
+  tealdeer | tldr)
+    canonical=tealdeer
+    VERSION=1.8.1
+    TAG=v$VERSION
+    REPOSITORY=dbrgn/tealdeer
+    ASSET_KIND=binary
+    case "$OS-$ARCH" in
+      darwin-aarch64) ASSET=tealdeer-macos-aarch64 ;;
+      darwin-x86_64) ASSET=tealdeer-macos-x86_64 ;;
+      linux-aarch64) ASSET=tealdeer-linux-aarch64-musl ;;
+      linux-x86_64) ASSET=tealdeer-linux-x86_64-musl ;;
+    esac
+    ;;
+  ytop | top | htop)
+    canonical=ytop
+    VERSION=0.6.2
+    TAG=$VERSION
+    REPOSITORY=cjbassi/ytop
+    case "$OS-$ARCH" in
+      darwin-x86_64) ASSET="ytop-$VERSION-x86_64-apple-darwin.tar.gz" ;;
+      linux-x86_64) ASSET="ytop-$VERSION-x86_64-unknown-linux-gnu.tar.gz" ;;
+    esac
+    ;;
+  dust | du)
+    canonical=dust
+    VERSION=1.2.4
+    TAG=v$VERSION
+    REPOSITORY=bootandy/dust
+    case "$OS-$ARCH" in
+      darwin-x86_64) target=x86_64-apple-darwin ;;
+      linux-aarch64) target=aarch64-unknown-linux-musl ;;
+      linux-x86_64) target=x86_64-unknown-linux-musl ;;
+    esac
+    [ -n "${target:-}" ] && ASSET="dust-v$VERSION-$target.tar.gz"
+    ;;
+  procs | ps)
+    canonical=procs
+    VERSION=0.14.12
+    TAG=v$VERSION
+    REPOSITORY=dalance/procs
+    case "$OS-$ARCH" in
+      darwin-aarch64) target=aarch64-mac ;;
+      darwin-x86_64) target=x86_64-mac ;;
+      linux-aarch64) target=aarch64-linux ;;
+      linux-x86_64) target=x86_64-linux ;;
+    esac
+    ASSET="procs-v$VERSION-$target.zip"
+    ;;
+  herdr)
+    canonical=herdr
+    VERSION=0.7.3
+    TAG=v$VERSION
+    REPOSITORY=ogulcancelik/herdr
+    ASSET_KIND=binary
+    case "$OS" in
+      darwin) release_os=macos ;;
+      linux) release_os=linux ;;
+    esac
+    ASSET="herdr-$release_os-$ARCH"
+    ;;
+  lazygit)
+    canonical=lazygit
+    VERSION=0.63.0
+    TAG=v$VERSION
+    REPOSITORY=jesseduffield/lazygit
+    case "$ARCH" in
+      aarch64) release_arch=arm64 ;;
+      x86_64) release_arch=x86_64 ;;
+    esac
+    ASSET="lazygit_${VERSION}_${OS}_${release_arch}.tar.gz"
+    ;;
   -h | --help | help)
     usage
     exit 0
@@ -254,6 +350,13 @@ is_installed() {
     neovim) [ -x "$BIN_DIR/nvim" ] ;;
     yazi) [ -x "$BIN_DIR/yazi" ] && [ -x "$BIN_DIR/ya" ] ;;
     coreutils) [ -x "$BIN_DIR/coreutils" ] ;;
+    zoxide) [ -x "$BIN_DIR/zoxide" ] && [ -x "$BIN_DIR/z" ] ;;
+    tealdeer) [ -x "$BIN_DIR/tldr" ] && [ -x "$BIN_DIR/tealdeer" ] ;;
+    ytop) [ -x "$BIN_DIR/htop" ] && [ -x "$BIN_DIR/ytop" ] ;;
+    dust) [ -x "$BIN_DIR/dust" ] ;;
+    procs) [ -x "$BIN_DIR/procs" ] ;;
+    herdr) [ -x "$BIN_DIR/herdr" ] ;;
+    lazygit) [ -x "$BIN_DIR/lazygit" ] ;;
   esac
 }
 
@@ -271,7 +374,9 @@ mkdir -p "$EXTRACT_DIR"
 
 printf 'Downloading %s %s for %s/%s...\n' "$canonical" "$VERSION" "$OS" "$ARCH"
 download "$URL" "$ARCHIVE"
-extract_archive "$ARCHIVE" "$EXTRACT_DIR"
+if [ "$ASSET_KIND" = archive ]; then
+  extract_archive "$ARCHIVE" "$EXTRACT_DIR"
+fi
 
 case "$canonical" in
   rsync)
@@ -315,6 +420,30 @@ case "$canonical" in
       esac
       link_binary coreutils "$applet"
     done
+    ;;
+  zoxide)
+    install_binary "$(find_binary "$EXTRACT_DIR" zoxide)" zoxide
+    link_binary zoxide z
+    ;;
+  tealdeer)
+    install_binary "$ARCHIVE" tldr
+    link_binary tldr tealdeer
+    ;;
+  ytop)
+    install_binary "$(find_binary "$EXTRACT_DIR" ytop)" htop
+    link_binary htop ytop
+    ;;
+  dust)
+    install_binary "$(find_binary "$EXTRACT_DIR" dust)" dust
+    ;;
+  procs)
+    install_binary "$(find_binary "$EXTRACT_DIR" procs)" procs
+    ;;
+  herdr)
+    install_binary "$ARCHIVE" herdr
+    ;;
+  lazygit)
+    install_binary "$(find_binary "$EXTRACT_DIR" lazygit)" lazygit
     ;;
 esac
 
