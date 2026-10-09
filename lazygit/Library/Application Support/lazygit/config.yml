@@ -26,7 +26,7 @@ gui:
     unstagedChangesColor:
       - red # Red
 git:
-  pagers:
+  diffRenderers:
     - colorArg: always
-      pager: delta --dark --paging=never --diff-so-fancy --line-numbers
+      command: delta --dark --paging=never --diff-so-fancy --line-numbers
       # externalDiffCommand: difft --color=always --display=inline
