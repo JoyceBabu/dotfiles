@@ -37,10 +37,10 @@ jb_dl_file() (
 
 if jb_check_for_executable curl; then
   JB_FETCH_EXE='curl'
-  JB_FETCH_FLAGS='-fsSL'
+  JB_FETCH_FLAGS='-fsSL --connect-timeout 3 --retry 2'
 elif jb_check_for_executable wget; then
   JB_FETCH_EXE='wget'
-  JB_FETCH_FLAGS='-q -O-'
+  JB_FETCH_FLAGS='-q -O- -T 10'
 else
   printf 'curl or wget is required to load the environment.\n' >&2
   return 1 2>/dev/null || exit 1
