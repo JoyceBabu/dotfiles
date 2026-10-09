@@ -126,7 +126,4 @@ if [ -f ~/.bash_custom ]; then
     . ~/.bash_custom
 fi
 
-if [ -z "$TMUX" ]; then
-  bind -m vi-command -x '"\C-h": tmux select-pane -L"'
-fi
 
