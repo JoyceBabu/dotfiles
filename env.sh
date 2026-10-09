@@ -24,7 +24,7 @@ jb_dl_file() (
   destination="$JB_ENV_DIR/$2"
   temporary_file="$destination.tmp.$$"
 
-  if ! $JB_FETCH_EXE $JB_FETCH_FLAGS "$source_url" > "$temporary_file"; then
+  if ! eval "$JB_FETCH_EXE $JB_FETCH_FLAGS \"\$source_url\"" > "$temporary_file"; then
     rm -f "$temporary_file"
     return 1
   fi
