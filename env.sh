@@ -63,10 +63,24 @@ chmod 0755 "$JB_ENV_DIR/opt/libexec/jb-setup"
 PATH="$JB_ENV_DIR/opt/bin:$PATH"
 export PATH
 
+jb_setup_aliases() {
+  case "$-" in
+    *i*) ;;
+    *) return ;;
+  esac
+
+  [ -x "$JB_ENV_DIR/opt/bin/htop" ] && alias top='htop'
+  [ -x "$JB_ENV_DIR/opt/bin/dust" ] && alias du='dust'
+  [ -x "$JB_ENV_DIR/opt/bin/procs" ] && alias ps='procs'
+}
+
 jb_setup() {
   "$JB_ENV_DIR/opt/libexec/jb-setup" "$@" || return
   hash -r 2>/dev/null || true
+  jb_setup_aliases
 }
+
+jb_setup_aliases
 
 export MYVIMRC="$JB_ENV_DIR/.vimrc"
 export VIMINIT=":set runtimepath^=$JB_ENV_DIR/.vim|:source $MYVIMRC"
@@ -164,9 +178,21 @@ jb_check_for_executable() {
   type \$1 >/dev/null 2>/dev/null
 }
 
+jb_setup_aliases() {
+  case "\$-" in
+    *i*) ;;
+    *) return ;;
+  esac
+
+  [ -x "\$JB_ENV_DIR/opt/bin/htop" ] && alias top='htop'
+  [ -x "\$JB_ENV_DIR/opt/bin/dust" ] && alias du='dust'
+  [ -x "\$JB_ENV_DIR/opt/bin/procs" ] && alias ps='procs'
+}
+
 jb_setup() {
   "\$JB_ENV_DIR/opt/libexec/jb-setup" "\$@" || return
   hash -r 2>/dev/null || true
+  jb_setup_aliases
 }
 
 jb_sudo() {
@@ -332,6 +358,7 @@ export GIT_CONFIG_GLOBAL="\$JB_ENV_DIR/.gitconfig"
 export INPUTRC="\$JB_ENV_DIR/.inputrc"
 PATH="\$JB_ENV_DIR/opt/bin:\$PATH"
 export PATH
+jb_setup_aliases
 
 unset jb_check_for_executable
 
