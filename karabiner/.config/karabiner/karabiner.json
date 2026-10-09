@@ -108,7 +108,7 @@
                                         "bundle_identifiers": [
                                             "^com\\.apple\\.finder$",
                                             "^com\\.google\\.Chrome$",
-                                            "^com\\.microsoft\\.edgemac$",
+                                            "^com\\.microsoft\\.edgemac",
                                             "^com\\.descy\\.michael\\.TodoTxtMac$",
                                             "^org\\.keepassxc\\.keepassxc$",
                                             "^org\\.torproject\\.torbrowser$",
@@ -135,7 +135,7 @@
                                         "bundle_identifiers": [
                                             "^com\\.apple\\.finder$",
                                             "^com\\.google\\.Chrome$",
-                                            "^com\\.microsoft\\.edgemac$",
+                                            "^com\\.microsoft\\.edgemac",
                                             "^com\\.descy\\.michael\\.TodoTxtMac$",
                                             "^org\\.keepassxc\\.keepassxc$",
                                             "^org\\.torproject\\.torbrowser$",
@@ -162,7 +162,7 @@
                                         "bundle_identifiers": [
                                             "^com\\.apple\\.Finder$",
                                             "^com\\.google\\.Chrome$",
-                                            "^com\\.microsoft\\.edgemac$",
+                                            "^com\\.microsoft\\.edgemac",
                                             "^com\\.descy\\.michael\\.TodoTxtMac$",
                                             "^org\\.keepassxc\\.keepassxc$",
                                             "^org\\.torproject\\.torbrowser$",
@@ -193,7 +193,7 @@
                                     {
                                         "bundle_identifiers": [
                                             "^com\\.google\\.Chrome$",
-                                            "^com\\.microsoft\\.edgemac$",
+                                            "^com\\.microsoft\\.edgemac",
                                             "^org\\.torproject\\.torbrowser$"
                                         ],
                                         "type": "frontmost_application_if"
