@@ -331,12 +331,10 @@ jb_nvim() {
   done
 
   if [ -n "\$SOCK" ] && [ -e "\$SOCK" ]; then
-    if [ \$# -ne 1 ]; then
-      remote_file=\$(jb_absolute_path "\$1") || remote_file=\"\$1\"
+    for file in "\$@"; do
+      remote_file=\$(jb_absolute_path "\$file") || remote_file=\$file
       command nvim --server "\$SOCK" --remote "\$remote_file"
-    elif [ \$# -ne 0 ]; then
-      command nvim --server "\$SOCK" --remote "\$@"
-    fi
+    done
 
     tmux select-window -t "\$FOUND_WIN"
     tmux select-pane -t "\$FOUND_WIN.\$PANE_IDX"

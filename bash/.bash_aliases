@@ -175,8 +175,8 @@ tvim() {
 
   # Find nvim socket in current window
   local SOCK=''
-  local SOCKET_PATH="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp/}nvim.${USER}}/nvim.$USER"
-  for s in $(find "$SOCKET_PATH" -type s -user "$USER" -name 'nvim.*.0' -maxdepth 3 2>/dev/null); do
+  local SOCKET_PATH="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp/}}/"
+  for s in $(find "$SOCKET_PATH" -type s -user "$USER" -path '*/nvim*' -name 'nvim.*.0' -maxdepth 3 2>/dev/null); do
     local PID=$(echo $s | awk -F'.' '{print $(NF-1)}')
     local SEARCH_PID=$PID
     local FOUND_WIN=''
@@ -201,10 +201,10 @@ tvim() {
   done
 
   if [ -n "$SOCK" ] && [ -e "$SOCK" ]; then
-    # Found nvim in current window, send files to it
-    if [ $# -ne 0 ]; then
-      command nvim --server "$SOCK" --remote "$@"
-    fi
+    for file in "$@"; do
+      remote_file=$(jb_absolute_path "$file") || remote_file=$file
+      command nvim --server "$SOCK" --remote "$remote_file"
+    done
 
     # Focus the nvim pane
     tmux select-window -t "$FOUND_WIN"
