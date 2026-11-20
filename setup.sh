@@ -23,6 +23,7 @@ useronly=(
     phpactor
     process-compose
     ripgrep
+    srt-agent
     tmux
     vim
     wezterm

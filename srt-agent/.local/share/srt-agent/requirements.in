@@ -1,0 +1,12 @@
+openpyxl
+defusedxml
+python-docx
+xlrd
+pypdf
+pdfplumber
+pandas
+matplotlib
+requests
+pytesseract
+pypdfium2
+pillow-heif

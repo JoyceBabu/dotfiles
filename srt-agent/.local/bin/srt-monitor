@@ -1,0 +1,2 @@
+#log stream --predicate 'process == "sandbox-exec"' --style syslog
+log stream --style compact --predicate 'sender == "Sandbox"' # AND eventMessage CONTAINS "codex"'

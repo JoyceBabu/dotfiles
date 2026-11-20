@@ -1,0 +1,77 @@
+#!/bin/sh
+# Rebuild the srt-agent tools venv from requirements.in (wheels only,
+# hash-pinned). Keep this script next to requirements.in and tools/.
+# Usage: ./update-tools                    apply edits to requirements.in
+#        ./update-tools --upgrade          also move to newer versions
+#        ./update-tools --recreate         rebuild tools/ with $PYTHON
+#                                          (after changing Python version)
+# Other arguments go to uv pip compile, e.g. --upgrade-package openpyxl.
+set -eu
+cd "$(dirname "$0")"
+
+# Python version for new venvs, from uv's managed installs only
+# (uv python install 3.13). Never falls back to Homebrew or system Python.
+PYTHON=3.13
+
+usage() {
+    cat <<EOF
+Usage: update-tools [--recreate] [UV-COMPILE-OPTIONS...]
+
+Rebuild the srt-agent tools venv (tools/) from requirements.in.
+Versions are re-pinned with hashes into requirements.txt (wheels only),
+the changes are shown, and nothing is installed until you confirm.
+The venv is then synced to match requirements.txt exactly.
+
+Options:
+  --recreate        Delete and rebuild tools/ with uv-managed Python
+                    \$PYTHON (after changing it). Implied when tools/ is missing.
+  -h, --help        Show this help.
+
+Anything else is passed to 'uv pip compile', for example:
+  --upgrade                     move every package to its newest version
+  --upgrade-package NAME        upgrade one package only
+
+Workflow: edit requirements.in (never requirements.txt), then run
+this script. requirements.txt is regenerated on every run.
+
+Files (next to this script):
+  requirements.in   packages you want, one per line
+  requirements.txt  generated pins and hashes
+  tools/            the venv; disposable, rebuilt with --recreate
+  PYTHON=$PYTHON
+EOF
+}
+
+recreate=false
+case "${1:-}" in
+    -h|--help) usage; exit 0 ;;
+    --recreate) recreate=true; shift ;;
+esac
+[ -d tools ] || recreate=true
+# Resolve for the interpreter the venv will actually use.
+if $recreate; then target="--python-version $PYTHON"; else target="--python tools/bin/python"; fi
+
+[ -f requirements.txt ] && cp requirements.txt requirements.txt.old || : > requirements.txt.old
+uv pip compile --quiet --generate-hashes --only-binary :all: \
+    $target "$@" requirements.in -o requirements.txt
+
+if diff -u requirements.txt.old requirements.txt; then
+    if ! $recreate; then echo "No changes."; rm requirements.txt.old; exit 0; fi
+    echo "No version changes."
+fi
+if $recreate; then echo "tools/ will be rebuilt with uv-managed Python $PYTHON."; fi
+printf 'Proceed? [y/N] '
+read -r answer
+case "$answer" in
+    y|Y|yes) ;;
+    *) mv requirements.txt.old requirements.txt; echo "Cancelled."; exit 1 ;;
+esac
+
+if $recreate; then
+    rm -rf tools
+    # uv venvs have no pip: the toolbox is only changed through this script.
+    uv venv --quiet --python "$PYTHON" --python-preference only-managed tools
+fi
+# sync makes the venv match exactly, removing packages you dropped.
+uv pip sync --python tools --require-hashes --only-binary :all: requirements.txt
+rm requirements.txt.old
