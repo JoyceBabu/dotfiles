@@ -1,0 +1,11 @@
+// srt-agent group "lang/php84": PHP 8.4. Keg-only: run it as /opt/homebrew/opt/php@8.4/bin/php.
+// Projects use it with "extends": ["lang/php84"].
+{
+  "extends": ["lib/php-common"],
+  "filesystem": {
+    "allowRead": [
+      "/opt/homebrew/Cellar/php@8.4",
+      "/opt/homebrew/Cellar/net-snmp",
+    ],
+  },
+}

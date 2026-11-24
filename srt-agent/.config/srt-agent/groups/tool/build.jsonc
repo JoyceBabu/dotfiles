@@ -1,0 +1,14 @@
+// srt-agent group "tool/build": cmake, autoconf, automake (native builds; add to rust/python projects with C code).
+// Projects use it with "extends": ["tool/build"].
+{
+  // Homebrew formulae with their runtime dependencies (brew deps --installed).
+  "filesystem": {
+    "allowRead": [
+      "/opt/homebrew/Cellar/autoconf",
+      "/opt/homebrew/Cellar/automake",
+      "/opt/homebrew/Cellar/cmake",
+      "/opt/homebrew/Cellar/libtool",
+      "/opt/homebrew/Cellar/m4",
+    ],
+  },
+}

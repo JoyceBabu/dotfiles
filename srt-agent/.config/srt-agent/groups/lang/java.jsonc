@@ -1,0 +1,45 @@
+// srt-agent group "lang/java": OpenJDK and Gradle.
+// Projects use it with "extends": ["lang/java"].
+{
+  // Homebrew formulae with their runtime dependencies (brew deps --installed).
+  "filesystem": {
+    "allowRead": [
+      "/opt/homebrew/Cellar/brotli",
+      "/opt/homebrew/Cellar/cairo",
+      "/opt/homebrew/Cellar/fontconfig",
+      "/opt/homebrew/Cellar/freetype",
+      "/opt/homebrew/Cellar/gettext",
+      "/opt/homebrew/Cellar/giflib",
+      "/opt/homebrew/Cellar/glib",
+      "/opt/homebrew/Cellar/gradle",
+      "/opt/homebrew/Cellar/gradle-completion",
+      "/opt/homebrew/Cellar/graphite2",
+      "/opt/homebrew/Cellar/harfbuzz",
+      "/opt/homebrew/Cellar/icu4c@79",
+      "/opt/homebrew/Cellar/jpeg-turbo",
+      "/opt/homebrew/Cellar/json-c",
+      "/opt/homebrew/Cellar/libpng",
+      "/opt/homebrew/Cellar/libtiff",
+      "/opt/homebrew/Cellar/libunistring",
+      "/opt/homebrew/Cellar/libx11",
+      "/opt/homebrew/Cellar/libxau",
+      "/opt/homebrew/Cellar/libxcb",
+      "/opt/homebrew/Cellar/libxdmcp",
+      "/opt/homebrew/Cellar/libxext",
+      "/opt/homebrew/Cellar/libxrender",
+      "/opt/homebrew/Cellar/little-cms2",
+      "/opt/homebrew/Cellar/lz4",
+      "/opt/homebrew/Cellar/lzo",
+      "/opt/homebrew/Cellar/openjdk",
+      "/opt/homebrew/Cellar/pcre2",
+      "/opt/homebrew/Cellar/pixman",
+      "/opt/homebrew/Cellar/webp",
+      "/opt/homebrew/Cellar/xorgproto",
+      "/opt/homebrew/Cellar/xz",
+      "/opt/homebrew/Cellar/zstd",
+    ],
+  },
+  "network": {
+    "allowedDomains": ["services.gradle.org", "plugins.gradle.org", "repo.maven.apache.org", "repo1.maven.org"],
+  },
+}

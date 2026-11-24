@@ -1,0 +1,11 @@
+// srt-agent group "lang/php82": PHP 8.2. Keg-only: run it as /opt/homebrew/opt/php@8.2/bin/php.
+// Projects use it with "extends": ["lang/php82"].
+{
+  "extends": ["lib/php-common"],
+  "filesystem": {
+    "allowRead": [
+      "/opt/homebrew/Cellar/php@8.2",
+      "/opt/homebrew/Cellar/aspell",
+    ],
+  },
+}

@@ -1,0 +1,10 @@
+// srt-agent group "lang/rust": Rust via rustup in ~/.rustup.
+// Projects use it with "extends": ["lang/rust"].
+{
+  "filesystem": {"allowRead": ["~/.rustup"]},
+  "network": {
+    "allowedDomains": ["crates.io", "index.crates.io", "static.crates.io", "docs.rs"],
+  },
+  "path": ["~/.cargo/bin"],
+  "setEnv": {"RUSTUP_HOME": "~/.rustup"},
+}

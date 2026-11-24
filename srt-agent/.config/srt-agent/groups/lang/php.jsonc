@@ -1,0 +1,11 @@
+// srt-agent group "lang/php": the current Homebrew PHP (plain "php") with Composer.
+// Projects use it with "extends": ["lang/php"].
+{
+  "extends": ["lib/php-common", "tool/composer"],
+  "filesystem": {
+    "allowRead": [
+      "/opt/homebrew/Cellar/php",
+      "/opt/homebrew/Cellar/net-snmp",
+    ],
+  },
+}

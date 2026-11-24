@@ -1,0 +1,13 @@
+// srt-agent group "lang/node": node, npm, npx and yarn for JavaScript/TypeScript (ESM or CommonJS).
+// Projects use it with "extends": ["lang/node"].
+{
+  "extends": ["lib/node"],
+  "filesystem": {
+    "allowRead": [
+      "/opt/homebrew/Cellar/yarn",
+    ],
+  },
+  "network": {
+    "allowedDomains": ["registry.npmjs.org", "registry.yarnpkg.com"],
+  },
+}

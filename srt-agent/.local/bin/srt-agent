@@ -1,9 +1,50 @@
 #!/usr/bin/python3 -I
-"""Run coding agents in srt with a persistent, project-local home.
+"""Run coding agents in srt with persistent, per-project, per-agent homes.
+
+Configuration (JSON with // and /* */ comments and trailing commas):
+    ~/.config/srt-agent/config.jsonc   Global (or SRT_AGENT_SETTINGS / --settings)
+    <project>/.srt-agent.jsonc         Per project; agents cannot change it
+Every file is flat: srt's two lists, "network" and "filesystem", sit next
+to the launcher's own keys. Only these srt lists are forwarded, and only
+the listed names inside them (network: allowedDomains, deniedDomains,
+allowUnixSockets, allowMachLookup; filesystem: allowRead, denyRead,
+allowWrite, denyWrite). Any other key, at any level, is refused.
+    global:  network, filesystem, crossSessionMessaging, passEnv, agents,
+             autoVenv, toolsVenv, path, setEnv, groups, agentHome, baseSettings
+    group:   network, filesystem, remove, path, setEnv
+    agent:   network, filesystem, passEnv, setEnv, binary, homeEnv
+    project: network, filesystem, remove, extends, path, setEnv, agentHome
+srt-agent does not read ~/.srt-settings.json unless you import it
+explicitly: "baseSettings": "~/.srt-settings.json" in the global config. Imported network/filesystem lists become inherited defaults
+for every agent (merged first; a project's approved "remove" can drop them);
+the file must be strict JSON with srt's list settings and switches only.
+Its switches (allowAppleEvents, enableWeakerNestedSandbox,
+enableWeakerNetworkIsolation, network.allowLocalBinding,
+network.allowAllUnixSockets) are the first layer: the global config,
+groups and the project may change them, and turning one on is asked
+about. allowPty may appear only as true. Any other key is refused, never
+ignored. Approval binds its parsed content; it is shown in
+the approval diff and write-protected. Off by default. These are inherited
+DEFAULTS, not a floor: an approved project "remove" can drop any imported
+entry, deny rules included. Each launch passes
+srt one complete generated policy with --settings. --check verifies
+this: if ~/.srt-settings.json allows a domain the generated policy does
+not, the sandbox proxy must refuse it (the file is read only for that test).
+A denyRead that a read grant already covers (same path or inside it) is
+refused: in srt allowRead wins, so such a block would do nothing. Literal
+paths and glob blocks against literal grants are checked fully (as written
+and with symlinks resolved); a glob grant is checked against each block's
+literal part. Two globs that overlap only partly are not decided, so a block
+that passes is not proven effective. The glob model mirrors srt's syntax
+(* and ? within a folder name, ** across folders, [...] classes) but is the
+launcher's own reading of it, not srt's matcher.
+Parsing is strict after comments and trailing commas are removed:
+duplicate keys, NaN/Infinity and stray commas are errors. Approvals bind
+the parsed settings, so editing a comment does not ask again.
 
 Usage after installation:
     srt-agent project init
-    srt-agent project init --extends rust,restricted
+    srt-agent project init -e lang/rust,restricted   (-e = --extends)
     srt-agent project approve
     srt-agent project revoke
     srt-agent run claude
@@ -11,7 +52,7 @@ Usage after installation:
     srt-agent run pi
     srt-agent run dsh                      (alias: deepseek)
     srt-agent run dsh -- --profile headless "run the tests"
-    srt-agent run --allow-local-binding dsh -- web
+    srt-agent run -l dsh -- web            (-l = --allow-local-binding)
     claude [Launcher options...] -- [Claude arguments...]
     codex [Launcher options...] -- [Codex arguments...]
     claude --resume [SESSION_ID]
@@ -41,45 +82,107 @@ Aliases (use the literal installed path, not $HOME):
     alias dsh='/Users/joyce/.local/bin/srt-agent run dsh'
 
 Built-in agents (binary, private config location, extra network domains):
-    claude  claude  CLAUDE_CONFIG_DIR=.private/home/.claude      (none)
-    codex   codex   CODEX_HOME=.private/home/.codex              OpenAI domains
-    pi      pi      PI_CODING_AGENT_DIR=.private/home/.pi/agent  (none: provider-specific)
-    dsh     dsh     DSH_HOME=.private/home/.dsh                  api.deepseek.com
-Every agent gets the same shared project HOME, so all agents' config
-variables are set for every launch. Other agents can be defined, or the
-built-ins extended, in the global settings (covered by approval):
-    "srtAgent": {
-      "passEnv": ["MY_SETTING"],
-      "agents": {
-        "pi":    {"network": {"allowedDomains": ["api.anthropic.com"]}, "passEnv": ["ANTHROPIC_API_KEY"]},
-        "codex": {"filesystem": {"allowRead": ["/opt/homebrew/Caskroom/codex"]}},
-        "my-agent": {"binary": "my-agent", "homeEnv": {"MY_AGENT_HOME": ".my-agent"},
-                     "network": {"allowedDomains": ["api.example.com"]}, "passEnv": ["EXAMPLE_API_KEY"],
-                     "setEnv": {"MY_AGENT_TELEMETRY": "0"}}
-      }
+    claude  claude  CLAUDE_CONFIG_DIR=<agent home>/.claude       (none)
+    codex   codex   CODEX_HOME=<agent home>/.codex               OpenAI domains
+    pi      pi      PI_CODING_AGENT_DIR=<agent home>/.pi/agent   (none: provider-specific)
+    dsh     dsh     DSH_HOME=<agent home>/.dsh                   api.deepseek.com
+Every agent's config variables are set for every launch, all inside the
+running agent's own home. Other agents can be defined, or the built-ins
+extended, in the global config (covered by approval):
+    "passEnv": ["MY_SETTING"],
+    "agents": {
+      "pi":    {"network": {"allowedDomains": ["api.anthropic.com"]}, "passEnv": ["ANTHROPIC_API_KEY"]},
+      "codex": {"filesystem": {"allowRead": ["/opt/homebrew/Caskroom/codex"]}},
+      "my-agent": {"binary": "my-agent", "homeEnv": {"MY_AGENT_HOME": ".my-agent"},
+                   "network": {"allowedDomains": ["api.example.com"]}, "passEnv": ["EXAMPLE_API_KEY"],
+                   "setEnv": {"MY_AGENT_TELEMETRY": "0"}}
     }
 "path" appends host tool folders to the agent PATH (readable, write-denied)
 and "setEnv" sets variables (a leading ~/ means your account home). Both go
-in the global srtAgent for every project, or in a project override's own
-"srtAgent" section (only these two keys) for that project alone; setEnv
+in the global config for every project, or in a project file for that
+project alone; setEnv
 precedence is global, then project, then the agent's. Rust via rustup, per
-project (.srt-settings.json in the project):
+project (.srt-agent.jsonc in the project):
     "filesystem": {"allowRead": [".", "~/.rustup"], "allowWrite": ["."]},
-    "srtAgent": {"path": ["~/.cargo/bin"], "setEnv": {"RUSTUP_HOME": "~/.rustup"}}
+    "path": ["~/.cargo/bin"], "setEnv": {"RUSTUP_HOME": "~/.rustup"}
 Groups. Reusable sets defined once in the global settings and pulled into
 a project with "extends"; groups merge in the order listed and the
 project's own entries come last (lists add up, setEnv: later wins).
 Groups take the project-override keys plus network.allowedDomains, and
 "remove" revokes exact global entries (domains included):
-    global:  "srtAgent": {"groups": {
+    global:  "groups": {
                "rust": {"filesystem": {"allowRead": ["~/.rustup"]},
                         "network": {"allowedDomains": ["crates.io", "index.crates.io", "static.crates.io"]},
-                        "srtAgent": {"path": ["~/.cargo/bin"], "setEnv": {"RUSTUP_HOME": "~/.rustup"}}},
-               "restricted": {"remove": {"network": {"allowedDomains": ["github.com"]}}}}}
+                        "path": ["~/.cargo/bin"], "setEnv": {"RUSTUP_HOME": "~/.rustup"}},
+               "restricted": {"remove": {"network": {"allowedDomains": ["github.com"]}}}}
     project: {"extends": ["rust", "restricted"],
               "filesystem": {"allowRead": ["."], "allowWrite": ["."]}}
-Changing a group changes the global settings, so every project using it
-asks for approval again.
+Groups can also live in their own files, one per group, next to the
+global config: ~/.config/srt-agent/groups/<name>.jsonc holds exactly what
+a group holds (network, filesystem, remove, path, setEnv); the file name
+is the group name. Hidden files and names not ending in .jsonc are
+skipped; an invalid name is refused, as is a group defined both inline
+and as a file. Symlinked files (stow) are followed. The folder and every
+group file's target are write-denied to agents.
+Group names may carry one namespace folder: groups/lang/php.jsonc is
+"lang/php", groups/tool/rg.jsonc is "tool/rg".
+Generating a group for programs:
+    srt-agent group create --tool rg              -> groups/tool/rg.jsonc
+    srt-agent group create dev --tool rg --tool fd
+    srt-agent group update tool/rg                (after brew install/upgrade)
+It grants the program's own files, its Homebrew formula and that formula's
+runtime dependencies (from Homebrew's INSTALL_RECEIPT.json records), the
+libraries it links (otool -L, following @rpath), and for scripts the
+interpreter in the shebang, recursively. Nothing is executed. Whole
+formula folders are granted, so upgrades keep working. Files a tool opens
+only while running (config, plugins) cannot be seen; the sandbox log names
+them on first use. An existing file is never replaced unless --force or
+update is used; macOS's own programs need no group.
+Template home: ~/.config/srt-agent/home/ mirrors an agent home and is
+applied at every launch: common/ for every agent, then <agent>/ (which
+wins), e.g. home/claude/.claude/CLAUDE.md, home/codex/.codex/AGENTS.md,
+home/pi/.pi/agent/AGENTS.md.
+    regular file        copied and write-protected ("managed"); rewritten
+                        every launch, so agents cannot change their own
+                        global instructions
+    <agent>/.seed/...   copied only if missing, then the agent's to change
+                        (e.g. .seed/.codex/config.toml)
+    link to a file      recreated as a link, its target readable (not
+                        writable): edits to the real file are live
+A file the launcher did not write is kept as <name>.srt-agent-backup-<time>
+before being replaced; files dropped from the template are removed if
+unchanged. .local/bin and .claude/sessions are the launcher's own. The
+template is part of the global settings: changing it asks every project
+again (linked files are live, so only the link is approved). With
+agentHome shared, two agents' templates may not both write a path.
+Agent groups: groups/agent/<agent>.jsonc (e.g. agent/pi) is applied
+automatically whenever that agent runs, in every project. It may hold
+network.allowedDomains, filesystem.allowRead, path, setEnv and extends
+(the groups it reaches are held to the same keys); the agent's entry in
+config.jsonc wins on setEnv. Like that entry, it is part of the global
+settings: changing an agent group, or a group it extends, asks every
+project again. srt-agent group create agent/pi --tool pi generates one.
+A group may itself "extends": ["other", ...]: those come first, in order,
+then the group's own entries; a group reached through several paths is
+applied once, where it first appears; cycles and unknown names are
+refused for every launch, with the chain shown.
+Switches: allowLocalBinding and allowAllUnixSockets (in network),
+allowAppleEvents, enableWeakerNestedSandbox and enableWeakerNetworkIsolation
+may be set in the imported srt file, the global config, groups and project
+files; later layers win (project last), and --allow-local-binding turns
+local binding on for one launch. allowPty may appear only as true; proxy
+ports are never accepted. Project files may also list allowedDomains and
+deniedDomains.
+Loosening prompts: before the final approval, each kind of loosening since
+the last approval gets its own question with the items listed: new
+domains, removed domain blocks, new Unix sockets, new Mach services, new
+read or write access (outside the project), removed read or write blocks,
+and switches turned on. Answering no to any of them launches nothing.
+Approval: an inline group is part of config.jsonc, so changing it asks
+every project again. A group file is bound only to the projects that
+extend it, directly or through another group: editing
+groups/php-common.jsonc re-asks only projects that reach it, and the
+approval prompt shows that file.
 A setEnv value starting with {cache} names this project's own cache folder,
 ~/Library/Caches/srt-agent/<project>-<id>, created 0700 and writable only for
 this project. It lies outside the project, where srt's built-in blocks on
@@ -104,21 +207,22 @@ SSH-agent and other host credentials are NOT inherited unless listed.
 Launcher-managed names (PATH, HOME, TMPDIR, XDG_*, proxies, DYLD_*, LD_*,
 ...) cannot be passed or set.
 
-Access to a project requires an explicit .srt-settings.json in its root.
+Access to a project requires an explicit .srt-agent.jsonc in its root.
 There is NO automatic current-directory allowance. project init explicitly creates:
     {"filesystem": {"allowRead": ["."], "allowWrite": ["."]}}
 Relative override paths anchor at that project root, even from a subdirectory.
 The project root is the nearest ancestor containing .git (found without
 running git), otherwise the current directory.
 Without an override the launcher refuses to start and creates no storage.
-The override accepts filesystem.allowRead, allowWrite, denyRead and denyWrite, plus
-network.allowUnixSockets and network.allowMachLookup. Read paths and socket
+The override accepts filesystem.allowRead, allowWrite, denyRead and denyWrite,
+network.allowedDomains, deniedDomains, allowUnixSockets and allowMachLookup,
+and the switches listed above. Read paths and socket
 paths may be external. ~/ is expanded to the REAL account home before HOME
 changes. Write grants stay confined to this project. Denials may be external.
 Root reads and wildcard Mach
 names are rejected. Whole-home reads and starting from home require the
 per-launch --allow-home flag plus the ordinary project approval. A home
-project uses .srt-project.json to keep the global .srt-settings.json separate.
+project also uses .srt-agent.jsonc; the global config lives elsewhere.
 A non-Git folder can also opt in. /root and the launcher itself are always
 read/write-denied, regardless of project grants or --allow-home.
 The project's .git/config, .git/hooks, a .git gitlink file, .envrc, .env
@@ -126,7 +230,7 @@ and .vscode are always write-denied: host-side Git, direnv, dotenv loaders
 and VS Code (tasks, launch configs, settings that name executables) would
 otherwise run commands planted there. Edit those files on the host.
 Every directory on PATH, both your host PATH and the agent's own PATH
-(including .private/home/.local/bin), is write-denied too, so the agent can
+(including <agent home>/.local/bin), is write-denied too, so the agent can
 never plant a command that a later lookup runs. Relative or empty host
 PATH entries are resolved against the project; one that names the project
 root or an ancestor is refused, because it would deny every project write.
@@ -136,7 +240,7 @@ poetry shell, ...) is carried into the sandbox: VIRTUAL_ENV (and
 VIRTUAL_ENV_PROMPT) are set, its bin comes first on the agent PATH, and
 read access is granted to the venv and to the base interpreter named by
 pyvenv.cfg and bin/python (never the home directory or an ancestor).
-With --auto-venv, or global "srtAgent": {"autoVenv": true}, a launch with
+With --auto-venv, or global "autoVenv": true, a launch with
 no VIRTUAL_ENV uses the project's own .venv (a real directory, not a
 symlink). --no-auto-venv turns that off for one run; --no-venv ignores
 every venv. Each venv's grants need interactive approval once; approved
@@ -145,7 +249,7 @@ pyvenv.cfg are write-denied (bin is on PATH), so install packages that add
 commands on the host. A venv outside the project is read-only to the
 agent. Conda (CONDA_PREFIX) is not detected.
 
-Shared tools. Global "srtAgent": {"toolsVenv": "~/.local/share/srt-agent/tools"}
+Shared tools. Global "toolsVenv": "~/.local/share/srt-agent/tools"
 names one host-maintained venv (e.g. openpyxl, pandas) for every project:
     /usr/bin/python3 -m venv ~/.local/share/srt-agent/tools
     ~/.local/share/srt-agent/tools/bin/pip install openpyxl pandas
@@ -167,17 +271,18 @@ Local listeners are disabled unless --allow-local-binding is supplied for
 this invocation before the -- separator. It permits listeners and loopback,
 which also reaches every host service listening on localhost; use it only
 for logins or a web UI such as dsh web. It does not persist.
-Global "srtAgent": {"crossSessionMessaging": "project"} selects the default
+Global "crossSessionMessaging": "project" selects the default
 communication scope: off (default), project, or global. true/false remain
 aliases for project/off. --cross-session-messaging SCOPE overrides it for
 one run. --allow-cross-session-messaging means project, and
 --no-cross-session-messaging means off.
-Project scope uses .private/tmp/claude/run/cc-socks; global scope shares
+Project scope uses Claude's own <agent tmp>/run/cc-socks; global scope shares
 only inboxes and discovery/auth records under the actual account's
 ~/.local/state/srt-agent-messaging. Global scope lets sessions in different
 projects message each other, which weakens per-project isolation.
 Credentials and other config stay in
-the project. Each session gets its own socket in the selected directory.
+Claude's own agent home. Messaging is Claude-only: other agents never get
+a channel to Claude sessions. Each session gets its own socket in the selected directory.
 An explicit --messaging-socket-path uses the short temp alias and a unique filename.
 The launcher creates the real leaf directory before sandboxing, avoiding
 Claude's default ancestor-walking setup through the temp symlink. It permits
@@ -190,40 +295,64 @@ Claude's sessions directory switches between a preserved project registry
 and the global registry. Switching registry scopes refuses live sessions
 in the same project; exit them before switching. Host-side scope leases
 are protected alongside approvals; stale leases are pruned on later runs.
-The srtAgent object belongs to this launcher and is removed from generated
-SRT settings. Approvals cover the global srtAgent object as part of the source file.
+Launcher keys never reach the generated srt policy. Approvals cover them
+as part of the config file they are in.
 
 Interactive launches run the agent on a fresh pseudo-terminal in a new
 session (inside the sandbox). The agent cannot use TIOCSTI on your real
 terminal to type commands into your shell after it exits. Job-control
 suspend (Ctrl-Z) is resumed automatically. --no-pty-isolation disables it.
 
-Each opted-in project gets:
-    .private/home/               Shared HOME for all agents
-    .private/home/.claude/       CLAUDE_CONFIG_DIR
-    .private/home/.codex/        CODEX_HOME
-    .private/home/.pi/agent/     PI_CODING_AGENT_DIR
-    .private/home/.dsh/          DSH_HOME
-    .private/tmp/<agent>/        Agent temporary files
-Generated policies live outside the project, in the protected
+Agent storage lives outside the project, one folder per project:
+    ~/.local/share/srt-agent/projects/<name>-<id>/
+        project.json             Identity record (launcher-owned)
+        agents/<agent>/home/     That agent's HOME: its credentials, config,
+                                 CLAUDE_CONFIG_DIR/CODEX_HOME/XDG_* dirs
+        agents/<agent>/tmp/      That agent's temporary files
+        srt-tmp/<agent>/         srt's own host-side temp (agents: no access)
+The identity record is a consistency check against reusing another
+project's folder, not proof that the folder's contents are trustworthy.
+<id> is 96 bits of SHA-256 of the resolved project path; renaming or moving
+a project starts its agents fresh. Each agent may read and write only its
+own home and tmp: not its agents/<agent> folder itself, not the identity
+record, not other agents' folders, not other projects. Read grants cannot
+be denied back once allowed, so any grant overlapping the storage or cache
+roots is refused (except whole-home access with --allow-home, which
+exposes every agent's storage and weakens cross-agent and cross-project
+confidentiality). Delete a
+retired project's folders yourself (storage and ~/Library/Caches/srt-agent).
+"agentHome": "isolated" (default) or "shared", globally or in a project file
+(approved like the rest), chooses whether this project's agents share one HOME
+(<storage>/shared/home) or keep separate ones. Shared mode is mutual
+trust: each agent can read the other's credentials AND change its
+configuration (settings, hooks, instructions, Claude's sessions registry),
+influencing the other's future sessions. Use it only for agents you trust
+together. --show reports the effective mode. Temp folders, srt's temp and launcher-owned files stay separate;
+other projects stay isolated. The two modes use different folders, so
+switching never merges state: the other mode's homes are kept unchanged.
+A nested agent (codex started inside a Claude session) uses config dirs
+inside the CALLING agent's home, so it signs in separately from launching
+that agent directly; this is deliberate.
+Separate homes keep credentials apart, but agents of one project still
+share its files and its {cache}: they are not isolated from each other's
+work. The macOS Keychain is not isolated by HOME either.
+Generated policies live in the protected
 ~/.local/state/srt-agent/policies/<project-hash>/<agent>-*.json.
 
-Merges network and filesystem policy from SRT_AGENT_SETTINGS or
-~/.srt-settings.json with the explicit project override, private storage,
-agent executable and mandatory protections. System read permissions come
-from the global JSON. Global ~/ paths refer to the REAL account home;
+Merges network and filesystem policy from the global config (SRT_AGENT_SETTINGS
+or ~/.config/srt-agent/config.jsonc) with the explicit project override,
+agent storage, agent executable and mandatory protections. System read
+permissions come from the global config. Global ~/ paths refer to the REAL account home;
 external global write exceptions are preserved. Global current-directory
 grants are rejected; put them in the project override. Global allow globs
 are expanded to concrete paths at launch and included in approval; deny
-globs remain patterns. Does not modify the base settings, install
+globs remain patterns. Does not modify the global config, install
 itself, or edit shell profiles. Project overrides are created only when
 project init is explicitly requested, and existing overrides are never replaced.
 Generated policies are never reused as inputs. Their directory, the source
 settings, and the launcher's lexical and resolved paths are write-denied.
 Read denies include / and the absolute account home. Never put a literal ~
-there: the agent runs with HOME changed to the project's .private/home directory.
-Ignore .private in Git during project setup; the launcher does not edit
-Git ignore files.
+there: the agent runs with HOME changed to its private agent home.
 The optional project remove object mirrors filesystem and network list names:
     {"filesystem": {"allowRead": ["."], "allowWrite": ["."]},
      "remove": {"filesystem": {"allowRead": ["~/.claude"]},
@@ -240,11 +369,15 @@ is not isolated by HOME.
 
 srt itself runs with your real HOME and a sanitized host PATH. The private
 HOME, PATH and other agent variables are applied only inside the sandbox,
-so nothing the agent writes into .private is ever executed by srt.
-Agent temp variables use the real .private/tmp path, without a symlink.
-Short, project-and-agent-specific /tmp symlinks point INTO .private/tmp for
-srt's host-side sockets and XDG_RUNTIME_DIR, avoiding macOS socket path
-limits. All temporary contents live in the project. No automatic cleanup.
+so nothing the agent writes into its storage is ever executed by srt.
+Host-side steps inside agent-writable folders (wrapper install, Claude's
+sessions link) use no-follow descriptor walks, so planted symlinks are refused.
+Agent temp variables use the real agent tmp path, without a symlink.
+A short, project-and-agent-specific /tmp symlink points INTO it for
+XDG_RUNTIME_DIR; srt itself gets a separate alias to its own launcher-owned
+temp folder, so the unsandboxed srt never uses a folder an agent could have
+seeded. Both avoid macOS socket path limits; a stale alias of your own is
+retargeted. No automatic cleanup.
 
 Uses /usr/bin/python3 in isolated mode (3.9+) to avoid PATH or project Python
 module shadowing. Requires macOS, srt, and installed agent binaries.
@@ -274,6 +407,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 
 
 OPENAI_DOMAINS = [
@@ -304,7 +438,7 @@ AGENTS = {
         "prependArgs": ["--no-daemon"],
     },
     # pi (pi.dev) has no sandbox of its own. Its provider is user-selected,
-    # so no API domain is assumed: add one under srtAgent.agents.pi.network.allowedDomains.
+    # so no API domain is assumed: add one under agents.pi.network.allowedDomains.
     "pi": {
         "binary": "pi",
         "homeEnv": {"PI_CODING_AGENT_DIR": ".pi/agent"},
@@ -347,13 +481,18 @@ PROXY_ENV = re.compile(r"(?i)(http|https|all|ftp|grpc|no|docker_http|docker_http
 # Unix sockets and services that act with your full host privileges.
 RISKY_SOCKET_HINTS = ("docker", "podman", "colima", "orbstack", "lima", "ssh", "gpg",
                       "1password", "agent.sock", "launchd")
-PROJECT_SETTINGS = ".srt-settings.json"
+PROJECT_SETTINGS = ".srt-agent.jsonc"
+# Older names: refused with rename instructions, never read.
+GLOBAL_SETTINGS = Path(".config/srt-agent/config.jsonc")  # relative to the account home
 TRUST_FORMAT = 5
 REMOVABLE_LISTS = {
     "filesystem": ("allowRead", "allowWrite", "denyRead", "denyWrite"),
-    "network": ("allowedDomains", "allowUnixSockets", "allowMachLookup"),
+    "network": ("allowedDomains", "deniedDomains", "allowUnixSockets", "allowMachLookup"),
 }
-GROUP_NAME = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
+GROUP_SEGMENT = r"[a-z0-9][a-z0-9-]{0,63}"
+# A group name may carry one namespace, e.g. "lang/php" or "tool/rg"; the
+# file is then groups/lang/php.jsonc.
+GROUP_NAME = re.compile(GROUP_SEGMENT + "(/" + GROUP_SEGMENT + ")?")
 EXEC_CODE = r'''
 import json, os, sys
 from urllib.parse import urlsplit, urlunsplit
@@ -483,7 +622,10 @@ messaging_directory = sys.argv[6]
 messaging_registry = sys.argv[7]
 project = pathlib.Path(sys.argv[8])
 path_dirs = [pathlib.Path(p) for p in json.loads(sys.argv[9])]
+storage_info = json.loads(sys.argv[10])
+srt_probe_domain = sys.argv[11] if len(sys.argv) > 11 else ""
 failures = []
+warnings = []
 for path in ("/etc/hosts", "/private/etc/hosts"):
     try:
         pathlib.Path(path).read_bytes()
@@ -645,6 +787,124 @@ if venv:
         failures.append("virtualenv python")
     venv_config = pathlib.Path(venv) / "pyvenv.cfg"
     denied("writing the virtualenv pyvenv.cfg", lambda: os.open(venv_config, os.O_WRONLY), os.close)
+# srt must use only the generated policy: a domain allowed solely in srt's
+# own ~/.srt-settings.json must be refused by the sandbox proxy.
+if srt_probe_domain and proxy:
+    import base64
+    from urllib.parse import unquote
+    endpoint = urlsplit(proxy)
+    request = "CONNECT " + srt_probe_domain + ":443 HTTP/1.1\r\nHost: " + srt_probe_domain + ":443\r\n"
+    if endpoint.username:
+        token = base64.b64encode((unquote(endpoint.username) + ":" + unquote(endpoint.password or "")).encode()).decode()
+        request += "Proxy-Authorization: Basic " + token + "\r\n"
+    # Only an explicit allowlist refusal from srt's proxy counts as PASS.
+    # An unreachable proxy, a timeout or any other answer proves nothing.
+    try:
+        with socket.create_connection((endpoint.hostname, endpoint.port), timeout=10) as conn:
+            conn.sendall((request + "\r\n").encode())
+            head = b""
+            # A refusal is short and the proxy closes after it; an accepted
+            # tunnel stays open, so stop once headers have arrived and the
+            # line goes quiet.
+            while len(head) < 8192:
+                try:
+                    chunk = conn.recv(1024)
+                except socket.timeout:
+                    if b"\r\n\r\n" in head:
+                        break
+                    raise
+                if not chunk:
+                    break
+                head += chunk
+                if b"\r\n\r\n" in head:
+                    conn.settimeout(2)
+        header_block, _, body = head.partition(b"\r\n\r\n")
+        lines = header_block.decode("latin-1", "replace").split("\r\n")
+        body = body.decode("latin-1", "replace").lower()
+        status, headers = lines[0].strip(), [line.lower() for line in lines[1:]]
+        code = status.split(" ")[1] if len(status.split(" ")) > 1 else ""
+        if code == "200":
+            print("FAIL: srt allowed", srt_probe_domain, "which only ~/.srt-settings.json allows: srt merges that file")
+            failures.append("srt merges ~/.srt-settings.json")
+        elif code == "403" and (any(h.startswith("x-proxy-error:") and "blocked" in h for h in headers)
+                                or "blocked by network allowlist" in body):
+            print("PASS: srt uses only the generated policy (" + srt_probe_domain + " refused by the allowlist)")
+        else:
+            print("INCONCLUSIVE: srt independence:", srt_probe_domain, "got", repr(status or "no answer"),
+                  "instead of the proxy's allowlist refusal")
+            warnings.append("srt independence check inconclusive (unexpected proxy answer)")
+    except OSError as error:
+        print("INCONCLUSIVE: srt independence: could not query the sandbox proxy (" + str(error) + ")")
+        warnings.append("srt independence check inconclusive (proxy unreachable)")
+elif srt_probe_domain:
+    print("INCONCLUSIVE: srt independence: no sandbox proxy in the environment")
+    warnings.append("srt independence check inconclusive (no proxy)")
+else:
+    print("SKIP: srt independence (no domain allowed only in ~/.srt-settings.json to probe; add one there to test)")
+# Agent storage: launcher-owned parts, other agents and other projects.
+identity = pathlib.Path(storage_info["identity"])
+host_temp = pathlib.Path(storage_info["host_temp"])
+denied("creating a file in srt's host-side temp folder",
+       lambda: os.open(host_temp / ("check-" + os.urandom(4).hex()), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), os.close)
+denied("listing srt's host-side temp folder", lambda: os.listdir(host_temp))
+shared_home = storage_info.get("shared_home")
+if shared_home and os.path.isdir(shared_home):
+    denied("reading the shared agent home (this project uses isolated homes)", lambda: os.listdir(shared_home))
+denied("reading the agent storage identity record", lambda: open(identity, "rb").read())
+denied("writing the agent storage identity record", lambda: os.open(identity, os.O_WRONLY), os.close)
+home = pathlib.Path(os.environ["HOME"])
+moved_home = home.with_name(home.name + ".moved-check")
+denied("replacing this agent's home folder", lambda: os.rename(home, moved_home),
+       lambda _: os.rename(moved_home, home))
+# Existence comes from the launcher (host side): inside the sandbox a
+# denied lookup and a missing folder can look alike.
+for label, folder in (("other projects' agent storage", storage_info["storage_base"]),
+                      ("other projects' caches", storage_info["cache_base"])):
+    if folder:
+        denied("listing " + label, lambda folder=folder: os.listdir(folder))
+    else:
+        print("SKIP: listing " + label + " (not created yet)")
+for item in storage_info["siblings"]:
+    sibling, exists = pathlib.Path(item["path"]), item["exists"]
+    probe = sibling / ("check-" + os.urandom(4).hex())
+    if exists:
+        denied("reading agent " + sibling.name + "'s storage", lambda sibling=sibling: os.listdir(sibling))
+        denied("writing into agent " + sibling.name + "'s storage",
+               lambda probe=probe: os.open(probe, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600),
+               lambda fd, probe=probe: (os.close(fd), os.unlink(probe)))
+    else:
+        denied("creating agent " + sibling.name + "'s storage", lambda sibling=sibling: os.mkdir(sibling),
+               lambda _, sibling=sibling: os.rmdir(sibling))
+# srt compatibility, not a security property: srt's built-in blocks on
+# .git/hooks, .vscode and shell rc files have covered only the project.
+# Tests that create repositories in TMPDIR rely on that.
+compat = pathlib.Path(tempfile.mkdtemp(prefix="srt-compat-", dir=os.environ["TMPDIR"]))
+try:
+    (compat / ".git/hooks").mkdir(parents=True)
+    (compat / ".git/hooks/pre-commit").write_text("probe")
+    (compat / ".vscode").mkdir()
+    (compat / ".vscode/settings.json").write_text("{}")
+    (compat / ".bashrc").write_text("probe")
+    print("PASS: Git hooks, .vscode and .bashrc can be created in the agent temp folder (srt compatibility)")
+except OSError as error:
+    print("WARN: srt now blocks Git hooks, .vscode or .bashrc outside the project too:", error)
+    warnings.append("srt blocks Git hooks/.vscode/.bashrc in the agent temp folder: tests that create "
+                    "repositories or rc files in TMPDIR will fail")
+finally:
+    import shutil as _shutil
+    _shutil.rmtree(compat, ignore_errors=True)
+runtime = os.environ.get("XDG_RUNTIME_DIR")
+if runtime:
+    sock_path = pathlib.Path(runtime) / ("srt-check-" + os.urandom(12).hex() + ".sock")
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
+            server.bind(str(sock_path))
+        print("PASS: Unix socket path fits macOS limits (" + str(len(str(sock_path))) + " bytes)")
+    except OSError as error:
+        print("FAIL: Unix socket in XDG_RUNTIME_DIR (" + str(len(str(sock_path))) + " bytes):", error)
+        failures.append("socket path length")
+    finally:
+        sock_path.unlink(missing_ok=True)
 # The shared tools venv must run as a venv and stay read-only.
 import shutil, subprocess
 toolpy = shutil.which("toolpy")
@@ -669,11 +929,19 @@ try:
     with open("/dev/tty", "rb", buffering=0) as terminal:
         fcntl.ioctl(terminal, request, b"\x15")
     print("WARN: TIOCSTI to the launch terminal is not blocked by srt; keep pty isolation on")
+    warnings.append("TIOCSTI is not blocked by srt: keep pty isolation on")
 except OSError as error:
     if error.errno == errno.ENXIO:
         print("SKIP: no controlling terminal for the TIOCSTI test")
     else:
         print("PASS: TIOCSTI to the launch terminal is blocked")
+print()
+if failures:
+    print("SUMMARY: " + str(len(failures)) + " check(s) FAILED: " + ", ".join(failures))
+else:
+    print("SUMMARY: all security checks passed")
+for warning in warnings:
+    print("SUMMARY WARNING: " + warning)
 raise SystemExit(1 if failures else 0)
 '''
 
@@ -691,7 +959,9 @@ def home_directories():
 
 
 def project_settings_path(project):
-    return project / (".srt-project.json" if project in home_directories() else PROJECT_SETTINGS)
+    # The global config lives in ~/.config/srt-agent, so even a home-folder
+    # project no longer collides with it.
+    return project / PROJECT_SETTINGS
 
 
 def mandatory_denials():
@@ -760,6 +1030,120 @@ def approval_directory(create=False):
     return directory
 
 
+def parse_jsonc(raw, label, comments=True):
+    # JSON plus // and /* */ comments and trailing commas, nothing else.
+    # Pass 1 removes comments with a character tokenizer that tracks strings
+    # and escapes (so "https://..." is never touched), replacing each comment
+    # with the same number of newlines to keep error line numbers right.
+    # Pass 2 drops a comma only when the next non-space character outside a
+    # string closes an object or array. The result must then be strict JSON:
+    # duplicate keys, NaN/Infinity and stray characters are errors, never
+    # silently resolved.
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as error:
+        fail(label + " is not valid UTF-8: " + str(error))
+    if text.startswith("\ufeff"):
+        text = text[1:]
+    def unique_pairs(pairs):
+        obj = {}
+        for key, value in pairs:
+            if key in obj:
+                raise ValueError("duplicate key " + json.dumps(key, ensure_ascii=True))
+            obj[key] = value
+        return obj
+
+    def no_constants(name):
+        raise ValueError("non-standard number " + name)
+
+    def decode(source):
+        try:
+            return json.loads(source, object_pairs_hook=unique_pairs, parse_constant=no_constants)
+        except ValueError as error:
+            fail(label + ": " + str(error))
+
+    if not comments:  # strict JSON (srt's own files): same duplicate/NaN checks
+        return decode(text)
+
+    def where(index):
+        return label + ": line " + str(text.count("\n", 0, index) + 1)
+
+    out = []
+    i, n, string_start = 0, len(text), None
+    while i < n:
+        c = text[i]
+        if string_start is not None:
+            out.append(c)
+            if c == "\\":
+                if i + 1 >= n:
+                    fail(where(i) + ": unterminated string")
+                out.append(text[i + 1])
+                i += 2
+                continue
+            if c == '"':
+                string_start = None
+            elif c == "\n":
+                fail(where(i) + ": line break inside a string")
+            i += 1
+        elif c == '"':
+            string_start = i
+            out.append(c)
+            i += 1
+        elif text.startswith("//", i):
+            end = text.find("\n", i)
+            end = n if end < 0 else end  # keep the newline itself
+            out.append(" " * (end - i))  # same width: error columns stay exact
+            i = end
+        elif text.startswith("/*", i):
+            end = text.find("*/", i + 2)
+            if end < 0:
+                fail(where(i) + ": unterminated /* comment")
+            # Same shape: newlines kept, everything else blanked, so error
+            # lines and columns point at the real text.
+            out.append("".join(ch if ch == "\n" else " " for ch in text[i:end + 2]))
+            i = end + 2
+        elif c == "/":
+            fail(where(i) + ": unexpected '/' outside a string or comment")
+        else:
+            out.append(c)
+            i += 1
+    if string_start is not None:
+        fail(where(string_start) + ": unterminated string")
+    stripped = "".join(out)
+    result = []
+    i, n, in_string, last = 0, len(stripped), False, ""
+    while i < n:
+        c = stripped[i]
+        if in_string:
+            result.append(c)
+            if c == "\\":
+                result.append(stripped[i + 1])
+                i += 2
+                continue
+            if c == '"':
+                in_string = False
+                last = '"'
+        elif c == '"':
+            in_string = True
+            result.append(c)
+        elif c == ",":
+            j = i + 1
+            while j < n and stripped[j] in " \t\r\n":
+                j += 1
+            if j >= n or stripped[j] not in "}]" or last in ("", "[", "{", ",", ":"):
+                result.append(c)  # a separator, or a stray comma for json to reject
+                last = ","
+            else:
+                result.append(" ")  # a trailing comma after a value: blanked, keeping columns
+        else:
+            result.append(c)
+            if c not in " \t\r\n":
+                last = c
+        i += 1
+
+    return decode("".join(result))
+
+
 def project_key(project):
     return hashlib.sha256(os.fsencode(str(project))).hexdigest()
 
@@ -780,12 +1164,19 @@ def read_regular(path):
         return raw
 
 
+def settings_digest(data):
+    # Approvals bind the parsed settings, not the bytes: editing a comment or
+    # reformatting does not ask again; any change in meaning does.
+    return hashlib.sha256(json.dumps(data, sort_keys=True, ensure_ascii=True, separators=(",", ":"))
+                          .encode("utf-8")).hexdigest()
+
+
 def project_identity(project, path, raw, grants, base_policy):
     return {
         "format": TRUST_FORMAT,
         "project": str(project),
         "config_path": str(path),
-        "content_sha256": hashlib.sha256(raw).hexdigest(),
+        "content_sha256": settings_digest(parse_jsonc(raw, str(path))),
         # Include resolved targets: retargeting a symlink must require approval
         # even when the JSON bytes have not changed.
         "permissions_sha256": hashlib.sha256(
@@ -795,12 +1186,61 @@ def project_identity(project, path, raw, grants, base_policy):
     }
 
 
+def effective_switches(base_policy, grants):
+    switches = dict(base_policy.get("switches", {}))
+    switches.update(grants.get("switches", {}))
+    return switches
+
+
+LOOSENING = (
+    # (summary key, direction, question)
+    ("allowedDomains", "added", "new network domains"),
+    ("deniedDomains", "removed", "removed domain blocks"),
+    ("allowUnixSockets", "added", "new Unix sockets (host services outside the sandbox)"),
+    ("allowMachLookup", "added", "new Mach services (host services outside the sandbox)"),
+    ("allowRead", "added", "new read access"),
+    ("allowWrite", "added", "new write access"),
+    ("denyRead", "removed", "removed read blocks"),
+    ("denyWrite", "removed", "removed write blocks"),
+    ("switches", "added", "sandbox switches turned on"),
+)
+
+
+def approval_summary(base_policy, grants):
+    # What the agents end up with, by category, for comparing approvals.
+    # Agent-specific additions come from the global config and are covered
+    # by its own diff.
+    def text(entry):
+        return entry["path"] if isinstance(entry, dict) else entry
+    network = base_policy["effective_configuration"].get("network", {})
+    summary = {}
+    for key in ("allowedDomains", "deniedDomains", "allowUnixSockets", "allowMachLookup"):
+        summary[key] = sorted(set(network.get(key, []) or []) | set(grants.get(key, []) or []))
+    for key in ("allowRead", "allowWrite", "denyRead", "denyWrite"):
+        summary[key] = sorted({text(e) for e in base_policy["filesystem"].get(key, [])}
+                              | {text(e) for e in grants.get(key, [])})
+    summary["switches"] = sorted(k for k, v in effective_switches(base_policy, grants).items() if v)
+    return summary
+
+
+def loosening_changes(old, new, project=None):
+    # Access inside the project itself is the expected workspace, not a
+    # loosening worth its own question; it still shows in the full diff.
+    changes = []
+    for key, direction, question in LOOSENING:
+        before, after = set(old.get(key, [])), set(new.get(key, []))
+        items = sorted(after - before) if direction == "added" else sorted(before - after)
+        if project is not None and key in ("allowRead", "allowWrite"):
+            items = [i for i in items if not Path(i).is_relative_to(project)]
+        if items:
+            changes.append((key, question, items))
+    return changes
+
+
 def risky_ipc(base_policy, grants):
     network = base_policy["effective_configuration"].get("network", {})
     sockets = list(network.get("allowUnixSockets", []) or []) + grants["allowUnixSockets"]
     warnings = [s for s in sockets if isinstance(s, str) and any(h in s.lower() for h in RISKY_SOCKET_HINTS)]
-    if network.get("allowAllUnixSockets"):
-        warnings.append("allowAllUnixSockets")
     return warnings
 
 
@@ -861,6 +1301,24 @@ def require_approval(project, path, raw, data, grants, base_policy, allow_home=F
             for entry in risky_ipc(base_policy, grants):
                 terminal.write("WARNING: " + json.dumps(entry, ensure_ascii=True)
                                + " can usually run commands or use credentials as you, outside the sandbox.\n")
+        if not project_ok:
+            # Ask separately for each kind of loosening, against what was
+            # last approved (or, the first time, against the global baseline),
+            # so a widened permission cannot hide inside a long diff.
+            empty = {"allowUnixSockets": [], "allowMachLookup": [], "remove": {}}
+            old_summary = previous.get("summary") if isinstance(previous.get("summary"), dict) else \
+                approval_summary(base_policy, {**empty, "allowRead": [], "allowWrite": [], "denyRead": [], "denyWrite": []})
+            for key, question, items in loosening_changes(old_summary, approval_summary(base_policy, grants), project):
+                terminal.write("\nLOOSENS SECURITY: " + question + ":\n")
+                for item in items:
+                    note = (" - " + SWITCHES[item][1]) if key == "switches" else ""
+                    if key == "allowUnixSockets" and any(h in item.lower() for h in RISKY_SOCKET_HINTS):
+                        note = " - can usually run commands or use credentials as you"
+                    terminal.write("    " + json.dumps(item, ensure_ascii=True) + note + "\n")
+                terminal.write("Accept " + ("this" if len(items) == 1 else "these " + str(len(items))) + "? [y/N] ")
+                terminal.flush()
+                if terminal_input.readline().strip().lower() not in ("y", "yes"):
+                    fail("Not approved (" + question + "); nothing was launched")
         if not venv_ok:
             terminal.write("\nsrt-agent: this virtualenv is not yet approved for this project.\n")
             terminal.write("Its bin goes first on the agent PATH and these paths become readable:\n"
@@ -887,6 +1345,7 @@ def require_approval(project, path, raw, data, grants, base_policy, allow_home=F
         with os.fdopen(fd, "w") as handle:
             json.dump({"identity": identity, "configuration": data,
                        "base_configuration": base_policy["configuration"],
+                       "summary": approval_summary(base_policy, grants),
                        "virtual_envs": approved_venvs}, handle, indent=2, ensure_ascii=True)
             handle.write("\n")
         os.replace(temporary, record_path)
@@ -991,9 +1450,11 @@ def init_project(project, settings=None, extends=()):
     override["filesystem"] = {"allowRead": ["."], "allowWrite": ["."]}
     # Exclusive create refuses existing files and symlinks. No source settings,
     # shell profiles, generated policies or agent state are changed here.
+    body = json.dumps(override, indent=2)
     with path.open("x") as handle:
-        json.dump(override, handle, indent=2)
-        handle.write("\n")
+        handle.write("// srt-agent project settings (JSON with comments and trailing commas).\n"
+                     "// Agents cannot change this file; any change in meaning needs your approval.\n"
+                     + body + "\n")
     print("Created project override:", path)
     if references:
         print("Extends:", ", ".join(references))
@@ -1010,32 +1471,34 @@ def project_permissions(project, base_settings, allow_home=False):
     if base_settings is not None and path.resolve() == Path(base_settings).expanduser().resolve():
         fail("Base and project settings must be different files")
     raw = read_regular(path)
-    data = json.loads(raw)
-    if not isinstance(data, dict) or set(data) - {"filesystem", "network", "remove", "srtAgent", "extends"}:
-        fail("Project override supports filesystem, network, remove, srtAgent and extends only")
-    effective = data
+    data = parse_jsonc(raw, str(path))  # shown in the approval diff as written
+    flat = flat_layer(data, str(path), PROJECT_LAUNCHER_KEYS, ("remove", "extends"))
+    effective = flat
     group_names = []
     group_domains = []
-    if "extends" in data:
+    group_files_used = {}
+    if "extends" in flat:
         # Global groups first, in the order listed, then this file last.
-        extends = data["extends"]
+        extends = flat["extends"]
         if not isinstance(extends, list) or any(
                 not isinstance(e, str) or not GROUP_NAME.fullmatch(e) for e in extends):
-            fail('Project extends must be an array of group names like "rust"')
+            fail('Project extends must be an array of group names like "lang/rust"')
         if base_settings is None:
             fail("Project extends needs the global settings file that defines its groups")
-        groups = global_groups(project, base_settings)
+        groups, group_sources = global_groups(project, base_settings, with_sources=True)
         layers = []
-        for reference in dict.fromkeys(extends):
-            if reference not in groups:
-                fail("Unknown group " + reference + "; define it under srtAgent.groups in the global settings")
+        for reference in expand_groups(extends, groups, group_directory(project, base_settings)):
+            if reference in group_sources:
+                # Bound to THIS project's approval (via permissions) and shown
+                # in its approval diff; projects not using it are unaffected.
+                source, parsed = group_sources[reference]
+                group_files_used[reference] = source
+                data = {**data, "(group file " + source["path"] + ")": parsed}
             group = copy.deepcopy(groups[reference])
-            group_domains += [d for d in group.get("network", {}).pop("allowedDomains", []) if d not in group_domains]
+            group.pop("extends", None)
             layers.append(group)
             group_names.append(reference)
-        own = {key: value for key, value in data.items() if key != "extends"}
-        if isinstance(own.get("network"), dict) and "allowedDomains" in own["network"]:
-            fail("Project network.allowedDomains is not supported; put domains in a global group")
+        own = {key: value for key, value in flat.items() if key != "extends"}
         effective = merge_layers(layers + [own])
     if "filesystem" not in effective:
         fail("Project override (with its groups) must provide a filesystem object")
@@ -1044,10 +1507,20 @@ def project_permissions(project, base_settings, allow_home=False):
     if not isinstance(filesystem, dict) or set(filesystem) - set(allowed):
         fail("Project filesystem overrides support allowRead, allowWrite, denyRead and denyWrite only")
     permissions = {"remove": validate_removals(effective.get("remove", {}))}
-    if "extends" in data:
+    network = effective.get("network", {})
+    if not isinstance(network, dict):
+        fail("Project network must be an object")
+    for name in ("allowedDomains", "deniedDomains"):
+        if network.get(name):
+            permissions[name] = validate_domains(network[name], "Project network." + name)
+    if effective.get("switches"):
+        permissions["switches"] = dict(effective["switches"])
+    if "extends" in flat:
         # Recorded only when used, so existing approvals stay valid.
         permissions["groups"] = group_names
-        permissions["allowedDomains"] = group_domains
+        permissions.setdefault("allowedDomains", [])
+        if group_files_used:
+            permissions["group_files"] = group_files_used
     for name in allowed:
         entries = filesystem.get(name, [])
         if not isinstance(entries, list):
@@ -1078,9 +1551,9 @@ def project_permissions(project, base_settings, allow_home=False):
                     paths.append(literal(spelled))
             paths.append(literal(resolved))
         permissions[name] = unique_entries(paths)
-    network = effective.get("network", {})
-    if not isinstance(network, dict) or set(network) - {"allowUnixSockets", "allowMachLookup"}:
-        fail("Project network overrides support allowUnixSockets and allowMachLookup only")
+    if set(network) - set(REMOVABLE_LISTS["network"]):
+        fail("Project network supports " + ", ".join(REMOVABLE_LISTS["network"])
+             + ", allowLocalBinding and allowAllUnixSockets")
     for name in ("allowUnixSockets", "allowMachLookup"):
         values = network.get(name, [])
         if not isinstance(values, list) or any(not isinstance(v, str) or not v for v in values):
@@ -1105,11 +1578,12 @@ def project_permissions(project, base_settings, allow_home=False):
     if "srtAgent" not in effective:
         return path, permissions, data, raw
     launcher = effective["srtAgent"]
-    if not isinstance(launcher, dict) or set(launcher) - {"path", "setEnv"}:
-        fail("Project srtAgent supports path and setEnv only")
+    if "agentHome" in launcher:
+        # Credential access: bound to the approval like any other grant.
+        permissions["agentHome"] = validate_agent_home(launcher["agentHome"], "Project agentHome")
     permissions["launcher"] = {
-        "path": validate_path_entries(launcher.get("path", []), "Project srtAgent.path"),
-        "setEnv": validate_set_env(launcher.get("setEnv", {}), "Project srtAgent.setEnv"),
+        "path": validate_path_entries(launcher.get("path", []), "Project path"),
+        "setEnv": validate_set_env(launcher.get("setEnv", {}), "Project setEnv"),
         "resolved_path": [str(resolve_project_path(project, e)) for e in launcher.get("path", [])],
         # What the agent actually receives: ~/ is your account home, never
         # the private HOME inside the sandbox.
@@ -1217,15 +1691,15 @@ def detect_tools_venv(project, spec, filesystem):
     venv = resolve_project_path(project, spec, canonical=False)
     venv = Path(os.path.normpath(venv))
     if not (venv / "pyvenv.cfg").is_file():
-        fail("srtAgent.toolsVenv is not a virtualenv (no pyvenv.cfg): " + str(venv))
+        fail("toolsVenv is not a virtualenv (no pyvenv.cfg): " + str(venv))
     details = venv_details(project, venv, "Tools venv")
     for spelled in (venv, Path(details["resolved"])):
         if spelled.is_relative_to(project) or project.is_relative_to(spelled):
-            fail("srtAgent.toolsVenv must be outside the project so agents cannot modify it: " + str(spelled))
+            fail("toolsVenv must be outside the project so agents cannot modify it: " + str(spelled))
         for entry in filesystem.get("allowWrite", []):
             granted = Path(entry["path"] if isinstance(entry, dict) else entry)
             if spelled.is_relative_to(granted) or granted.is_relative_to(spelled):
-                fail("srtAgent.toolsVenv must stay read-only, but global allowWrite covers it: " + str(granted))
+                fail("toolsVenv must stay read-only, but global allowWrite covers it: " + str(granted))
     return details
 
 
@@ -1240,11 +1714,12 @@ OVERRIDABLE_ENV = {"RUSTUP_HOME", "CARGO_HOME", "TMPDIR"}
 CACHE_ONLY_ENV = {"TMPDIR"}
 
 
-def install_tools_wrapper(bin_dir, tools):
+def install_tools_wrapper(home, tools):
     # A symlink to a venv's python elsewhere loses the venv (Python looks for
     # pyvenv.cfg beside the invoked path), so write a tiny exec wrapper. The
-    # directory is on the agent PATH and therefore write-denied to agents.
-    fd = os.open(bin_dir, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    # directory is on the agent PATH and therefore write-denied to agents,
+    # but .local above it is not: walk without following symlinks.
+    fd = open_private_dir(home, ".local/bin")
     try:
         if tools is None:
             try:
@@ -1269,8 +1744,255 @@ def install_tools_wrapper(bin_dir, tools):
         os.close(fd)
 
 
+# Paths in an agent home that the launcher itself manages.
+TEMPLATE_RESERVED = (".local/bin", ".claude/sessions")
+TEMPLATE_FILE_LIMIT = 1024 * 1024
+
+
+def template_directory(project, settings):
+    # home/ next to the global config (~/.config/srt-agent/home), as spelled.
+    return resolve_project_path(project, str(settings), canonical=False).parent / "home"
+
+
+def scan_template(project, settings):
+    # home/common/... and home/<agent>/..., mirroring the agent home.
+    # Regular files are copied ("managed": rewritten every launch and
+    # write-protected); files under <scope>/.seed/ are copied only when
+    # missing and left writable. A link to a file outside the template is
+    # recreated as a link (live edits), its target granted read-only. Links
+    # inside the template are followed and copied. Folders reached through
+    # links, and special files, are refused.
+    root = template_directory(project, settings)
+    if not os.path.lexists(root):
+        return {}
+    if not root.is_dir():
+        fail(str(root) + " must be a folder")
+    real_root = root.resolve()
+    forbidden = [storage_parent(), approval_directory().parent]
+    scopes = {}
+    for scope_entry in sorted(root.iterdir()):
+        scope = scope_entry.name
+        if scope.startswith("."):
+            continue
+        if not scope_entry.is_dir() or scope_entry.is_symlink():
+            fail(str(scope_entry) + ": the template holds folders named common or after an agent")
+        if scope != "common" and not AGENT_NAME.match(scope):
+            fail("Invalid template folder " + str(scope_entry) + "; use common or an agent name")
+        entries = {}
+
+        def walk(directory, relative, seed):
+            for entry in sorted(os.scandir(directory), key=lambda e: e.name):
+                if entry.name == ".DS_Store":
+                    continue
+                if not relative and entry.name == ".seed" and not seed:
+                    if not entry.is_dir(follow_symlinks=False):
+                        fail(entry.path + " must be a folder")
+                    walk(entry.path, (), True)
+                    continue
+                rel = relative + (entry.name,)
+                text = "/".join(rel)
+                if any(text == r or text.startswith(r + "/") for r in TEMPLATE_RESERVED):
+                    fail(entry.path + ": " + text + " is managed by the launcher itself")
+                if entry.is_symlink():
+                    try:
+                        target = Path(entry.path).resolve(strict=True)
+                    except (FileNotFoundError, RuntimeError):
+                        fail("Template link is broken: " + entry.path)
+                    if not target.is_file():
+                        fail("Template link must point to a file: " + entry.path + " -> " + str(target))
+                    if not target.is_relative_to(real_root):
+                        if seed:
+                            fail("Seed files must be real files, not links: " + entry.path)
+                        if any(target.is_relative_to(f) or target.is_relative_to(f.resolve()) for f in forbidden):
+                            fail("Template link points into srt-agent's own storage: " + entry.path)
+                        entries[text] = {"kind": "link", "target": str(target), "source": entry.path}
+                        continue
+                    source = target
+                elif entry.is_dir(follow_symlinks=False):
+                    walk(entry.path, rel, seed)
+                    continue
+                elif entry.is_file(follow_symlinks=False):
+                    source = Path(entry.path)
+                else:
+                    fail("Template entries must be files, folders or links to files: " + entry.path)
+                if source.stat().st_size > TEMPLATE_FILE_LIMIT:
+                    fail("Template file is larger than 1 MiB: " + entry.path)
+                data = read_regular(source)
+                entries[text] = {"kind": "seed" if seed else "managed", "data": data,
+                                 "sha256": hashlib.sha256(data).hexdigest(), "source": entry.path}
+
+        walk(scope_entry, (), False)
+        scopes[scope] = entries
+    return scopes
+
+
+def template_summary(scopes):
+    # For the approval: what is bound (hashes, link targets) and what is
+    # shown (text content). Linked files are live, so only the link is bound.
+    bound, shown = {}, {}
+    for scope, entries in sorted(scopes.items()):
+        for rel, entry in sorted(entries.items()):
+            key = scope + "/" + rel
+            if entry["kind"] == "link":
+                bound[key] = "link -> " + entry["target"]
+                shown[key] = bound[key]
+                continue
+            bound[key] = entry["kind"] + " " + entry["sha256"]
+            try:
+                text = entry["data"].decode("utf-8")
+            except UnicodeDecodeError:
+                text = "<binary, " + str(len(entry["data"])) + " bytes, sha256 " + entry["sha256"] + ">"
+            shown[key] = ("(seed: copied once) " if entry["kind"] == "seed" else "") + text
+    return bound, shown
+
+
+def template_for(scopes, agent, home_mode):
+    # common first, then the agent's own folder (which wins). In a shared
+    # home, two agents' templates may not both claim a path.
+    chosen = dict(scopes.get("common", {}))
+    chosen.update(scopes.get(agent, {}))
+    if home_mode == "shared":
+        owners = {}
+        for scope, entries in scopes.items():
+            if scope == "common":
+                continue
+            for rel in entries:
+                if rel in owners:
+                    fail("With agentHome shared, the templates of " + owners[rel] + " and " + scope
+                         + " both write " + rel + "; keep it in one of them, or in common")
+                owners[rel] = scope
+    return chosen
+
+
+def apply_template(home, manifest_path, chosen):
+    # Writes into the agent home, which the agent controls: every step goes
+    # through directory descriptors opened without following links, and
+    # files are replaced by rename, so a planted link cannot redirect a
+    # write. A file the launcher did not write before is kept as a backup.
+    try:
+        manifest = json.loads(manifest_path.read_text()) if manifest_path.is_file() else {}
+    except (OSError, ValueError):
+        manifest = {}
+    notes, written = [], {}
+
+    def current_sha(fd, name):
+        try:
+            info = os.lstat(name, dir_fd=fd)
+        except FileNotFoundError:
+            return None, None
+        if stat.S_ISLNK(info.st_mode):
+            return "link", "link -> " + os.readlink(name, dir_fd=fd)
+        if stat.S_ISREG(info.st_mode):
+            handle = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=fd)
+            with os.fdopen(handle, "rb") as stream:
+                return "file", hashlib.sha256(stream.read()).hexdigest()
+        return "other", None
+
+    def make_room(fd, name, rel, kind):
+        if kind is None:
+            return
+        if kind == "other":
+            fail("Agent home has a folder or special file where the template puts " + rel)
+        recorded = manifest.get(rel)
+        _, now = current_sha(fd, name)
+        if recorded is not None and recorded == now:
+            return  # ours, unchanged: simply replaced
+        backup = name + ".srt-agent-backup-" + time.strftime("%Y%m%d-%H%M%S")
+        os.rename(name, backup, src_dir_fd=fd, dst_dir_fd=fd)
+        notes.append("kept the previous " + rel + " as " + backup)
+
+    for rel, entry in sorted(chosen.items()):
+        parent, name = os.path.split(rel)
+        if parent:
+            private_dir(home, parent)
+        fd = open_private_dir(home, parent) if parent else os.open(home, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            kind, now = current_sha(fd, name)
+            if entry["kind"] == "seed":
+                if kind is None:
+                    _write_file(fd, name, entry["data"])
+                continue
+            want = entry["sha256"] if entry["kind"] == "managed" else "link -> " + entry["target"]
+            if now == want:
+                written[rel] = want
+                continue
+            make_room(fd, name, rel, kind)
+            if entry["kind"] == "managed":
+                _write_file(fd, name, entry["data"])
+            else:
+                temporary = ".srt-agent-link-" + os.urandom(8).hex()
+                os.symlink(entry["target"], temporary, dir_fd=fd)
+                os.replace(temporary, name, src_dir_fd=fd, dst_dir_fd=fd)
+            written[rel] = want
+        finally:
+            os.close(fd)
+    # Files the template no longer lists: removed if still exactly as the
+    # launcher wrote them, otherwise left alone with a note.
+    for rel, recorded in manifest.items():
+        if rel in written:
+            continue
+        if chosen.get(rel, {}).get("kind") == "seed":
+            continue  # was managed, now a seed: the existing copy becomes the agent's
+        parent, name = os.path.split(rel)
+        try:
+            fd = open_private_dir(home, parent) if parent else os.open(home, os.O_RDONLY | os.O_DIRECTORY)
+        except (OSError, SystemExit):
+            continue
+        try:
+            _, now = current_sha(fd, name)
+            if now == recorded:
+                os.unlink(name, dir_fd=fd)
+            elif now is not None:
+                notes.append(rel + " is no longer in the template but was changed; left in place")
+        finally:
+            os.close(fd)
+    temporary = manifest_path.with_name(manifest_path.name + ".tmp")
+    temporary.write_text(json.dumps(written, indent=2, sort_keys=True))
+    os.replace(temporary, manifest_path)
+    for note in notes:
+        print("srt-agent: template: " + note, file=sys.stderr)
+    return written
+
+
+def _write_file(fd, name, data):
+    temporary = ".srt-agent-file-" + os.urandom(8).hex()
+    out = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=fd)
+    try:
+        with os.fdopen(out, "wb") as handle:
+            handle.write(data)
+        os.replace(temporary, name, src_dir_fd=fd, dst_dir_fd=fd)
+    finally:
+        try:
+            os.unlink(temporary, dir_fd=fd)
+        except FileNotFoundError:
+            pass
+
+
 def venv_mode(requested, options):
     return requested or ("auto" if options.get("autoVenv") else "env")
+
+
+def open_private_dir(root, relative):
+    # Like private_dir, but only opens: returns a descriptor for root/relative
+    # reached without following symlinks in any component below root. root
+    # itself must be a folder agents cannot replace.
+    fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        for part in Path(relative).parts:
+            try:
+                child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+            except OSError as error:
+                if error.errno in (errno.ELOOP, errno.ENOTDIR):
+                    fail("Refusing a symlink or non-directory in private storage: " + str(Path(root) / relative))
+                raise
+            os.close(fd)
+            fd = child
+            if os.fstat(fd).st_uid != os.getuid():
+                fail("Private directory is not owned by you: " + str(Path(root) / relative))
+    except BaseException:
+        os.close(fd)
+        raise
+    return fd
 
 
 def private_dir(root, relative):
@@ -1358,11 +2080,97 @@ def validate_set_env(values, label):
     return dict(values)
 
 
+GLOBAL_LAUNCHER_KEYS = ("crossSessionMessaging", "passEnv", "agents", "autoVenv", "toolsVenv", "path", "setEnv",
+                        "groups", "agentHome", "baseSettings")
+GROUP_LAUNCHER_KEYS = ("path", "setEnv")
+PROJECT_LAUNCHER_KEYS = ("path", "setEnv", "agentHome")
+# srt's on/off settings. Any layer may set them (imported srt file, global
+# config, groups, project), later layers winning; anything that loosens
+# security is named in its own approval prompt. allowPty must stay true:
+# every agent runs on its own pseudo-terminal inside the sandbox.
+SWITCHES = {
+    "allowLocalBinding": ("network", "agents may run servers listening on this Mac"),
+    "allowAllUnixSockets": ("network", "EVERY Unix socket, including Docker's (root) and agents holding your keys"),
+    "enableWeakerNestedSandbox": (None, "a weaker sandbox, meant for running inside Docker"),
+    "enableWeakerNetworkIsolation": (None, "weaker network isolation"),
+    "allowAppleEvents": (None, "agents may script other apps outside the sandbox"),
+}
+SRT_LISTS = {
+    "network": ("allowedDomains", "deniedDomains", "allowUnixSockets", "allowMachLookup"),
+    "filesystem": ("allowRead", "denyRead", "allowWrite", "denyWrite"),
+}
+
+
+def take_switches(values, section, label):
+    # Booleans only. allowPty may be written (srt files carry it) but only
+    # as true. Proxy ports and other srt internals are not accepted at all.
+    found = {}
+    for key, (where, _) in SWITCHES.items():
+        if where == section and key in values:
+            if not isinstance(values[key], bool):
+                fail(label + ": " + (key if section is None else section + "." + key) + " must be true or false")
+            found[key] = values[key]
+    if section is None and "allowPty" in values and values["allowPty"] is not True:
+        fail(label + ": allowPty must be true; agents run on their own pseudo-terminal inside the sandbox")
+    return found
+
+
+def flat_layer(data, label, launcher_keys, other_keys=()):
+    # Every config file is flat: srt's two lists (network, filesystem) next
+    # to the launcher's own keys. Internally the launcher keys are grouped
+    # under "srtAgent" so the rest of the code sees one shape. Only the
+    # named srt lists are ever forwarded to srt; any other key, at any level,
+    # is refused rather than passed through or ignored.
+    if not isinstance(data, dict):
+        fail(label + " must be a JSON object")
+    if "srtAgent" in data:
+        fail(label + ": the srtAgent wrapper is gone; move its keys (" + ", ".join(launcher_keys)
+             + ") to the top level of the same object")
+    top_switches = tuple(k for k, (section, _) in SWITCHES.items() if section is None) + ("allowPty",)
+    allowed = ("network", "filesystem") + tuple(launcher_keys) + tuple(other_keys) + top_switches
+    unknown = sorted(set(data) - set(allowed))
+    if unknown:
+        fail(label + " does not support " + ", ".join(unknown) + ". Supported: " + ", ".join(allowed))
+    internal = {key: value for key, value in data.items() if key not in launcher_keys and key not in top_switches}
+    switches = take_switches(data, None, label)
+    for section, lists in SRT_LISTS.items():
+        values = internal.get(section, {})
+        if not isinstance(values, dict):
+            fail(label + "." + section + " must be an object")
+        section_switches = tuple(k for k, (where, _) in SWITCHES.items() if where == section)
+        extra = sorted(set(values) - set(lists) - set(section_switches))
+        if extra:
+            fail(label + "." + section + " does not support " + ", ".join(extra) + ". Supported: "
+                 + ", ".join(lists + section_switches))
+        if section_switches and any(k in values for k in section_switches):
+            switches.update(take_switches(values, section, label))
+            internal[section] = {k: v for k, v in values.items() if k not in section_switches}
+    if switches:
+        internal["switches"] = switches
+    launcher = {key: data[key] for key in launcher_keys if key in data}
+    if launcher:
+        internal["srtAgent"] = launcher
+    return internal
+
+
+def flat_global(data, label):
+    internal = flat_layer(data, label, GLOBAL_LAUNCHER_KEYS)
+    groups = internal.get("srtAgent", {}).get("groups")
+    if isinstance(groups, dict):
+        internal["srtAgent"]["groups"] = {
+            name: flat_layer(group, label + ": groups." + str(name), GROUP_LAUNCHER_KEYS, ("remove", "extends"))
+            for name, group in groups.items()}
+    return internal
+
+
 def validate_group(group, label):
     # Same shape as a project override, plus network.allowedDomains: groups
     # live in the global settings, which you alone write and approve.
-    if not isinstance(group, dict) or set(group) - {"filesystem", "network", "remove", "srtAgent"}:
-        fail(label + " supports filesystem, network, remove and srtAgent only")
+    if not isinstance(group, dict) or set(group) - {"filesystem", "network", "remove", "srtAgent", "extends", "switches"}:
+        fail(label + " supports filesystem, network, remove, extends, path and setEnv only")
+    extends = group.get("extends", [])
+    if not isinstance(extends, list) or any(not isinstance(e, str) or not GROUP_NAME.fullmatch(e) for e in extends):
+        fail(label + '.extends must be an array of group names like "php-common"')
     filesystem = group.get("filesystem", {})
     if not isinstance(filesystem, dict) or set(filesystem) - set(REMOVABLE_LISTS["filesystem"]):
         fail(label + ".filesystem supports " + ", ".join(REMOVABLE_LISTS["filesystem"]) + " only")
@@ -1373,36 +2181,373 @@ def validate_group(group, label):
     if not isinstance(network, dict) or set(network) - set(REMOVABLE_LISTS["network"]):
         fail(label + ".network supports " + ", ".join(REMOVABLE_LISTS["network"]) + " only")
     validate_domains(network.get("allowedDomains", []), label + ".network.allowedDomains")
+    validate_domains(network.get("deniedDomains", []), label + ".network.deniedDomains")
     for name in ("allowUnixSockets", "allowMachLookup"):
         values = network.get(name, [])
         if not isinstance(values, list) or any(not isinstance(v, str) or not v for v in values):
             fail(label + ".network." + name + " must be an array of nonempty strings")
     validate_removals(group.get("remove", {}))
     launcher = group.get("srtAgent", {})
-    if not isinstance(launcher, dict) or set(launcher) - {"path", "setEnv"}:
-        fail(label + ".srtAgent supports path and setEnv only")
-    validate_path_entries(launcher.get("path", []), label + ".srtAgent.path")
-    validate_set_env(launcher.get("setEnv", {}), label + ".srtAgent.setEnv")
+    validate_path_entries(launcher.get("path", []), label + ".path")
+    validate_set_env(launcher.get("setEnv", {}), label + ".setEnv")
     return group
 
 
 def validate_groups(groups):
     if not isinstance(groups, dict):
-        fail("Global srtAgent.groups must be an object")
+        fail("Global groups must be an object")
     for name, group in groups.items():
         if not isinstance(name, str) or not GROUP_NAME.fullmatch(name):
-            fail("Invalid group name in srtAgent.groups: " + json.dumps(name, ensure_ascii=True))
-        validate_group(group, "srtAgent.groups." + name)
+            fail("Invalid group name in groups: " + json.dumps(name, ensure_ascii=True))
+        validate_group(group, "groups." + name)
     return groups
 
 
-def global_groups(project, settings):
-    # Read only the group definitions; load_base_policy validates the rest
-    # of the file and binds its content hash to the approval.
+SYSTEM_LIBRARY_ROOTS = ("/usr/lib/", "/System/")
+HOMEBREW_PREFIXES = (Path("/opt/homebrew"), Path("/usr/local"))
+
+
+class ToolInspection:
+    # Finds what a program needs to read: its own files, its Homebrew
+    # formula and that formula's runtime dependencies (from Homebrew's
+    # INSTALL_RECEIPT.json, the records brew deps uses), libraries it links
+    # (otool -L, following @rpath), and for scripts the interpreter named in
+    # the shebang, recursively. Nothing found is executed.
+    def __init__(self):
+        self.grants, self.formulae, self.seen, self.notes = [], {}, set(), []
+
+    def grant(self, path):
+        text = str(path)
+        if text not in self.grants:
+            self.grants.append(text)
+
+    def formula_of(self, path):
+        for prefix in HOMEBREW_PREFIXES:
+            cellar = prefix / "Cellar"
+            if path.is_relative_to(cellar) and len(path.relative_to(cellar).parts) >= 2:
+                formula, version = path.relative_to(cellar).parts[:2]
+                return prefix, formula, version
+        return None
+
+    def package_of(self, path):
+        # Programs that need the folder around them, granted as one unit:
+        # - a global npm package (npm install -g): that package's folder
+        #   under lib/node_modules, never lib/ itself;
+        # - a Composer install (composer global require, or a project's
+        #   vendor/bin): the vendor folder, which holds the autoloader. Not
+        #   its parent, where Composer keeps auth.json;
+        # - a Python virtualenv (uv tool, pipx): the whole environment,
+        #   whose interpreter and packages the script needs.
+        if (path.name.startswith("python") and path.parent.name == "bin"
+                and any(path.parent.parent.glob("lib/python3*"))):
+            return path.parent.parent  # a self-contained Python (uv, python.org): bin/ and its lib/
+        for ancestor in path.parents:
+            if (ancestor / "pyvenv.cfg").is_file():
+                return ancestor
+            if ancestor.name == "vendor" and (ancestor / "autoload.php").is_file():
+                return ancestor
+        for prefix in HOMEBREW_PREFIXES:
+            modules = prefix / "lib" / "node_modules"
+            if path.is_relative_to(modules):
+                parts = path.relative_to(modules).parts
+                depth = 2 if parts and parts[0].startswith("@") else 1
+                if len(parts) > depth:
+                    return modules.joinpath(*parts[:depth])
+        return None
+
+    def add_formula(self, prefix, formula, version=None):
+        if formula in self.formulae:
+            return
+        if version is None:
+            try:
+                version = (prefix / "opt" / formula).resolve(strict=True).name
+            except OSError:
+                self.notes.append("Homebrew dependency " + formula + " is not installed; skipped")
+                return
+        self.formulae[formula] = version
+        self.grant(prefix / "Cellar" / formula)
+        receipt = prefix / "Cellar" / formula / version / "INSTALL_RECEIPT.json"
+        try:
+            data = json.loads(read_small_text(receipt, 1024 * 1024, str(receipt)))
+        except (OSError, ValueError):
+            self.notes.append("No readable Homebrew record for " + formula + "; its dependencies come from otool only")
+            return
+        for dependency in data.get("runtime_dependencies") or []:
+            name = dependency.get("full_name") if isinstance(dependency, dict) else None
+            if isinstance(name, str) and name:
+                self.add_formula(prefix, name.split("/")[-1])
+
+    def otool(self, *args):
+        try:
+            return subprocess.run(["/usr/bin/otool", *args], capture_output=True, text=True, timeout=30,
+                                  check=False).stdout
+        except (OSError, subprocess.SubprocessError):
+            return ""
+
+    def libraries(self, path, executable):
+        rpaths, lines = [], self.otool("-l", str(path)).splitlines()
+        for index, line in enumerate(lines):
+            if line.strip() == "cmd LC_RPATH":
+                for follow in lines[index + 1:index + 4]:
+                    follow = follow.strip()
+                    if follow.startswith("path "):
+                        rpaths.append(follow[5:].rsplit(" (offset", 1)[0])
+        found = []
+        for line in self.otool("-L", str(path)).splitlines()[1:]:
+            line = line.strip()
+            if not line or line.startswith("(") or line.endswith(":"):
+                continue
+            name = line.split(" (compatibility", 1)[0].strip()
+            candidates = [name]
+            if name.startswith("@rpath/"):
+                candidates = [r + name[len("@rpath"):] for r in rpaths]
+            candidates = [c.replace("@loader_path", str(path.parent)).replace("@executable_path", str(executable.parent))
+                          for c in candidates]
+            for candidate in candidates:
+                if candidate.startswith(SYSTEM_LIBRARY_ROOTS):
+                    break  # the system's own libraries are readable globally
+                if os.path.exists(candidate):
+                    found.append(Path(candidate).resolve())
+                    break
+            else:
+                if not name.startswith(SYSTEM_LIBRARY_ROOTS):
+                    self.notes.append("Could not locate " + name + " (linked by " + str(path) + ")")
+        return found
+
+    def inspect(self, path, executable=None):
+        real = path.resolve()
+        if real in self.seen:
+            return
+        self.seen.add(real)
+        executable = executable or real
+        if str(real).startswith(("/usr/bin/", "/bin/", "/usr/sbin/", "/sbin/", "/usr/lib/", "/System/")):
+            return  # part of macOS, readable globally
+        formula = self.formula_of(real)
+        package = self.package_of(real)
+        if formula:
+            self.add_formula(*formula)
+        elif package:
+            self.grant(package)  # the whole package, with its own dependencies
+        else:
+            self.grant(real)
+        try:
+            with open(real, "rb") as handle:
+                head = handle.read(256)
+        except OSError:
+            return
+        if head.startswith(b"#!"):
+            words = head[2:].split(b"\n", 1)[0].decode("utf-8", "replace").split()
+            if words and os.path.basename(words[0]) == "env":
+                words = [w for w in words[1:] if not w.startswith("-")]
+                interpreter = shutil.which(words[0]) if words else None
+            else:
+                interpreter = words[0] if words else None
+            if interpreter:
+                self.inspect(Path(interpreter))
+            return
+        for library in self.libraries(real, executable):
+            self.inspect(library, executable)
+
+
+def find_tool(name):
+    if "/" in name:
+        path = Path(name).expanduser().absolute()
+    else:
+        found = shutil.which(name)
+        if not found:
+            fail("No program named " + name + " on PATH")
+        path = Path(found)
+    if not path.is_file() or not os.access(path, os.X_OK):
+        fail(str(path) + " is not an executable file")
+    return path
+
+
+def create_tool_group(settings, name, tools, force=False):
+    directory = group_directory(account_home(), settings)
+    if name is None:
+        if len(tools) != 1:
+            fail("Name the group when generating it for several tools, e.g. group create dev --tool rg --tool fd")
+        name = "tool/" + re.sub(r"[^a-z0-9-]", "-", os.path.basename(tools[0]).lower()).strip("-")
+    if not GROUP_NAME.fullmatch(name):
+        fail("Invalid group name " + name + '; use e.g. "tool/rg"')
+    inspection, described, extra_path = ToolInspection(), [], []
+    standard = {"/usr/bin", "/bin", "/usr/sbin", "/sbin", "/usr/local/bin"} | {str(p / "bin") for p in HOMEBREW_PREFIXES}
+    for tool in tools:
+        path = find_tool(tool)
+        if str(path.parent) not in standard and str(path.parent) not in extra_path:
+            extra_path.append(str(path.parent))
+        inspection.inspect(path)
+        formula = inspection.formula_of(path.resolve())
+        described.append(tool + ": " + str(path.resolve()) + (" (Homebrew " + formula[1] + " " + formula[2] + ")" if formula else ""))
+    if not inspection.grants:
+        fail("Nothing to grant: " + ", ".join(tools) + " " + ("is" if len(tools) == 1 else "are")
+             + " part of macOS and already readable through the global config")
+    target = directory / (name + ".jsonc")
+    if os.path.lexists(target) and not force:
+        fail(str(target) + " exists; use srt-agent group update " + name + " to regenerate it")
+    lines = ['// srt-agent group "' + name + '", generated ' + time.strftime("%Y-%m-%d") + " by:",
+             "//     srt-agent group create " + name + "".join(" --tool " + shlex.quote(t) for t in tools),
+             "// Regenerate after installing or upgrading: srt-agent group update " + name]
+    lines += ["// " + line for line in described]
+    lines += ["// Found from Homebrew records, otool -L and script interpreters. Not detectable:",
+              "// config files and plugins the tool opens only while running; the sandbox",
+              "// log names them on first use. Add them to allowRead below."]
+    lines += ["// Note: " + note for note in inspection.notes]
+    lines += ["// srt-agent:tools " + " ".join(shlex.quote(t) for t in tools), "{",
+              '  "filesystem": {', '    "allowRead": [']
+    lines += ["      " + json.dumps(grant, ensure_ascii=True) + "," for grant in inspection.grants]
+    lines += ["    ],", "  },"]
+    if extra_path:
+        lines += ["  // Not in a standard PATH folder: added so agents (and language-server",
+                  "  // plugins) find it by name. Everything in these folders becomes readable.",
+                  '  "path": [' + ", ".join(json.dumps(p, ensure_ascii=True) for p in extra_path) + "],"]
+    lines += ["}"]
+    body = "\n".join(lines) + "\n"
+    flat_layer(parse_jsonc(body.encode("utf-8"), str(target)), str(target), GROUP_LAUNCHER_KEYS, ("remove", "extends"))
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=".group-", dir=target.parent)
+    try:
+        with os.fdopen(fd, "w") as handle:
+            handle.write(body)
+        if force:
+            os.replace(temporary, target)
+        else:
+            os.link(temporary, target)  # fails if it appeared meanwhile
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+    print("Wrote " + str(target) + " (" + str(len(inspection.grants)) + " path" + ("" if len(inspection.grants) == 1 else "s") + ")")
+    for grant in inspection.grants:
+        print("  " + grant)
+    for note in inspection.notes:
+        print("  note: " + note)
+    print('Projects use it with "extends": ["' + name + '"]')
+
+
+def update_tool_group(settings, name):
+    if not GROUP_NAME.fullmatch(name):
+        fail("Invalid group name " + name)
+    target = group_directory(account_home(), settings) / (name + ".jsonc")
+    try:
+        text = read_regular(target.resolve(strict=True)).decode("utf-8")
+    except FileNotFoundError:
+        fail("No group file " + str(target))
+    for line in text.splitlines():
+        if line.startswith("// srt-agent:tools "):
+            create_tool_group(settings, name, shlex.split(line[len("// srt-agent:tools "):]), force=True)
+            return
+    fail(str(target) + " was not generated by group create (no srt-agent:tools line); edit it by hand")
+
+
+def group_protections(project, settings):
+    # Agents may neither add, edit nor retarget a group: deny writes to the
+    # folder (both spellings) and to every group file's real target.
+    directory = group_directory(project, settings)
+    paths = [directory]
+    if os.path.lexists(directory):
+        paths.append(directory.resolve())
+        for entry in directory.iterdir():
+            if entry.is_dir() and not entry.name.startswith("."):
+                paths += [entry, entry.resolve()]
+        for _, (_, source, _) in group_files(project, settings).items():
+            paths.append(Path(source["resolved_path"]))
+    return list(dict.fromkeys(paths))
+
+
+def group_directory(project, settings):
+    # groups/ next to the global config, as spelled (~/.config/srt-agent/
+    # groups), even when config.jsonc itself is a symlink into dotfiles.
+    return resolve_project_path(project, str(settings), canonical=False).parent / "groups"
+
+
+def group_files(project, settings):
+    # One group per groups/<name>.jsonc; the file name is the group name.
+    # Hidden files and anything not ending in .jsonc (editor backups) are
+    # skipped; a .jsonc whose name is not a valid group name is refused, so
+    # a typo cannot silently drop a group. Symlinks (stow) are followed.
+    # Returns {name: (internal group, source record, parsed file)}.
+    directory = group_directory(project, settings)
+    if not os.path.lexists(directory):
+        return {}
+    if not directory.is_dir():
+        fail(str(directory) + " must be a folder of <group>.jsonc files")
+    candidates = []
+    for entry in sorted(directory.iterdir()):
+        if entry.name.startswith("."):
+            continue
+        if entry.is_dir():
+            # One namespace level: groups/<namespace>/<name>.jsonc
+            if not re.fullmatch(GROUP_SEGMENT, entry.name):
+                fail("Invalid group namespace folder " + str(entry) + "; use lowercase letters, digits and -")
+            for inner in sorted(entry.iterdir()):
+                if inner.name.startswith("."):
+                    continue
+                if inner.is_dir():
+                    fail("Group namespaces are one level deep: " + str(inner))
+                if inner.name.endswith(".jsonc"):
+                    candidates.append((entry.name + "/" + inner.name[:-len(".jsonc")], inner))
+        elif entry.name.endswith(".jsonc"):
+            candidates.append((entry.name[:-len(".jsonc")], entry))
+    found = {}
+    for name, entry in candidates:
+        if not GROUP_NAME.fullmatch(name):
+            fail("Invalid group file name " + str(entry) + "; use lowercase letters, digits and -")
+        try:
+            resolved = entry.resolve(strict=True)
+        except FileNotFoundError:
+            fail("Group file is a broken link: " + str(entry))
+        label = str(entry)
+        data = parse_jsonc(read_regular(resolved), label)
+        internal = flat_layer(data, label, GROUP_LAUNCHER_KEYS, ("remove", "extends"))
+        validate_group(internal, label)
+        found[name] = (internal, {"path": str(entry), "resolved_path": str(resolved),
+                                  "content_sha256": settings_digest(data)}, data)
+    return found
+
+
+def expand_groups(references, groups, directory):
+    # Depth first: a group's own "extends" come before it, in the order
+    # listed. Each group is applied once, where it first appears, however
+    # many paths lead to it. A group that reaches itself is refused.
+    order, done = [], set()
+
+    def visit(name, chain):
+        if name in chain:
+            fail("Group cycle: " + " -> ".join(chain[chain.index(name):] + [name]))
+        if name not in groups:
+            where = (" (from " + chain[-1] + ")") if chain else ""
+            fail("Unknown group " + name + where + "; create " + str(directory / (name + ".jsonc"))
+                 + " or define it under groups in the global settings")
+        if name in done:
+            return
+        for parent in dict.fromkeys(groups[name].get("extends", [])):
+            visit(parent, chain + [name])
+        done.add(name)
+        order.append(name)
+
+    for reference in dict.fromkeys(references):
+        visit(reference, [])
+    return order
+
+
+def global_groups(project, settings, with_sources=False):
+    # Inline groups (in config.jsonc) and group files. Inline groups are
+    # part of the global file, so approval binds them for every project;
+    # group files are bound only by the projects that extend them.
     path = resolve_project_path(project, str(settings), canonical=False).resolve(strict=True)
-    data = json.loads(read_regular(path))
-    launcher = data.get("srtAgent", {}) if isinstance(data, dict) else {}
-    return validate_groups(launcher.get("groups", {}) if isinstance(launcher, dict) else {})
+    data = flat_global(parse_jsonc(read_regular(path), str(path)), str(path))
+    groups = dict(validate_groups(data.get("srtAgent", {}).get("groups", {})))
+    sources = {}
+    for name, (group, source, parsed) in group_files(project, settings).items():
+        if name in groups:
+            fail("Group " + name + " is defined both in " + str(path) + " and in " + source["path"]
+                 + "; keep one")
+        groups[name] = group
+        sources[name] = (source, parsed)
+    # Check every group's extends now (unknown names, cycles), not only when
+    # a project first reaches the broken one.
+    expand_groups(sorted(groups), groups, group_directory(project, settings))
+    return (groups, sources) if with_sources else groups
 
 
 def merge_layers(layers):
@@ -1417,16 +2562,47 @@ def merge_layers(layers):
             for name, entries in lists.items():
                 target = merged.setdefault("remove", {}).setdefault(section, {}).setdefault(name, [])
                 target.extend(e for e in entries if e not in target)
+        if layer.get("switches"):
+            merged.setdefault("switches", {}).update(layer["switches"])
         launcher = layer.get("srtAgent", {})
         if launcher:
             target = merged.setdefault("srtAgent", {})
             path = target.setdefault("path", [])
             path.extend(e for e in launcher.get("path", []) if e not in path)
             target.setdefault("setEnv", {}).update(launcher.get("setEnv", {}))
+            if "agentHome" in launcher:
+                target["agentHome"] = launcher["agentHome"]
     return merged
 
 
 CACHE_PLACEHOLDER = "{cache}"
+
+
+STORAGE_FORMAT = 1
+
+
+def project_id(project):
+    # Readable name for discoverability; the 96-bit digest of the resolved
+    # project path is the identity. Renaming or moving a project gives it a
+    # new identity (and fresh agent state) by design.
+    name = re.sub(r"[^A-Za-z0-9._-]", "_", project.name)[:40] or "project"
+    return name + "-" + hashlib.sha256(os.fsencode(str(project))).hexdigest()[:24]
+
+
+def storage_parent():
+    return account_home() / ".local/share/srt-agent"
+
+
+def storage_base():
+    return storage_parent() / "projects"
+
+
+def cache_base():
+    return account_home() / "Library/Caches/srt-agent"
+
+
+def project_storage_path(project):
+    return storage_base() / project_id(project)
 
 
 def project_cache_dir(project):
@@ -1435,9 +2611,62 @@ def project_cache_dir(project):
     # so caches that unpack third-party trees (Cargo's crate sources) work
     # here. Nothing on the host opens this folder as a workspace, repository
     # or home, so those files are inert in it.
-    name = re.sub(r"[^A-Za-z0-9._-]", "_", project.name)[:40]
-    digest = hashlib.sha256(str(project).encode("utf-8")).hexdigest()[:12]
-    return account_home() / "Library/Caches/srt-agent" / (name + "-" + digest)
+    return cache_base() / project_id(project)
+
+
+def project_storage(project):
+    # Persistent per-project agent state, outside the project so credentials
+    # never sit in the repository tree, archives or synced project folders.
+    # The root and its identity record are launcher-owned: agents get access
+    # only to their own agents/<name> subtree, never to the root itself.
+    parent = storage_parent()
+    current = account_home()
+    for part in parent.relative_to(current).parts:
+        current /= part
+        if current.is_symlink():
+            fail("Agent storage must not contain symlinks: " + str(current))
+    parent.mkdir(parents=True, mode=0o700, exist_ok=True)
+    if not parent.is_dir() or parent.stat().st_uid != os.getuid():
+        fail("Agent storage must be a directory owned by you: " + str(parent))
+    root = private_dir(parent, Path("projects") / project_id(project))
+    record = root / "project.json"
+    expected = {"format": STORAGE_FORMAT, "project": str(project)}
+    for _ in range(2):
+        try:
+            fd = os.open(record, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        except FileNotFoundError:
+            # Write a complete record under a unique name, then publish it
+            # with link(), which never replaces an existing file: concurrent
+            # first launches either win or read the winner's full record.
+            staged = root / (".project.json." + os.urandom(8).hex())
+            fd = os.open(staged, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+            try:
+                with os.fdopen(fd, "w") as handle:
+                    json.dump(expected, handle, indent=2)
+                    handle.write("\n")
+                    handle.flush()
+                    os.fsync(handle.fileno())
+                try:
+                    os.link(staged, record, follow_symlinks=False)
+                except FileExistsError:
+                    continue  # a concurrent launch published first; verify theirs
+            finally:
+                staged.unlink(missing_ok=True)
+            return root
+        with os.fdopen(fd, "rb") as handle:
+            info = os.fstat(handle.fileno())
+            if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid():
+                fail("Agent storage identity record must be a regular file owned by you: " + str(record))
+            raw = handle.read(65537)
+        try:
+            data = json.loads(raw)
+        except ValueError:
+            data = None
+        if data != expected:
+            fail("Agent storage " + str(root) + " belongs to another project or is damaged (project.json does not "
+                 "name " + str(project) + "). Inspect it, then move or delete it.")
+        return root
+    fail("Could not create the agent storage identity record: " + str(record))
 
 
 def uses_cache(value):
@@ -1459,6 +2688,15 @@ def expand_env_value(value, project=None):
     return value
 
 
+AGENT_HOME_MODES = ("isolated", "shared")
+
+
+def validate_agent_home(value, label):
+    if value not in AGENT_HOME_MODES:
+        fail(label + ' must be "isolated" or "shared"')
+    return value
+
+
 def validate_path_entries(entries, label):
     if not isinstance(entries, list) or any(
             not isinstance(e, str) or "\0" in e or "*" in e or ":" in e or not (e.startswith("~/") or os.path.isabs(e))
@@ -1477,12 +2715,12 @@ def validate_domains(values, label):
 
 def validate_agents(agents):
     if not isinstance(agents, dict):
-        fail("Global srtAgent.agents must be an object")
+        fail("Global agents must be an object")
     result = {}
     for name, spec in agents.items():
         if not isinstance(name, str) or not AGENT_NAME.match(name) or name in RESERVED_AGENT_NAMES or name in AGENT_ALIASES:
-            fail("Invalid agent name in srtAgent.agents: " + json.dumps(name, ensure_ascii=True))
-        label = "srtAgent.agents." + name
+            fail("Invalid agent name in agents: " + json.dumps(name, ensure_ascii=True))
+        label = "agents." + name
         builtin = name in AGENTS
         allowed_keys = {"binary", "network", "filesystem", "passEnv", "setEnv"} | (set() if builtin else {"homeEnv"})
         if not isinstance(spec, dict) or set(spec) - allowed_keys:
@@ -1523,6 +2761,50 @@ def validate_agents(agents):
     return result
 
 
+AGENT_GROUP_KEYS = {"network": ("allowedDomains",), "filesystem": ("allowRead",)}
+
+
+def agent_group(project, settings, agent):
+    # groups/agent/<agent>.jsonc, loaded automatically for that agent (and
+    # whatever it extends). It extends the agent's entry in the global
+    # config, so it may hold what that entry holds that makes sense in a
+    # group: network.allowedDomains, filesystem.allowRead, path, setEnv.
+    # Returns (merged group or None, ordered names, {file name: source}).
+    groups, sources = global_groups(project, settings, with_sources=True)
+    name = "agent/" + agent
+    if name not in groups:
+        return None, [], {}
+    order = expand_groups([name], groups, group_directory(project, settings))
+    layers = []
+    for reference in order:
+        layer = copy.deepcopy(groups[reference])
+        layer.pop("extends", None)
+        extra = sorted(set(layer) - {"network", "filesystem", "srtAgent"})
+        for section, keys in AGENT_GROUP_KEYS.items():
+            extra += [section + "." + k for k in sorted(set(layer.get(section, {})) - set(keys))]
+        if extra:
+            extra = [{"switches": "allowLocalBinding/allowAllUnixSockets/other switches"}.get(x, x) for x in extra]
+            fail(("Agent group " + name if reference == name else "Group " + reference + " (extended by " + name + ")")
+                 + " has " + ", ".join(extra) + "; agent groups support only network.allowedDomains, "
+                 "filesystem.allowRead, path, setEnv and extends")
+        layers.append(layer)
+    return merge_layers(layers), order, {n: sources[n] for n in order if n in sources}
+
+
+def all_agent_groups(project, settings):
+    # Every agent group and what it reaches, for the global approval: like
+    # an agents.<name> entry in config.jsonc, a change asks every project.
+    groups, sources = global_groups(project, settings, with_sources=True)
+    bound = {}
+    for name in sorted(g for g in groups if g.startswith("agent/")):
+        order = expand_groups([name], groups, group_directory(project, settings))
+        bound[name] = {"order": order,
+                       "files": {n: sources[n][0]["content_sha256"] for n in order if n in sources}}
+    shown = {sources[n][0]["path"]: sources[n][1]
+             for entry in bound.values() for n in entry["order"] if n in sources}
+    return bound, shown
+
+
 def canonical_agent(name):
     name = AGENT_ALIASES.get(name, name)
     if not AGENT_NAME.match(name) or name in RESERVED_AGENT_NAMES:
@@ -1533,7 +2815,7 @@ def canonical_agent(name):
 def agent_profile(name, custom):
     if name not in AGENTS and name not in custom:
         fail("Unknown agent " + json.dumps(name, ensure_ascii=True) + "; built-ins are "
-             + ", ".join(sorted(AGENTS)) + " (define others under srtAgent.agents)")
+             + ", ".join(sorted(AGENTS)) + " (define others under agents)")
     profile = copy.deepcopy(AGENTS.get(name, {
         "homeEnv": {}, "allowedDomains": [], "passEnv": [], "setEnv": {}, "prependArgs": [],
     }))
@@ -1626,12 +2908,13 @@ def registry_has_live_sessions(directory, project, global_registry):
     return False
 
 
-def activate_session_registry(project, config, scope):
+def activate_session_registry(project, home, scope):
     # Claude currently derives discovery records and peer auth keys from
     # CLAUDE_CONFIG_DIR/sessions. Share that directory, never credentials
     # or the rest of CLAUDE_CONFIG_DIR. Preserve project metadata when
     # selecting the global registry, and switch back reversibly.
     registry_scope = "global" if scope == "global" else "project"
+    config = home / ".claude"
     active = config / "sessions"
     project_registry = config / "sessions.project"
     global_registry = global_messaging_root() / "sessions"
@@ -1658,38 +2941,64 @@ def activate_session_registry(project, config, scope):
             live.append(record)
         if any(record["scope"] != registry_scope for record in live):
             fail("Exit this project's running Claude sessions before switching between project and global messaging")
-        current_scope = "project"
-        if active.is_symlink():
-            target = active.resolve()
-            if target == global_registry:
-                current_scope = "global"
-            elif target != project_registry:
-                fail("Unexpected Claude sessions symlink target: " + str(active))
-        elif active.exists():
-            if not active.is_dir() or active.stat().st_uid != os.getuid():
+        # Work through a descriptor for CLAUDE_CONFIG_DIR obtained with a
+        # no-follow walk from the agent's home (whose own entry agents cannot
+        # replace), and only *at operations below it: a concurrently running
+        # agent swapping .claude or sessions for a symlink cannot redirect
+        # these renames and links outside its own config.
+        cfd = open_private_dir(home, ".claude")
+        try:
+            def entry(name):
+                try:
+                    return os.stat(name, dir_fd=cfd, follow_symlinks=False)
+                except FileNotFoundError:
+                    return None
+
+            def ensure_project_registry():
+                try:
+                    os.mkdir("sessions.project", 0o700, dir_fd=cfd)
+                except FileExistsError:
+                    info = entry("sessions.project")
+                    if info is None or not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid():
+                        fail("Claude sessions.project must be a directory owned by you")
+                return str(project_registry)
+
+            current_scope = "project"
+            info = entry("sessions")
+            if info is not None and stat.S_ISLNK(info.st_mode):
+                target = os.readlink("sessions", dir_fd=cfd)
+                if target == str(global_registry):
+                    current_scope = "global"
+                elif target != str(project_registry):
+                    fail("Unexpected Claude sessions symlink target: " + str(active))
+            elif info is not None and (not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid()):
                 fail("Claude sessions must be a directory owned by you")
-        if current_scope != registry_scope:
-            if registry_has_live_sessions(active, project, current_scope == "global"):
-                fail("Exit this project's running Claude sessions before switching messaging registry scope")
-            if not active.is_symlink() and active.exists():
-                if project_registry.exists() or project_registry.is_symlink():
-                    fail("Cannot preserve project registry: sessions.project already exists")
-                active.rename(project_registry)
-            target = global_registry if registry_scope == "global" else private_dir(config, "sessions.project")
-            link = config / (".sessions-link-" + os.urandom(8).hex())
-            try:
-                os.symlink(str(target), str(link))
-                os.replace(link, active)
-            finally:
-                link.unlink(missing_ok=True)
-        elif not active.exists():
-            if project_registry.exists() or project_registry.is_symlink():
-                # Recover a previously preserved registry if an interrupted
-                # switch stopped between the rename and link publication.
-                target = private_dir(config, "sessions.project")
-                os.symlink(str(target), str(active))
-            else:
-                private_dir(config, "sessions")
+            if current_scope != registry_scope:
+                if registry_has_live_sessions(active, project, current_scope == "global"):
+                    fail("Exit this project's running Claude sessions before switching messaging registry scope")
+                if info is not None and not stat.S_ISLNK(info.st_mode):
+                    if entry("sessions.project") is not None:
+                        fail("Cannot preserve project registry: sessions.project already exists")
+                    os.rename("sessions", "sessions.project", src_dir_fd=cfd, dst_dir_fd=cfd)
+                target = str(global_registry) if registry_scope == "global" else ensure_project_registry()
+                link = ".sessions-link-" + os.urandom(8).hex()
+                try:
+                    os.symlink(target, link, dir_fd=cfd)
+                    os.replace(link, "sessions", src_dir_fd=cfd, dst_dir_fd=cfd)
+                finally:
+                    try:
+                        os.unlink(link, dir_fd=cfd)
+                    except FileNotFoundError:
+                        pass
+            elif info is None:
+                if entry("sessions.project") is not None:
+                    # Recover a previously preserved registry if an interrupted
+                    # switch stopped between the rename and link publication.
+                    os.symlink(ensure_project_registry(), "sessions", dir_fd=cfd)
+                else:
+                    os.mkdir("sessions", 0o700, dir_fd=cfd)
+        finally:
+            os.close(cfd)
         pid = os.getpid()
         start = process_start(pid)
         if start is None:
@@ -1809,52 +3118,213 @@ def global_filesystem(project, filesystem, allow_home=False):
     return result
 
 
+BASE_SETTINGS_KEYS = SRT_LISTS  # what an imported srt file may contribute
+
+
+def load_imported_base(project, spec, config_path):
+    # baseSettings: an explicit, visible import of srt's own file as
+    # inherited defaults for every agent: srt's lists and switches (switches
+    # here are the first layer; later layers win). Anything else (unknown
+    # keys, an srtAgent section, proxy ports) is refused rather than ignored.
+    if not isinstance(spec, str) or "\0" in spec or not (spec.startswith("~/") or os.path.isabs(spec)):
+        fail("Global baseSettings must be an absolute or ~/ path")
+    name = resolve_project_path(project, spec, canonical=False)
+    try:
+        path = name.resolve(strict=True)
+    except FileNotFoundError:
+        fail("baseSettings names a missing file: " + str(name))
+    if path == config_path:
+        fail("baseSettings cannot name the srt-agent config itself")
+    label = str(name) + " (baseSettings)"
+    data = parse_jsonc(read_regular(path), label, comments=False)
+    if not isinstance(data, dict):
+        fail(label + " must be a JSON object")
+    if "srtAgent" in data:
+        fail(label + " contains an srtAgent section. Launcher options belong in the srt-agent config; move them there.")
+    switches = take_switches(data, None, label)
+    top = tuple(k for k, (where, _) in SWITCHES.items() if where is None) + ("allowPty",)
+    unknown = sorted(set(data) - set(top) - set(BASE_SETTINGS_KEYS))
+    if unknown:
+        fail(label + " has settings srt-agent does not import: " + ", ".join(unknown)
+             + ". Only network and filesystem lists are imported; remove them or stop importing this file.")
+    for section, allowed in BASE_SETTINGS_KEYS.items():
+        values = data.get(section, {})
+        if not isinstance(values, dict):
+            fail(label + "." + section + " must be an object")
+        section_switches = tuple(k for k, (where, _) in SWITCHES.items() if where == section)
+        switches.update(take_switches(values, section, label))
+        lists = {k: v for k, v in values.items() if k not in section_switches}
+        extra = sorted(set(lists) - set(allowed))
+        if extra:
+            fail(label + "." + section + " has settings srt-agent controls itself or does not import: " + ", ".join(extra)
+                 + ". Imported: " + ", ".join(allowed) + ".")
+        for key, entries in lists.items():
+            # srt's own file holds plain strings only; launcher-style path
+            # objects are not srt syntax and are refused here, not later.
+            if not isinstance(entries, list) or any(not isinstance(e, str) or not e or "\0" in e for e in entries):
+                fail(label + "." + section + "." + key + " must be an array of nonempty strings")
+    return name, path, data, switches
+
+
+def glob_regex(pattern):
+    # srt path globs: * and ? stay within one folder name, ** crosses
+    # folders, [...] is a character class.
+    out, i = [], 0
+    while i < len(pattern):
+        if pattern.startswith("**", i):
+            out.append(".*")
+            i += 2
+        elif pattern[i] == "*":
+            out.append("[^/]*")
+            i += 1
+        elif pattern[i] == "?":
+            out.append("[^/]")
+            i += 1
+        elif pattern[i] == "[" and "]" in pattern[i + 2:]:
+            end = pattern.index("]", i + 2)
+            body = pattern[i + 1:end]
+            out.append("[" + ("^" + body[1:] if body.startswith("!") else body).replace("\\", "\\\\") + "]")
+            i = end + 1
+        else:
+            out.append(re.escape(pattern[i]))
+            i += 1
+    return re.compile("".join(out))
+
+
+def static_prefix(pattern):
+    # The deepest folder every match of a glob lies inside.
+    parts = Path(pattern).parts
+    for index, part in enumerate(parts):
+        if glob.has_magic(part):
+            return Path(*parts[:index]) if index else Path("/")
+    return Path(pattern)
+
+
+def path_spellings(text):
+    # As written and with symlinks resolved; for a glob only the literal
+    # prefix is resolved and the rest reattached.
+    if not glob.has_magic(text):
+        return {text, os.path.realpath(text)}
+    prefix = static_prefix(text)
+    rest = os.path.relpath(text, prefix)
+    return {text, os.path.join(os.path.realpath(prefix), rest)}
+
+
+def refuse_ineffective_read_blocks(allow_entries, deny_entries):
+    # In srt allowRead beats denyRead, so a block that a grant covers does
+    # nothing. Refuse it rather than let it look protective. A grant INSIDE a
+    # blocked area is the normal srt pattern and stays allowed.
+    # What is checked (both as written and with symlinks resolved):
+    #   literal grant vs literal block, literal grant vs glob block (via the
+    #   block's literal prefix), glob grant vs literal block (the block or a
+    #   parent matches), glob grant vs glob block (the block's literal prefix
+    #   or a parent matches). Two globs that overlap only partly cannot be
+    #   decided statically and are not refused, so this rejects many
+    #   ineffective blocks but does not prove every remaining one works.
+    # / and the account home are the launcher's own broad blocks; skipped.
+    def text_of(entry):
+        return entry["path"] if isinstance(entry, dict) else entry
+    broad = {"/", str(account_home()), str(account_home().resolve())}
+    grants = set()
+    for entry in allow_entries:
+        grants |= path_spellings(text_of(entry))
+    for entry in deny_entries:
+        written = text_of(entry)
+        if written in broad:
+            continue
+        for blocked in path_spellings(written):
+            anchor = static_prefix(blocked) if glob.has_magic(blocked) else Path(blocked)
+            covered = [anchor, *anchor.parents]
+            for granted in grants:
+                if glob.has_magic(granted):
+                    regex = glob_regex(granted)
+                    hit = any(regex.fullmatch(str(p)) for p in covered)
+                else:
+                    hit = anchor == Path(granted) or anchor.is_relative_to(granted)
+                if hit:
+                    fail("denyRead " + written + " has no effect: allowRead " + granted + " covers it, and in srt "
+                         "allowRead wins. Remove the denyRead, or replace the broad allowRead with narrower grants "
+                         "that leave " + written + " out.")
+
+
 def load_base_policy(project, settings, allow_home=False, removals=None):
     name = resolve_project_path(project, str(settings), canonical=False)
     path = name.resolve(strict=True)
     raw = read_regular(path)
-    data = json.loads(raw)
-    if not isinstance(data, dict) or not isinstance(data.get("network"), dict):
+    data = parse_jsonc(raw, str(path))
+    internal = flat_global(data, str(path))
+    merged, base_info, base_data = internal, None, None
+    switches = {}
+    declared = internal.get("srtAgent", {})
+    if "baseSettings" in declared:
+        base_name, base_path, base_data, base_switches = load_imported_base(project, declared["baseSettings"], path)
+        # Imported entries come first and count as global entries, so an
+        # approved project "remove" can drop them like any other default.
+        merged = copy.deepcopy(internal)
+        for section in BASE_SETTINGS_KEYS:
+            for key, entries in base_data.get(section, {}).items():
+                if key not in BASE_SETTINGS_KEYS[section]:
+                    continue  # a switch, taken separately
+                target = merged.setdefault(section, {}).setdefault(key, [])
+                if not isinstance(target, list):
+                    fail(str(path) + ": " + section + "." + key + " must be an array")
+                merged[section][key] = unique_entries(entries + target)
+        switches.update(base_switches)  # first layer
+        base_info = {"path": str(base_name), "resolved_path": str(base_path), "content_sha256": settings_digest(base_data)}
+    switches.update(merged.get("switches", {}))  # the global config wins over the import
+    if not isinstance(merged.get("network"), dict):
         fail("Settings must contain a network object; refusing a policy fallback")
     removals = validate_removals({} if removals is None else removals)
-    effective = remove_global_entries(data, removals)
+    effective = remove_global_entries(merged, removals)
+    effective.pop("switches", None)
     launcher_options = effective.pop("srtAgent", {})
-    if not isinstance(launcher_options, dict) or set(launcher_options) - {"crossSessionMessaging", "passEnv", "agents",
-                                                                          "autoVenv", "toolsVenv", "path", "setEnv", "groups"}:
-        fail("Global srtAgent supports crossSessionMessaging, passEnv, agents, autoVenv, toolsVenv, path, setEnv "
-             "and groups only")
     messaging_default = messaging_scope(launcher_options.get("crossSessionMessaging", "off"))
     options = {
         "crossSessionMessaging": messaging_default,
-        "passEnv": validate_env_patterns(launcher_options.get("passEnv", []), "Global srtAgent.passEnv"),
+        "passEnv": validate_env_patterns(launcher_options.get("passEnv", []), "Global passEnv"),
         "agents": validate_agents(launcher_options.get("agents", {})),
     }
     # Optional keys appear only when configured, so existing approvals that
     # use neither stay valid.
     if "path" in launcher_options:
-        options["path"] = validate_path_entries(launcher_options["path"], "Global srtAgent.path")
+        options["path"] = validate_path_entries(launcher_options["path"], "Global path")
     if "groups" in launcher_options:
         validate_groups(launcher_options["groups"])
+    if "agentHome" in launcher_options:
+        options["agentHome"] = validate_agent_home(launcher_options["agentHome"], "Global agentHome")
     if "setEnv" in launcher_options:
-        options["setEnv"] = validate_set_env(launcher_options["setEnv"], "Global srtAgent.setEnv")
+        options["setEnv"] = validate_set_env(launcher_options["setEnv"], "Global setEnv")
     if "autoVenv" in launcher_options:
         if not isinstance(launcher_options["autoVenv"], bool):
-            fail("Global srtAgent.autoVenv must be true or false")
+            fail("Global autoVenv must be true or false")
         options["autoVenv"] = launcher_options["autoVenv"]
     filesystem = global_filesystem(project, effective.get("filesystem", {}), allow_home=allow_home)
     policy = {
         "path": str(name), "resolved_path": str(path),
-        "content_sha256": hashlib.sha256(raw).hexdigest(),
-        "configuration": data,
+        "content_sha256": settings_digest(data),
+        # What the approval prompt diffs: the config, plus the imported file
+        # when there is one, so a change to either is shown, not just flagged.
+        "configuration": data if base_data is None else {**data, "(imported baseSettings)": base_data},
         "effective_configuration": effective,
         "launcher_options": options,
         "removals": removals,
         "filesystem": filesystem,
+        "switches": switches,
     }
+    template_bound, template_shown = template_summary(scan_template(project, settings))
+    if template_bound:
+        policy["template"] = template_bound
+        policy["configuration"] = {**policy["configuration"], "(template home)": template_shown}
+    agent_groups, agent_group_files = all_agent_groups(project, settings)
+    if agent_groups:
+        policy["agent_groups"] = agent_groups
+        policy["configuration"] = {**policy["configuration"], "(agent group files)": agent_group_files}
+    if base_info is not None:
+        policy["base_settings"] = base_info
     if "toolsVenv" in launcher_options:
         spec = launcher_options["toolsVenv"]
         if not isinstance(spec, str) or "\0" in spec or not (spec.startswith("~/") or os.path.isabs(spec)):
-            fail("Global srtAgent.toolsVenv must be an absolute or ~/ path")
+            fail("Global toolsVenv must be an absolute or ~/ path")
         # Resolved grants are part of the approval identity: an upgrade that
         # moves the base interpreter asks again.
         policy["tools"] = detect_tools_venv(project, spec, filesystem)
@@ -1885,8 +3355,14 @@ def short_tmp(root, agent, target):
     try:
         os.symlink(str(target), str(link))
     except FileExistsError:
-        if not link.is_symlink() or link.lstat().st_uid != os.getuid() or link.resolve() != target:
-            fail("Temporary alias already exists with another owner or target: " + str(link))
+        if not link.is_symlink() or link.lstat().st_uid != os.getuid():
+            fail("Temporary alias already exists with another owner or type: " + str(link))
+        if link.resolve() != target:
+            # Our own alias left over from an older layout: replace it
+            # atomically. Agents cannot write /tmp, so only you could race it.
+            staged = link.with_name(link.name + ".new-" + os.urandom(4).hex())
+            os.symlink(str(target), str(staged))
+            os.replace(staged, link)
     return link
 
 
@@ -1895,11 +3371,23 @@ def prepare(agent, project, settings, allow_local_binding=False, require_project
             requested_venv_mode=None):
     agent = canonical_agent(agent)
     requested_scope = None if allow_cross_session_messaging is None else messaging_scope(allow_cross_session_messaging)
-    # Validate explicit opt-in before creating .private or temporary aliases.
+    # Validate explicit opt-in before creating storage or temporary aliases.
     override_path, grants, project_data, project_raw = project_permissions(project, settings, allow_home=allow_home)
     base_policy = load_base_policy(project, settings, allow_home=allow_home, removals=grants["remove"])
     options = base_policy["launcher_options"]
     profile = agent_profile(agent, options["agents"])
+    # groups/agent/<agent>.jsonc: extends this agent's entry. The agent's
+    # entry in config.jsonc wins on setEnv, being the more specific.
+    agent_extra, agent_groups_used, _ = agent_group(project, settings, agent)
+    profile["groups"] = agent_groups_used
+    profile.setdefault("path", [])
+    if agent_extra:
+        launcher = agent_extra.get("srtAgent", {})
+        profile["allowRead"] = list(dict.fromkeys(agent_extra.get("filesystem", {}).get("allowRead", []) + profile["allowRead"]))
+        profile["allowedDomains"] = list(dict.fromkeys(
+            agent_extra.get("network", {}).get("allowedDomains", []) + profile["allowedDomains"]))
+        profile["setEnv"] = {**launcher.get("setEnv", {}), **profile["setEnv"]}
+        profile["path"] = list(launcher.get("path", []))
     if requested_scope not in (None, "off") and not profile.get("messaging"):
         fail("--allow-cross-session-messaging is supported for Claude only")
     settings_name = Path(base_policy["path"])
@@ -1917,18 +3405,54 @@ def prepare(agent, project, settings, allow_local_binding=False, require_project
                          allow_home=allow_home, venv=venv, mode=mode)
     executable = find_binary(profile["binary"], agent, project)
     srt = find_binary("srt", "srt", project)
-    storage = private_dir(project, ".private")
-    home = private_dir(storage, "home")
+    storage = project_storage(project)
+    agent_root = private_dir(storage, Path("agents") / agent)
+    # isolated (default): agents/<agent>/home. shared: one shared/home for
+    # this project's agents, a deliberate trust choice. Temp folders stay
+    # per agent either way, and the modes use separate folders, so
+    # switching never merges state.
+    home_mode = grants.get("agentHome") or options.get("agentHome") or "isolated"
+    home_root = private_dir(storage, "shared") if home_mode == "shared" else agent_root
+    fresh_home = not (home_root / "home").is_dir()
+    home = private_dir(home_root, "home")
+    if fresh_home:
+        other = ([storage / "shared/home"] if home_mode == "isolated" else
+                 [entry / "home" for entry in (storage / "agents").iterdir() if (entry / "home").is_dir()])
+        if any(path.is_dir() for path in other):
+            print("srt-agent: note: using a new " + home_mode + " agent home (" + str(home) + "); the "
+                  + ("shared" if home_mode == "isolated" else "isolated") + " home(s) are kept unchanged, "
+                  "so agents may need to sign in again.", file=sys.stderr)
+    # Every agent's config variable (CLAUDE_CONFIG_DIR, CODEX_HOME, ...)
+    # resolves inside THIS agent's home, so a codex run inside a Claude
+    # session still never sees the codex agent's own credentials.
     homes = all_home_env(options["agents"])
     for directory in [".config", ".cache", ".local/share", ".local/state", ".local/bin"] + list(homes.values()):
         private_dir(home, directory)
-    install_tools_wrapper(home / ".local/bin", base_policy.get("tools"))
-    temp = private_dir(storage, "tmp/" + agent)
+    install_tools_wrapper(home, base_policy.get("tools"))
+    template = template_for(scan_template(project, settings_name), agent, home_mode)
+    applied = apply_template(home, home_root / "template.json", template)
+    template_protected = [h / rel for h in dict.fromkeys((home, home.resolve()))
+                          for rel, entry in template.items() if entry["kind"] != "seed"]
+    template_reads = [entry["target"] for entry in template.values() if entry["kind"] == "link"]
+    profile["template"] = sorted(applied)
+    temp = private_dir(agent_root, "tmp")
     private_dir(temp, "run")
     policy_dir = private_dir(approval_directory(create=True).parent, "policies/" + project_key(project))
-    ignore = storage / ".gitignore"
-    if ignore.is_symlink():
-        fail("Refusing symlink: " + str(ignore))
+    # Agents get home and tmp, not agents/<name> itself: they cannot replace
+    # either entry with a symlink, so the launcher's own walks from them stay
+    # anchored.
+    agent_paths = list(dict.fromkeys(p for d in (home, temp) for p in (d, d.resolve())))
+    sibling_agents = sorted((set(AGENTS) | set(options["agents"]) | {
+        entry.name for entry in (storage / "agents").iterdir() if entry.is_dir() and not entry.is_symlink()
+    }) - {agent})
+    if agent in sibling_agents or any(agent_root.is_relative_to(storage / "agents" / name) for name in sibling_agents):
+        fail("Internal error: the running agent's own folder is in its write-deny list")
+    sibling_paths = [storage / "agents" / name for name in sibling_agents]
+    # srt runs OUTSIDE the sandbox: give it a temp folder agents can neither
+    # read nor write (under the storage root, outside their grants), with
+    # its own short alias for host-side Unix sockets. Never the agent's tmp.
+    host_temp = private_dir(storage, Path("srt-tmp") / agent)
+    host_temp_link = short_tmp(project, agent + "-srt", host_temp)
     temp_link = short_tmp(project, agent, temp)
     # macOS spells /tmp as /private/tmp. Keep the final symlink component:
     # resolve() on the whole link would return its project-local target and
@@ -1958,16 +3482,21 @@ def prepare(agent, project, settings, allow_local_binding=False, require_project
         messaging["directory"] = str(global_link / "sockets")
         messaging["registry"] = str(registry)
     if profile.get("messaging") and activate_messaging:
-        activate_session_registry(project, home / ".claude", scope)
+        activate_session_registry(project, home, scope)
     policy = copy.deepcopy(base)
-    policy["allowPty"] = True
-    policy["allowAppleEvents"] = False
-    policy["enableWeakerNestedSandbox"] = False
-    policy["enableWeakerNetworkIsolation"] = False
     network = policy["network"]
-    network["allowLocalBinding"] = bool(allow_local_binding)
-    if network.get("allowAllUnixSockets"):
-        fail("network.allowAllUnixSockets defeats the sandbox; list individual sockets instead")
+    # Switches: off unless a layer (import, global, groups, project) turned
+    # them on, all approved; --allow-local-binding turns local binding on for
+    # this launch only. allowPty is always true.
+    switches = effective_switches(base_policy, grants)
+    if allow_local_binding:
+        switches["allowLocalBinding"] = True
+    policy["allowPty"] = True
+    for key, (section, _) in SWITCHES.items():
+        (policy if section is None else network)[key] = bool(switches.get(key, False))
+    if grants.get("deniedDomains"):
+        denied = network.setdefault("deniedDomains", [])
+        network["deniedDomains"] = list(dict.fromkeys(denied + grants["deniedDomains"]))
     extra_domains = grants.get("allowedDomains", []) + profile["allowedDomains"]
     if extra_domains:
         domains = network.setdefault("allowedDomains", [])
@@ -1989,8 +3518,9 @@ def prepare(agent, project, settings, allow_local_binding=False, require_project
         # SRT uses subpath filters for Unix bind/connect. Grant only the
         # project inbox directory, whose socket names vary per session.
         network["allowUnixSockets"] = list(dict.fromkeys(network["allowUnixSockets"] + messaging_paths))
-    read_paths = [str(storage)] + temp_paths + messaging_filesystem_paths
+    read_paths = [str(p) for p in agent_paths] + temp_paths + messaging_filesystem_paths
     read_paths += [executable, str(Path(executable).resolve())]
+    read_paths += template_reads  # files the template links to, read-only
     tools = base_policy.get("tools")
     if venv is not None:
         read_paths += venv["allowRead"]
@@ -2001,18 +3531,18 @@ def prepare(agent, project, settings, allow_local_binding=False, require_project
     for entry in profile["allowRead"]:
         for spelled in (resolve_project_path(project, entry, canonical=False), resolve_project_path(project, entry)):
             if spelled.is_relative_to(project) or account_home().is_relative_to(spelled):
-                fail("srtAgent.agents." + agent + ".filesystem.allowRead cannot grant the project, your home or an ancestor: "
+                fail("agents." + agent + ".filesystem.allowRead cannot grant the project, your home or an ancestor: "
                      + str(spelled))
             read_paths.append(str(spelled))
     # Extra host tool directories (e.g. ~/.cargo/bin): readable, on PATH,
     # and write-denied below with every other PATH entry.
     extra_path = []
     project_launcher = grants.get("launcher", {})
-    for entry in options.get("path", []) + project_launcher.get("path", []):
+    for entry in options.get("path", []) + profile["path"] + project_launcher.get("path", []):
         directory = resolve_project_path(project, entry, canonical=False)
         for spelled in (directory, directory.resolve()):
             if spelled.is_relative_to(project) or account_home().is_relative_to(spelled):
-                fail("srtAgent.path (global or project) cannot add the project, your home or an ancestor: " + str(spelled))
+                fail("path (global or project) cannot add the project, your home or an ancestor: " + str(spelled))
             read_paths.append(str(spelled))
         if str(directory) not in extra_path:
             extra_path.append(str(directory))
@@ -2044,7 +3574,17 @@ def prepare(agent, project, settings, allow_local_binding=False, require_project
     # the user's own host tools will execute from the project (Git, direnv,
     # dotenv, VS Code) and every directory commands are looked up in.
     protected_paths = [
-        policy_dir, ignore, settings_name, settings, override_path,
+        policy_dir, settings_name, settings, override_path,
+        # Launcher-owned: the identity record, and every other agent's tree
+        # (writes are allow-listed anyway; this keeps them denied even if a
+        # broader grant ever appears).
+        storage / "project.json", *sibling_paths, storage / "srt-tmp",
+        *group_protections(project, settings_name),
+        template_directory(project, settings_name), template_directory(project, settings_name).resolve(),
+        *template_protected, *[Path(t) for t in template_reads],
+        *([Path(base_policy["base_settings"]["path"]), Path(base_policy["base_settings"]["resolved_path"])]
+          if base_policy.get("base_settings") else []),
+        *([storage / "shared"] if home_mode == "isolated" else []),
         launcher, launcher.resolve(), approval_directory().parent,
         *host_exec_protections(project),
         *path_dirs,
@@ -2059,13 +3599,51 @@ def prepare(agent, project, settings, allow_local_binding=False, require_project
     additions = {
         "denyRead": ["/", literal(account_home())] + [literal(p) for p in mandatory_denials()] + grants["denyRead"],
         "allowRead": [literal(p) for p in read_paths] + grants["allowRead"],
-        "allowWrite": [literal(storage)] + [literal(p) for p in temp_paths + messaging_filesystem_paths + cache_paths]
+        "allowWrite": [literal(p) for p in agent_paths + temp_paths + messaging_filesystem_paths + cache_paths]
                       + grants["allowWrite"],
         "denyWrite": [literal(p) for p in protected_paths] + grants["denyWrite"],
     }
+    # denyWrite beats allowWrite in srt: refuse to launch if a block covers
+    # the agent's own home or temp, instead of failing later with EPERM.
+    for needed in agent_paths + [Path(p) for p in temp_paths]:
+        for blocked in additions["denyWrite"] + base_policy["filesystem"].get("denyWrite", []):
+            text = blocked["path"] if isinstance(blocked, dict) else blocked
+            if not (isinstance(blocked, str) and glob.has_magic(text)) and (
+                    needed == Path(text) or needed.is_relative_to(text)):
+                fail("denyWrite " + text + " covers the agent's own folder " + str(needed)
+                     + "; in srt denyWrite wins, so the agent could not write its home or temp files")
     policy["filesystem"] = copy.deepcopy(base_policy["filesystem"])
     for name, entries in additions.items():
         policy["filesystem"][name] = unique_entries(policy["filesystem"].get(name, []) + entries)
+    # Reads cannot be denied back once allowed (allowRead beats denyRead), so
+    # sibling agents and other projects stay unreadable only if no grant
+    # covers the storage roots. Refuse any grant that overlaps them, other
+    # than the launcher's own per-agent and per-project entries.
+    own = {str(p) for p in agent_paths + cache_paths} | set(temp_paths) | set(messaging_filesystem_paths)
+    roots = list(dict.fromkeys(p for base_dir in (storage_base(), cache_base()) for p in (base_dir, base_dir.resolve())))
+    for name in ("allowRead", "allowWrite"):
+        for entry in policy["filesystem"][name]:
+            text = entry["path"] if isinstance(entry, dict) else entry
+            if text in own:
+                continue
+            if isinstance(entry, str) and glob.has_magic(text):
+                # Every match lies under the last complete folder before the
+                # first wildcard (*, ?, [), even for a partial name like
+                # ~/.local/sha*: check that folder.
+                magic = min(i for i in (text.find(c) for c in "*?[") if i >= 0)
+                candidate = Path(text[:magic].rsplit("/", 1)[0] or "/")
+            else:
+                candidate = Path(text)
+            # Lexical '..' must not hide an overlap.
+            candidate = Path(os.path.normpath(candidate))
+            if allow_home and candidate == account_home():
+                continue  # --allow-home: documented to expose all agent storage
+            for root in roots:
+                if candidate == root or candidate.is_relative_to(root) or root.is_relative_to(candidate):
+                    fail(name + " grant overlaps agent storage (other agents or projects would become reachable): "
+                         + text)
+    refuse_ineffective_read_blocks(policy["filesystem"]["allowRead"],
+                                   list(base_policy["filesystem"].get("denyRead", [])) + list(grants["denyRead"]))
     policy_path = write_policy(policy_dir, agent, policy)
     child_env = {variable: str(home / relative) for variable, relative in homes.items()}
     child_env.update({
@@ -2114,17 +3692,52 @@ def prepare(agent, project, settings, allow_local_binding=False, require_project
     passed = passthrough_env(patterns, child_env)
     # srt runs on the host. Give it the real HOME and a PATH without any
     # agent-writable directory: srt is a node script started via env, and a
-    # planted .private/home/.local/bin/node would otherwise run unsandboxed.
+    # planted <agent home>/.local/bin/node would otherwise run unsandboxed.
     # The private HOME/PATH are applied inside the sandbox by EXEC_CODE.
     env = dict(passed)
     env.update({
         "HOME": str(account_home()),
         "PATH": host_path(project),
-        # Only srt itself needs the short path for its pre-sandbox Unix sockets.
-        "TMPDIR": str(temp_link),
+        # Only srt itself needs the short path for its pre-sandbox Unix
+        # sockets; it is launcher-owned, never the agent-writable tmp.
+        "TMPDIR": str(host_temp_link),
         "SRT_AGENT_CHILD_ENV": json.dumps(child_env, ensure_ascii=True),
     })
-    return srt, executable, policy_path, child_env, env, temp, messaging, profile, sorted(passed), path_dirs, venv, base_policy.get("tools")
+    # The in-sandbox wrapper is /usr/bin/python3, which on macOS is an
+    # xcode-select stub: without DEVELOPER_DIR it reads the
+    # /var/select/developer_dir link before the agent environment exists.
+    # Hand it the same DEVELOPER_DIR the agent gets, so /var need not be
+    # readable.
+    if "DEVELOPER_DIR" in child_env:
+        env["DEVELOPER_DIR"] = child_env["DEVELOPER_DIR"]
+    return (srt, executable, policy_path, child_env, env, temp, messaging, profile, sorted(passed), path_dirs, venv,
+            base_policy.get("tools"), agent_root, home_mode)
+
+
+def sandbox_python(child_env):
+    # /usr/bin/python3 is an xcode-select stub: it reads /var/select (unless
+    # DEVELOPER_DIR is set) and writes an xcrun cache to the per-user temp
+    # folder, both rightly outside the sandbox. With DEVELOPER_DIR, run the
+    # real interpreter inside it instead, but only a root-owned file that
+    # neither group nor others can write, reached through root-owned folders
+    # (the same Apple Python the stub would start).
+    developer = child_env.get("DEVELOPER_DIR")
+    if not developer:
+        return "/usr/bin/python3"
+    candidate = Path(developer) / "usr/bin/python3"
+    try:
+        real = candidate.resolve(strict=True)
+        for item in [real, *real.parents]:
+            info = item.stat()
+            if info.st_uid != 0 or info.st_mode & 0o022:
+                raise PermissionError(str(item) + " is not root-owned and write-protected")
+        if not stat.S_ISREG(real.stat().st_mode) or not os.access(real, os.X_OK):
+            raise PermissionError(str(real) + " is not an executable file")
+    except OSError as error:
+        print("srt-agent: warning: not using " + str(candidate) + " (" + str(error) + "); falling back to "
+              "/usr/bin/python3, which may print xcrun cache errors", file=sys.stderr)
+        return "/usr/bin/python3"
+    return str(real)
 
 
 def parse_cli(argv):
@@ -2144,7 +3757,7 @@ def parse_cli(argv):
     common.add_argument("--project", default=argparse.SUPPRESS,
                         help="Use this project root instead of Git root/current directory")
     common.add_argument("--settings", default=argparse.SUPPRESS,
-                        help="Base srt settings (default: SRT_AGENT_SETTINGS or ~/.srt-settings.json)")
+                        help="Global srt-agent config (default: SRT_AGENT_SETTINGS or ~/.config/srt-agent/config.jsonc)")
     venv = common.add_mutually_exclusive_group()
     venv.add_argument("--auto-venv", dest="venv_mode", action="store_const", const="auto", default=argparse.SUPPRESS,
                       help="Without VIRTUAL_ENV, use the project's .venv if present")
@@ -2164,14 +3777,26 @@ def parse_cli(argv):
     ):
         action_parser = actions.add_parser(action, parents=[common], allow_abbrev=False, help=description, description=description)
         if action == "init":
-            action_parser.add_argument("--extends", metavar="GROUP", action="append", default=[],
-                                       help="Group from the global srtAgent.groups to extend (repeatable or "
+            action_parser.add_argument("-e", "--extends", metavar="GROUP", action="append", default=[],
+                                       help="Group from the global groups to extend (repeatable or "
                                             "comma-separated), e.g. --extends rust,python")
+    group_parser = commands.add_parser("group", parents=[common], allow_abbrev=False,
+                                       help="Generate group files for tools")
+    group_actions = group_parser.add_subparsers(dest="group_action", required=True)
+    create = group_actions.add_parser("create", parents=[common], allow_abbrev=False,
+                                      help="Write groups/<name>.jsonc granting what the tools need to read")
+    create.add_argument("name", nargs="?", metavar="NAME", help="Group name (default for one tool: tool/<tool>)")
+    create.add_argument("--tool", action="append", required=True, metavar="PROGRAM",
+                        help="Program name on PATH or a path (repeatable)")
+    create.add_argument("--force", action="store_true", help="Replace an existing group file")
+    update = group_actions.add_parser("update", parents=[common], allow_abbrev=False,
+                                      help="Regenerate a group made by group create")
+    update.add_argument("name", metavar="NAME")
     run = commands.add_parser("run", parents=[common], allow_abbrev=False, help="Run a coding agent inside srt")
     mode = run.add_mutually_exclusive_group()
     mode.add_argument("--show", action="store_true", help="Preview effective paths/policy without launching or approving")
     mode.add_argument("--check", action="store_true", help="Test filesystem protections inside srt without starting an agent")
-    run.add_argument("--allow-local-binding", action="store_true", help="Allow local listeners/loopback for this launch (e.g. login, dsh web)")
+    run.add_argument("-l", "--allow-local-binding", action="store_true", help="Allow local listeners/loopback for this launch (e.g. login, dsh web)")
     run.add_argument("--no-pty-isolation", action="store_true",
                      help="Attach the agent directly to this terminal instead of a fresh pseudo-terminal")
     messaging = run.add_mutually_exclusive_group()
@@ -2182,14 +3807,14 @@ def parse_cli(argv):
     messaging.add_argument("--no-cross-session-messaging", dest="allow_cross_session_messaging", action="store_const", const="off", default=None,
                            help="Disable launcher messaging support for this run, overriding the global default")
     run.add_argument("agent", metavar="AGENT",
-                     help="Agent to run: " + ", ".join(sorted(AGENTS)) + ", deepseek (alias of dsh), or one from srtAgent.agents")
+                     help="Agent to run: " + ", ".join(sorted(AGENTS)) + ", deepseek (alias of dsh), or one from agents")
     run.add_argument("--resume", nargs="?", const="", default=None, metavar="SESSION_ID",
                      help="Claude only: forward --resume and optional session ID without requiring --")
     run.epilog = "Agent arguments must follow --. Example: srt-agent run claude -- --model sonnet"
     execute = commands.add_parser("exec", parents=[common], allow_abbrev=False,
                                   help="Run a command, or your shell, with an agent's sandbox and environment")
     execute.add_argument("--show", action="store_true", help="Preview effective paths/policy without launching or approving")
-    execute.add_argument("--allow-local-binding", action="store_true", help="Allow local listeners/loopback for this launch")
+    execute.add_argument("-l", "--allow-local-binding", action="store_true", help="Allow local listeners/loopback for this launch")
     execute.add_argument("--no-pty-isolation", action="store_true",
                          help="Attach the command directly to this terminal instead of a fresh pseudo-terminal")
     execute.add_argument("agent", metavar="AGENT", help="Agent whose sandbox, HOME and environment to use")
@@ -2228,6 +3853,37 @@ def parse_cli(argv):
     return args
 
 
+def srt_independence_probe(policy):
+    # --check only: find a domain that srt's own ~/.srt-settings.json allows
+    # but this launch's generated policy does not. That file is read solely
+    # for this comparison, never as policy input.
+    try:
+        data = parse_jsonc(read_regular(account_home() / ".srt-settings.json"), "~/.srt-settings.json")
+        network = data.get("network", {}) if isinstance(data, dict) else {}
+        theirs, their_denied = network.get("allowedDomains", []), network.get("deniedDomains", [])
+        generated = json.loads(Path(policy).read_text()).get("network", {})
+        ours = list(generated.get("allowedDomains", [])) + list(generated.get("deniedDomains", []))
+    except (OSError, RuntimeError, ValueError, AttributeError, TypeError):
+        return ""
+
+    def covers(pattern, domain):
+        # Conservative: *.x is treated as covering x too, so a domain the
+        # generated policy might allow or deny is never used as the probe.
+        if not isinstance(pattern, str):
+            return False
+        pattern, domain = pattern.lower().rstrip("."), domain.lower().rstrip(".")
+        if pattern.startswith("*."):
+            pattern = pattern[2:]
+        return domain == pattern or domain.endswith("." + pattern)
+
+    excluded = ours + (their_denied if isinstance(their_denied, list) else [])
+    for domain in theirs if isinstance(theirs, list) else []:
+        if (isinstance(domain, str) and "*" not in domain and re.fullmatch(r"[A-Za-z0-9.-]+", domain)
+                and not any(covers(pattern, domain) for pattern in excluded)):
+            return domain
+    return ""
+
+
 def default_shell(project):
     # The host's login shell, unless it is missing or lives in the project.
     shell = os.environ.get("SHELL", "")
@@ -2239,7 +3895,17 @@ def default_shell(project):
 def main(argv=None):
     os.umask(0o077)
     args = parse_cli(sys.argv[1:] if argv is None else argv)
-    settings = args.settings or os.environ.get("SRT_AGENT_SETTINGS") or str(Path.home() / ".srt-settings.json")
+    settings = args.settings or os.environ.get("SRT_AGENT_SETTINGS") or str(account_home() / GLOBAL_SETTINGS)
+    if not args.settings and not os.environ.get("SRT_AGENT_SETTINGS") and not os.path.lexists(settings):
+        fail("No global srt-agent config at " + settings)
+    if args.command == "group":
+        if os.environ.get("SANDBOX_RUNTIME") == "1":
+            fail("Groups must be managed outside a running sandbox")
+        if args.group_action == "create":
+            create_tool_group(settings, args.name, args.tool, force=args.force)
+        else:
+            update_tool_group(settings, args.name)
+        return
     if args.command == "project":
         project = project_root(args.project, allow_home=args.allow_home)
         if args.project_action == "init":
@@ -2262,7 +3928,7 @@ def main(argv=None):
     agent_args = args.agent_args
     allow_home = args.allow_home
     project = project_root(args.project, allow_home=allow_home)
-    srt, executable, policy, child_env, env, temp, messaging, profile, passed, path_dirs, venv, tools = prepare(
+    srt, executable, policy, child_env, env, temp, messaging, profile, passed, path_dirs, venv, tools, agent_root, home_mode = prepare(
         args.agent, project, settings, allow_local_binding=args.allow_local_binding,
         require_project_approval=not args.show,
         allow_home=allow_home,
@@ -2290,19 +3956,32 @@ def main(argv=None):
         for flag in reversed(profile.get("prependArgs", [])):
             if flag not in agent_args:
                 agent_args = [flag] + agent_args
-    prefix = [srt, "--settings", str(policy), "--", "/usr/bin/python3", "-I", "-c"]
+    python = sandbox_python(child_env)
+    prefix = [srt, "--settings", str(policy), "--", python, "-I", "-c"]
     if args.command == "exec":
         command = prefix + [EXEC_CODE] + agent_args
     else:
         command = prefix + [EXEC_CODE, executable] + agent_args
     if args.check:
         # Run the probes through the same entrypoint as the agent.
-        command = prefix + [EXEC_CODE, "/usr/bin/python3", "-I", "-c", CHECK_CODE,
+        command = prefix + [EXEC_CODE, python, "-I", "-c", CHECK_CODE,
                    str(policy), str(Path(__file__).absolute()),
                    str(project_settings_path(project)), str(Path(settings).expanduser().absolute()),
                    str(approval_directory().parent),
                    messaging_directory or "", messaging["registry"] or "", str(project),
-                   json.dumps([str(p) for p in path_dirs])]
+                   json.dumps([str(p) for p in path_dirs]),
+                   json.dumps({
+                       "identity": str(agent_root.parent.parent / "project.json"),
+                       "host_temp": str(agent_root.parent.parent / "srt-tmp" / agent_root.name),
+                       "shared_home": str(agent_root.parent.parent / "shared")
+                                      if not Path(child_env["HOME"]).is_relative_to(agent_root.parent.parent / "shared") else "",
+                       "storage_base": str(storage_base()),
+                       "cache_base": str(cache_base()) if cache_base().is_dir() else "",
+                       "siblings": [{"path": str(agent_root.parent / name), "exists": (agent_root.parent / name).is_dir()}
+                                    for name in sorted(set(AGENTS) | {e.name for e in agent_root.parent.iterdir()})
+                                    if name != agent_root.name],
+                   }),
+                   srt_independence_probe(policy)]
     elif not args.no_pty_isolation and not args.show:
         env["SRT_AGENT_PTY"] = "1"
     if args.show:
@@ -2310,6 +3989,9 @@ def main(argv=None):
             effective = json.load(handle)
         print(json.dumps({"project": str(project), "agent": args.agent, "temporary_files": str(temp),
                           "cross_session_messaging": messaging, "virtual_env": venv, "tools_venv": tools,
+                          "agent_storage": str(agent_root), "agent_groups": profile.get("groups", []),
+                          "template_files": profile.get("template", []),
+                          "agent_home": {"mode": home_mode, "path": child_env["HOME"]},
                           "environment": child_env, "passed_host_variables": passed,
                           "command": [part if part not in (EXEC_CODE, CHECK_CODE) else "<inline python>" for part in command],
                           "policy": effective}, indent=2))

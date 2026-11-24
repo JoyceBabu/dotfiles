@@ -1,0 +1,11 @@
+// srt-agent group "lang/php83": PHP 8.3. Keg-only: run it as /opt/homebrew/opt/php@8.3/bin/php.
+// Projects use it with "extends": ["lang/php83"].
+{
+  "extends": ["lib/php-common"],
+  "filesystem": {
+    "allowRead": [
+      "/opt/homebrew/Cellar/php@8.3",
+      "/opt/homebrew/Cellar/aspell",
+    ],
+  },
+}

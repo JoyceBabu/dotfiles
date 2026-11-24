@@ -1,0 +1,7 @@
+// srt-agent group "restricted": takes GitHub away from a project.
+// Projects use it with "extends": ["restricted"].
+{
+  "remove": {
+    "network": {"allowedDomains": ["github.com", "api.github.com"]},
+  },
+}

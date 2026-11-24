@@ -1,0 +1,7 @@
+// srt-agent group "lang/python": package downloads (the interpreter and uv are global).
+// Projects use it with "extends": ["lang/python"].
+{
+  "network": {
+    "allowedDomains": ["pypi.org", "files.pythonhosted.org"],
+  },
+}

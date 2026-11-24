@@ -1,0 +1,13 @@
+// srt-agent group "lang/go": Go toolchain.
+// Projects use it with "extends": ["lang/go"].
+{
+  // Homebrew formulae with their runtime dependencies (brew deps --installed).
+  "filesystem": {
+    "allowRead": [
+      "/opt/homebrew/Cellar/go",
+    ],
+  },
+  "network": {
+    "allowedDomains": ["proxy.golang.org", "sum.golang.org"],
+  },
+}

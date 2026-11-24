@@ -1,0 +1,12 @@
+// srt-agent group "tool/composer": Composer and Packagist. Runs with plain "php", so pair it with the php group.
+// Projects use it with "extends": ["tool/composer"].
+{
+  "filesystem": {
+    "allowRead": [
+      "/opt/homebrew/Cellar/composer",
+    ],
+  },
+  "network": {
+    "allowedDomains": ["repo.packagist.org", "packagist.org", "getcomposer.org"],
+  },
+}

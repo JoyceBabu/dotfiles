@@ -1,0 +1,38 @@
+// srt-agent group "lang/c": C and C++ with Apple's toolchain (clang, clang++,
+// ld, make) plus the build tools.
+// Projects use it with "extends": ["lang/c"].
+//
+// The compiler itself needs no grant here: Apple's Command Line Tools live in
+// /Library/Developer and /usr/bin, which the global config already grants
+// (the launcher's own Python and git rely on them too), and the global
+// DEVELOPER_DIR lets clang find them without reading /var/select.
+// Homebrew compilers (gcc, llvm) are not installed; after brew install gcc,
+// run: srt-agent group create --tool gcc-15  and add "tool/gcc-15" below.
+// Headers and libraries from Homebrew formulae (e.g. #include <pcre2.h>) need
+// that formula's Cellar folder; add them per project or with group create.
+{
+  "extends": ["tool/build"],
+  // clangd (C/C++ language server) is in the Command Line Tools but not on
+  // PATH; this makes it, and the real clang/ar/..., findable by name. It is
+  // added after /usr/bin, so plain "cc" is still the xcrun stub.
+  "path": ["/Library/Developer/CommandLineTools/usr/bin"],
+  "setEnv": {
+    // /usr/bin/cc, ar, ... are xcrun stubs that try to write a cache under
+    // /var/folders (blocked; harmless "couldn't create cache file" errors).
+    // Build systems use these variables, so point them at the real tools.
+    // If you switch to Xcode, change CommandLineTools to
+    // /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain.
+    "CC": "/Library/Developer/CommandLineTools/usr/bin/clang",
+    "CXX": "/Library/Developer/CommandLineTools/usr/bin/clang++",
+    "AR": "/Library/Developer/CommandLineTools/usr/bin/ar",
+    "RANLIB": "/Library/Developer/CommandLineTools/usr/bin/ranlib",
+    "NM": "/Library/Developer/CommandLineTools/usr/bin/nm",
+    "STRIP": "/Library/Developer/CommandLineTools/usr/bin/strip",
+    // The SDK, so the real clang finds headers without asking xcrun.
+    "SDKROOT": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+    // Clang's module cache (used by -fmodules and Objective-C) would go to
+    // the per-user cache under /var/folders, which the sandbox blocks; keep
+    // it in this project's cache folder instead.
+    "CLANG_MODULE_CACHE_PATH": "{cache}/clang-modules",
+  },
+}

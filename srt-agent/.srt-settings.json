@@ -3,98 +3,10 @@
   "enableWeakerNestedSandbox": false,
   "enableWeakerNetworkIsolation": false,
   "allowAppleEvents": false,
-  "srtAgent": {
-    "toolsVenv": "~/.local/share/srt-agent/tools",
-    "agents": {
-      "claude": {
-        "network": {
-          "allowedDomains": [
-            "api.anthropic.com",
-            "mcp-proxy.anthropic.com",
-            "claude.ai",
-            "*.claude.ai",
-            "claude.com",
-            "*.claude.com"
-          ]
-        }
-      },
-      "codex": {
-        "network": {
-          "allowedDomains": [
-            "chatgpt.com",
-            "*.chatgpt.com",
-            "openai.com",
-            "*.openai.com",
-            "*.oaistatic.com",
-            "*.oaiusercontent.com"
-          ]
-        },
-        "filesystem": {
-          "allowRead": [
-            "/opt/homebrew/Caskroom/codex"
-          ]
-        }
-      },
-      "dsh": {
-        "network": {
-          "allowedDomains": [
-            "dummy.api.deepseek.com"
-          ]
-        }
-      },
-      "pi": {
-        "setEnv": {
-          "NODE_USE_ENV_PROXY": "1",
-          "SSL_CERT_FILE": "/etc/ssl/cert.pem"
-        }
-      }
-    },
-    "groups": {
-      "rust": {
-        "filesystem": {
-          "allowRead": [
-            "~/.rustup"
-          ]
-        },
-        "network": {
-          "allowedDomains": [
-            "crates.io",
-            "index.crates.io",
-            "static.crates.io",
-            "docs.rs"
-          ]
-        },
-        "srtAgent": {
-          "path": [
-            "~/.cargo/bin"
-          ],
-          "setEnv": {
-            "RUSTUP_HOME": "~/.rustup"
-          }
-        }
-      },
-      "python": {
-        "network": {
-          "allowedDomains": [
-            "pypi.org",
-            "files.pythonhosted.org"
-          ]
-        }
-      },
-      "restricted": {
-        "remove": {
-          "network": {
-            "allowedDomains": [
-              "github.com",
-              "api.github.com"
-            ]
-          }
-        }
-      }
-    }
-  },
   "network": {
     "allowLocalBinding": false,
+    "allowedDomains": [],
+    "deniedDomains": [],
     "allowUnixSockets": [
       "/private/var/run/mDNSResponder"
     ],
@@ -104,25 +16,7 @@
       "com.apple.dnssd.service",
       "com.apple.SystemConfiguration.DNSConfiguration",
       "com.apple.SystemConfiguration.configd"
-    ],
-    "allowedDomains": [
-      "localhost",
-      "github.com",
-      "*.github.com",
-      "*.githubusercontent.com",
-      "registry.npmjs.org",
-      "storage.googleapis.com",
-      "formulae.brew.sh",
-      "pypi.org",
-      "crates.io",
-      "static.crates.io",
-      "index.crates.io",
-      "api.github.com",
-      "raw.githubusercontent.com",
-      "files.pythonhosted.org",
-      "inference.hetzner.com"
-    ],
-    "deniedDomains": []
+    ]
   },
   "filesystem": {
     "denyRead": [
@@ -130,56 +24,41 @@
       "~"
     ],
     "allowRead": [
-      "/Library/Developer",
-      "/Library/Frameworks",
-      "/System/Cryptexes/OS",
-      "/System/Library",
       "/bin",
+      "/sbin",
+      "/usr",
+      "/etc",
+      "/private/etc",
+      "/private/var/db/timezone",
+      "/private/var/run/mDNSResponder",
+      "/private/var/run/resolv.conf",
+      "/private/var/select",
       "/dev/fd",
       "/dev/null",
       "/dev/random",
       "/dev/tty",
       "/dev/urandom",
       "/dev/zero",
-      "/etc",
-      "/opt/homebrew/Cellar",
-      "/opt/homebrew/Frameworks",
+      "/System/Library",
+      "/System/Cryptexes/OS",
+      "/Library/Developer",
+      "/Library/Frameworks",
+      "/usr/local/bin",
+      "/usr/local/sbin",
       "/opt/homebrew/bin",
+      "/opt/homebrew/sbin",
+      "/opt/homebrew/opt",
+      "/opt/homebrew/Frameworks",
       "/opt/homebrew/etc/openssl@4",
       "/opt/homebrew/etc/ca-certificates",
       "/opt/homebrew/etc/gitconfig",
-      "/opt/homebrew/lib",
-      "/opt/homebrew/opt",
-      "/opt/homebrew/sbin",
-      "/opt/homebrew/share",
-      "/private/etc",
-      "/private/etc/hosts",
-      "/private/etc/localtime",
-      "/private/etc/protocols",
-      "/private/etc/resolv.conf",
-      "/private/etc/services",
-      "/private/etc/ssl",
-      "/private/var/db/timezone",
-      "/private/var/run/mDNSResponder",
-      "/private/var/run/mDNSResponder",
-      "/private/var/run/resolv.conf",
-      "/private/var/select",
-      "/sbin",
-      "/tmp/claude",
-      "/usr",
-      "/usr/local/bin",
-      "/usr/local/sbin",
-      "/var",
-      "/var/run/mDNSResponder",
-      "/var/run/resolv.conf",
-      "~/.agents",
-      "~/.claude",
-      "~/.claude.json*",
-      "~/.config/workmux",
       "~/.gitconfig",
       "~/.gitignore_global",
       "~/.gitmessage",
-      "~/.local/state/workmux"
+      "~/.agents",
+      "~/.config/workmux",
+      "~/.local/state/workmux",
+      "/opt/homebrew/Cellar/pi-coding-agent/"
     ],
     "allowWrite": [
       "~/.local/state/workmux"

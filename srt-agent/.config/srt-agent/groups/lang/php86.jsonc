@@ -1,0 +1,75 @@
+// srt-agent group "lang/php86", generated 2026-11-24 by:
+//     srt-agent group create lang/php86 --tool /opt/homebrew/opt/php@8.6/bin/php
+// Regenerate after installing or upgrading: srt-agent group update lang/php86
+// /opt/homebrew/opt/php@8.6/bin/php: /opt/homebrew/Cellar/php@8.6/8.6.0_2/bin/php (Homebrew php@8.6 8.6.0_2)
+// Found from Homebrew records, otool -L and script interpreters. Not detectable:
+// config files and plugins the tool opens only while running; the sandbox
+// log names them on first use. Add them to allowRead below.
+// srt-agent:tools /opt/homebrew/opt/php@8.6/bin/php
+{
+  "filesystem": {
+    "allowRead": [
+      "/opt/homebrew/Cellar/php@8.6",
+      "/opt/homebrew/Cellar/apr",
+      "/opt/homebrew/Cellar/ca-certificates",
+      "/opt/homebrew/Cellar/openssl@4",
+      "/opt/homebrew/Cellar/apr-util",
+      "/opt/homebrew/Cellar/argon2",
+      "/opt/homebrew/Cellar/m4",
+      "/opt/homebrew/Cellar/autoconf",
+      "/opt/homebrew/Cellar/json-c",
+      "/opt/homebrew/Cellar/libunistring",
+      "/opt/homebrew/Cellar/gettext",
+      "/opt/homebrew/Cellar/capstone",
+      "/opt/homebrew/Cellar/brotli",
+      "/opt/homebrew/Cellar/libnghttp2",
+      "/opt/homebrew/Cellar/libnghttp3",
+      "/opt/homebrew/Cellar/libngtcp2",
+      "/opt/homebrew/Cellar/libpsl",
+      "/opt/homebrew/Cellar/libssh2",
+      "/opt/homebrew/Cellar/lz4",
+      "/opt/homebrew/Cellar/xz",
+      "/opt/homebrew/Cellar/zstd",
+      "/opt/homebrew/Cellar/curl",
+      "/opt/homebrew/Cellar/libtool",
+      "/opt/homebrew/Cellar/unixodbc",
+      "/opt/homebrew/Cellar/freetds",
+      "/opt/homebrew/Cellar/libpng",
+      "/opt/homebrew/Cellar/freetype",
+      "/opt/homebrew/Cellar/fontconfig",
+      "/opt/homebrew/Cellar/jpeg-turbo",
+      "/opt/homebrew/Cellar/libvmaf",
+      "/opt/homebrew/Cellar/aom",
+      "/opt/homebrew/Cellar/dav1d",
+      "/opt/homebrew/Cellar/libavif",
+      "/opt/homebrew/Cellar/giflib",
+      "/opt/homebrew/Cellar/webp",
+      "/opt/homebrew/Cellar/libtiff",
+      "/opt/homebrew/Cellar/gd",
+      "/opt/homebrew/Cellar/highway",
+      "/opt/homebrew/Cellar/imath",
+      "/opt/homebrew/Cellar/little-cms2",
+      "/opt/homebrew/Cellar/libdeflate",
+      "/opt/homebrew/Cellar/openexr",
+      "/opt/homebrew/Cellar/openjph",
+      "/opt/homebrew/Cellar/jpeg-xl",
+      "/opt/homebrew/Cellar/gmp",
+      "/opt/homebrew/Cellar/icu4c@78",
+      "/opt/homebrew/Cellar/icu4c@79",
+      "/opt/homebrew/Cellar/krb5",
+      "/opt/homebrew/Cellar/readline",
+      "/opt/homebrew/Cellar/libpq",
+      "/opt/homebrew/Cellar/libsodium",
+      "/opt/homebrew/Cellar/libzip",
+      "/opt/homebrew/Cellar/net-snmp",
+      "/opt/homebrew/Cellar/oniguruma",
+      "/opt/homebrew/Cellar/openldap",
+      "/opt/homebrew/Cellar/pcre2",
+      "/opt/homebrew/Cellar/sqlite",
+      "/opt/homebrew/Cellar/tidy-html5",
+    ],
+  },
+  // Not in a standard PATH folder: added so agents (and language-server
+  // plugins) find it by name. Everything in these folders becomes readable.
+  "path": ["/opt/homebrew/opt/php@8.6/bin"],
+}

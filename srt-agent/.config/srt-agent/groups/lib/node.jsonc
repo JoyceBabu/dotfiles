@@ -1,0 +1,33 @@
+// srt-agent group "lib/node": the node runtime and the libraries it loads.
+// A building block: lang/node and agent groups for node-based agents extend it.
+{
+  "filesystem": {
+    "allowRead": [
+      "/opt/homebrew/Cellar/abseil",
+      "/opt/homebrew/Cellar/ada-url",
+      "/opt/homebrew/Cellar/brotli",
+      "/opt/homebrew/Cellar/c-ares",
+      "/opt/homebrew/Cellar/ca-certificates",
+      "/opt/homebrew/Cellar/fmt",
+      "/opt/homebrew/Cellar/hdrhistogram_c",
+      "/opt/homebrew/Cellar/highway",
+      "/opt/homebrew/Cellar/icu4c@79",
+      "/opt/homebrew/Cellar/libffi",
+      "/opt/homebrew/Cellar/libnghttp2",
+      "/opt/homebrew/Cellar/libuv",
+      "/opt/homebrew/Cellar/llhttp",
+      "/opt/homebrew/Cellar/lz4",
+      "/opt/homebrew/Cellar/merve",
+      "/opt/homebrew/Cellar/nbytes",
+      "/opt/homebrew/Cellar/node",
+      "/opt/homebrew/Cellar/openssl@4",
+      "/opt/homebrew/Cellar/readline",
+      "/opt/homebrew/Cellar/simdjson",
+      "/opt/homebrew/Cellar/simdutf",
+      "/opt/homebrew/Cellar/sqlite",
+      "/opt/homebrew/Cellar/uvwasi",
+      "/opt/homebrew/Cellar/xz",
+      "/opt/homebrew/Cellar/zstd",
+    ],
+  },
+}

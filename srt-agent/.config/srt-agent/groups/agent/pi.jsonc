@@ -1,0 +1,12 @@
+// srt-agent agent group "agent/pi": applied automatically whenever pi runs.
+// pi is a Homebrew formula running on node: /opt/homebrew/bin/pi is a script
+// that starts Cellar/pi-coding-agent/<version>/libexec/bin/pi.
+// (Alternatively regenerate with: srt-agent group create agent/pi --tool pi --force)
+{
+  "extends": ["lib/node"],
+  "filesystem": {
+    "allowRead": [
+      "/opt/homebrew/Cellar/pi-coding-agent",
+    ],
+  },
+}

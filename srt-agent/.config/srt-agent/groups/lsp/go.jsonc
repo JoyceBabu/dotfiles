@@ -1,0 +1,18 @@
+// srt-agent group "lsp/go", generated 2026-11-24 by:
+//     srt-agent group create lsp/go --tool gopls
+// Regenerate after installing or upgrading: srt-agent group update lsp/go
+// gopls: /Users/joyce/go/bin/gopls
+// Found from Homebrew records, otool -L and script interpreters. Not detectable:
+// config files and plugins the tool opens only while running; the sandbox
+// log names them on first use. Add them to allowRead below.
+// srt-agent:tools gopls
+{
+  "filesystem": {
+    "allowRead": [
+      "/Users/joyce/go/bin/gopls",
+    ],
+  },
+  // Not in a standard PATH folder: added so agents (and language-server
+  // plugins) find it by name. Everything in these folders becomes readable.
+  "path": ["/Users/joyce/go/bin"],
+}
